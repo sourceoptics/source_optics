@@ -14,8 +14,8 @@ Run `pip install -r requirements.txt`
 Run `python manage.py runserver`
 
 ### Custom management commands
-`python manage.py`
-    `addrepo [repo_url]`
-    `addstat [repo_name]`
-    `scan [-r] [--recursive] [-s] [--store]`
-    `stat`
+`python manage.py
+    [addrepo [repo_url],
+    addstat [repo_name],
+    scan [-r] [--recursive] [-s] [--store],
+    stat]`
