@@ -7,7 +7,7 @@ from django.contrib.auth.models import Group, User
 class Organization(models.Model):
     # parent = models.ForeignKey('self', on_delete=models.SET_NULL, null=True)
     owner = models.ManyToManyField(User, related_name='owner')
-    name = models.TextField(max_length=32, default='')
+    name = models.TextField(max_length=32, blank=False)
     admins = models.ManyToManyField(User, related_name='admins')
     members = models.ManyToManyField(User, related_name='members')
 
@@ -15,7 +15,7 @@ class Organization(models.Model):
         return self.name
 
 class Repository(models.Model):
-    parent = models.ForeignKey(Organization, on_delete=models.SET_NULL, null=True)
+    parent = models.ForeignKey(Organization, on_delete=models.SET_NULL, blank=False, null=True, related_name='orgs')
     url = models.TextField(max_length=256, blank=False)
     name = models.TextField(max_length=32, blank=False)
     
@@ -27,13 +27,16 @@ class LoginCredential(models.Model):
     username = models.TextField(max_length=32, blank=False)
     password = models.TextField(max_length=128,  blank=False)
     
+    
+class Author(models.Model):
+    email = models.TextField(max_length=64, blank=False, null=True)
+    username = models.TextField(max_length=64, blank=False, null=True)
+    
 class Commit(models.Model):
     repo = models.ForeignKey(Repository, on_delete=models.CASCADE, related_name='repos')
-    author = models.ForeignKey('Author', on_delete=models.CASCADE, related_name='authors')
+    author = models.ForeignKey(Author, on_delete=models.CASCADE, blank=False, null=True, related_name='authors')
     sha = models.TextField(max_length=256, blank=False)
     lines_added = models.IntegerField(default=0)
     lines_removed = models.IntegerField(default=0)
 
-class Author(models.Model):
-    email = models.TextField(max_length=64, blank=False)
-    username = models.TextField(max_length=64)
+
