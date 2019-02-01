@@ -1,3 +1,2 @@
 django
 psycopg2-binary
-celery

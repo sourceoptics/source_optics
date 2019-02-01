@@ -16,23 +16,24 @@ class Organization(models.Model):
 
 class Repository(models.Model):
     parent = models.ForeignKey(Organization, on_delete=models.SET_NULL, null=True)
-    url = models.TextField(max_length=256, default='')
-    name = models.TextField(max_length=32, default='')
+    url = models.TextField(max_length=256, blank=False)
+    name = models.TextField(max_length=32, blank=False)
     
     def __str__(self):
         return self.name
 
 class LoginCredential(models.Model):
     repo = models.ForeignKey(Repository, on_delete=models.CASCADE)
-    username = models.TextField(max_length=32, default='')
-    password = models.TextField(max_length=128, default='')
+    username = models.TextField(max_length=32, blank=False)
+    password = models.TextField(max_length=128,  blank=False)
     
 class Commit(models.Model):
-    repo = models.ForeignKey(Repository, on_delete=models.CASCADE)
-    sha = models.TextField(max_length=256, default='')
+    repo = models.ForeignKey(Repository, on_delete=models.CASCADE, related_name='repos')
+    author = models.ForeignKey('Author', on_delete=models.CASCADE, related_name='authors')
+    sha = models.TextField(max_length=256, blank=False)
     lines_added = models.IntegerField(default=0)
     lines_removed = models.IntegerField(default=0)
 
 class Author(models.Model):
-    commit = models.ForeignKey(Commit, on_delete=models.CASCADE)
-    email = models.TextField(max_length=64, default='')
+    email = models.TextField(max_length=64, blank=False)
+    username = models.TextField(max_length=64)

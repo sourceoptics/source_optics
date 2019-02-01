@@ -76,10 +76,10 @@ WSGI_APPLICATION = 'config.wsgi.application'
 
 DATABASES = {
             'default': {
-                        'ENGINE': 'django.db.backends.postgresql',
-                                'USER' : 'srcopt_user',
-                                        'NAME': 'srcopt',
-                                            }
+                        'ENGINE':'django.db.backends.postgresql',
+                        'USER':  os.environ.get('DB_USER', ''),
+						'NAME': 'srcopt',
+					   }
             }
 
 # Password validation
