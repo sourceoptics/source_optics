@@ -39,6 +39,8 @@ class Commit(models.Model):
     repo = models.ForeignKey(Repository, on_delete=models.CASCADE, related_name='repos')
     author = models.ForeignKey(Author, on_delete=models.CASCADE, blank=False, null=True, related_name='authors')
     sha = models.TextField(max_length=256, blank=False)
+    commit_date = models.TextField(max_length=64, blank=False, null=True)
+    author_date = models.TextField(max_length=64, blank=False, null=True)
     lines_added = models.IntegerField(default=0)
     lines_removed = models.IntegerField(default=0)
 

@@ -29,7 +29,7 @@ class Scanner:
         return repo_instance, flag
 
     def log_repo(repo_url, work_dir, repo_name, repo_instance):
-        json_log = '\'{"commit":"%H","author":"%an","date":"%cd","email":"%ce"}\''
+        json_log = '\'{"commit":"%H","author_name":"%an","author_date":"%ad","commit_date":"%cd","author_email":"%ae"}\''
         cmd = subprocess.Popen('cd ' + work_dir + '/' + repo_name + ';git log --pretty=format:' + json_log, shell=True, stdout=subprocess.PIPE)
 
         for line in cmd.stdout:
@@ -37,9 +37,9 @@ class Scanner:
             #print(line)
             data = json.loads(line)
 
-            author_instance = Scanner.create_author(data['author'], data['email'])
+            author_instance = Scanner.create_author(data['author_email'], data['author_name'])
             #TODO: Using 0 for lines added/removed
-            commit_instance = Scanner.create_commit(repo_instance, author_instance, data['commit'], 0, 0)
+            commit_instance = Scanner.create_commit(repo_instance, author_instance, data['commit'], data['commit_date'], data['author_date'], 0, 0)
 
     def scan_repo(repo_url):
         work_dir = os.path.abspath(os.path.dirname(__file__).rsplit("/", 2)[0]) + '/work'
@@ -68,9 +68,9 @@ class Scanner:
             author_instance = Author.objects.create(email=email_, username=username_)
         return author_instance
 
-    def create_commit(repo_instance, author_instance, sha_, added, removed):
+    def create_commit(repo_instance, author_instance, sha_, author_date_, commit_date_, added, removed):
         try:
             commit_instance = Commit.objects.get(sha=sha_)
         except:
-            commit_instance = Commit.objects.create(repo=repo_instance, author=author_instance, sha=sha_, lines_added=added, lines_removed=removed)
+            commit_instance = Commit.objects.create(repo=repo_instance, author=author_instance, sha=sha_, commit_date=commit_date_, author_date=author_date_, lines_added=added, lines_removed=removed)
         return commit_instance
