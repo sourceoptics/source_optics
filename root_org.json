@@ -1,0 +1,10 @@
+[{
+	"model": "srcOptics.Organization",
+	"pk": 1,
+	"fields": {
+		"owner": 1,
+		"name": "root",
+		"admins": "admin",
+		"members": "admin"
+	}
+}]
