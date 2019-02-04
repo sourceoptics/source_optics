@@ -9,6 +9,5 @@ class Command(BaseCommand):
         parser.add_argument('repo_url', type=str, help='Repository url')
         
     def handle(self, *args, **kwargs):
-
-        Repository.clone_repo(kwargs['repo_url'])
+        Repository.scan_repo(kwargs['repo_url'])
         print(kwargs['repo_url'] + " added")
