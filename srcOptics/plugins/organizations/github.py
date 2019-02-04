@@ -10,7 +10,7 @@ class Repository:
         os.system('git clone ' + repo_url + ' ' + work_dir + '/' + repo_name)
 
     def log_repo(repo_url, work_dir, repo_name):
-        json_log = '\'{"commit":"%H","author":"%an","author_date":"%ad","commit_date":"%cd"}\''
+        json_log = '\'{"commit":"%H","author":"%an","date":"%cd","email":"%ce"}\''
         cmd = subprocess.Popen('cd ' + work_dir + '/' + repo_name + ';git log --pretty=format:' + json_log, shell=True, stdout=subprocess.PIPE)
 
         for line in cmd.stdout:
