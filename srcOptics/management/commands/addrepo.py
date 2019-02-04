@@ -10,4 +10,4 @@ class Command(BaseCommand):
         
     def handle(self, *args, **kwargs):
         Scanner.scan_repo(kwargs['repo_url'])
-        print(kwargs['repo_url'] + " added")
+        #print(kwargs['repo_url'] + " added")
