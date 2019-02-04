@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand, CommandError
 
-from srcOptics.plugins.organizations.github import Repository
+from srcOptics.plugins.organizations.github import Scanner
 
 class Command(BaseCommand):
     help = 'Adds a repository to a queue'
@@ -9,5 +9,5 @@ class Command(BaseCommand):
         parser.add_argument('repo_url', type=str, help='Repository url')
         
     def handle(self, *args, **kwargs):
-        Repository.scan_repo(kwargs['repo_url'])
+        Scanner.scan_repo(kwargs['repo_url'])
         print(kwargs['repo_url'] + " added")

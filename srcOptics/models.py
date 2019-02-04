@@ -32,6 +32,9 @@ class Author(models.Model):
     email = models.TextField(max_length=64, blank=False, null=True)
     username = models.TextField(max_length=64, blank=False, null=True)
     
+    def __str__(self):
+        return self.email
+
 class Commit(models.Model):
     repo = models.ForeignKey(Repository, on_delete=models.CASCADE, related_name='repos')
     author = models.ForeignKey(Author, on_delete=models.CASCADE, blank=False, null=True, related_name='authors')
@@ -39,4 +42,5 @@ class Commit(models.Model):
     lines_added = models.IntegerField(default=0)
     lines_removed = models.IntegerField(default=0)
 
-
+    def __str__(self):
+        return self.sha
