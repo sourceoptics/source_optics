@@ -6,10 +6,8 @@ from django.contrib.auth.models import Group, User
 # these
 class Organization(models.Model):
     # parent = models.ForeignKey('self', on_delete=models.SET_NULL, null=True)
-    owner = models.ManyToManyField(User, related_name='owner')
     name = models.TextField(max_length=32, blank=False)
     admins = models.ManyToManyField(User, related_name='admins')
-    members = models.ManyToManyField(User, related_name='members')
 
     def __str__(self):
         return self.name

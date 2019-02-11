@@ -1,6 +1,7 @@
 from django.core.management.base import BaseCommand, CommandError
 from django.core.management import call_command
 from django.contrib.auth import get_user_model
+from srcOptics.models import Organization
 import os
 
 
@@ -9,6 +10,7 @@ class Command(BaseCommand):
         
     def handle(self, *args, **kwargs):
         os.system('dropdb srcopt; createdb srcopt')
+        call_command('makemigrations')
         call_command('migrate')
         print('Create an admin account')
         username = input('Username: ')
@@ -24,4 +26,6 @@ class Command(BaseCommand):
             else:
                 print('Passwords do not match!')
         User = get_user_model()
-        User.objects.create_superuser(username, email, password)
+        admin = User.objects.create_superuser(username, email, password)
+        org = Organization.objects.create(name="root")
+        #org.admins.set(admin)

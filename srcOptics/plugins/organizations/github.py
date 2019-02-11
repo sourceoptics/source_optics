@@ -41,6 +41,7 @@ class Scanner:
             #TODO: Using 0 for lines added/removed
             commit_instance = Scanner.create_commit(repo_instance, author_instance, data['commit'], data['commit_date'], data['author_date'], 0, 0)
 
+	#TODO: Add configurable setting for work directory
     def scan_repo(repo_url):
         work_dir = os.path.abspath(os.path.dirname(__file__).rsplit("/", 2)[0]) + '/work'
         os.system('mkdir -p ' + work_dir)
