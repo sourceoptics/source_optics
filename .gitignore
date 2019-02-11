@@ -11,4 +11,3 @@ pyvenv.cfg
 pip-selfcheck.json
 __pycache__/
 srcOptics/work/
-srcOptics/migrations/
