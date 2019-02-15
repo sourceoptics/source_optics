@@ -54,6 +54,7 @@ class Scanner:
         work_dir = os.path.abspath(os.path.dirname(__file__).rsplit("/", 2)[0]) + '/work'
         os.system('mkdir -p ' + work_dir)
         repo_name = repo_url.rsplit('/', 1)[1]
+        repo_url = fix_repo_url(repo_url, cred)
 
         repo_instance, flag = Scanner.clone_repo(repo_url, work_dir, repo_name, cred)
         if flag == 0:
@@ -61,6 +62,9 @@ class Scanner:
         else:
             print("Already up to date.")
             flag = 0
+
+    def fix_repo_url(repo_url):
+
 
     # ------------------------------------------------------------------
     def create_repo(org_name, repo_url, repo_name, cred):
