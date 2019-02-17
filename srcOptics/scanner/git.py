@@ -61,8 +61,7 @@ class Scanner:
             author_instance = Scanner.create_author(data['author_email'], data['author_name'])
             #TODO: Using 0 for lines added/removed
 
-            datetime = data['commit_date']
-            commit_instance = Scanner.create_commit(repo_instance, author_instance, data['commit'], parse_datetime(data['commit_date']), data['author_date'], 0, 0)
+            commit_instance = Scanner.create_commit(repo_instance, author_instance, data['commit'], parse_datetime(data['commit_date']), parse_datetime(data['author_date']), 0, 0)
 
     # ------------------------------------------------------------------
     def scan_repo(repo_url, cred):
