@@ -46,6 +46,8 @@ class Commit(models.Model):
 
 class FileChange(models.Model):
     name = models.TextField(max_length=256, blank=False)
+    ext = models.TextField(max_length=32, blank=False)
+    binary = models.BooleanField(default=False)
     commit = models.ForeignKey(Commit, on_delete=models.CASCADE)
     lines_added = models.IntegerField(default=0)
     lines_removed = models.IntegerField(default=0)

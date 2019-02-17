@@ -79,8 +79,6 @@ class Scanner:
         # PARSER ----------------------------------------------
         for line in iter(cmd.stdout.readline,''):
             line = line.decode('utf-8')
-            print("--------------")
-            print("Line: " + line)
 
             # escape the empty line(s)
             if not line or line == "\n":
@@ -88,7 +86,6 @@ class Scanner:
 
             # split a maximum of 1 time to efficiently find if the line is EOF
             if line.split(maxsplit=1)[0] == 'EOF':
-                print("Done processing git log")
                 break
 
             # if the first character is '{', then we are no longer parsing files
@@ -102,10 +99,18 @@ class Scanner:
             # STAGE 2 -----------------------------------------
             if files_flag:
                 fields = line.split()
-                print("Fields: " + ''.join(fields))
+                binary = False
+
+                # binary files will have '-' in their field changes. Set these to 0
+                if fields[1] == '-':
+                    binary = True
+                    fields[1] = 0
+                if fields[0] == '-':
+                    binary = True
+                    fields[0] = 0
 
                 #                   name       commit       lines add  lines rm
-                Scanner.create_file(fields[2], last_commit, fields[0], fields[1])
+                Scanner.create_file(fields[2], last_commit, fields[0], fields[1], binary)
 
             # STAGE 1 -----------------------------------------
             if json_flag:
@@ -144,11 +149,11 @@ class Scanner:
         return repo_instance
 
     # ------------------------------------------------------------------
-    def create_author(email_):
+    def create_author(email):
         try:
-            author_instance = Author.objects.get(email=email_)
+            author_instance = Author.objects.get(email=email)
         except:
-            author_instance = Author.objects.create(email=email_)
+            author_instance = Author.objects.create(email=email)
         return author_instance
 
     # ------------------------------------------------------------------
@@ -160,10 +165,15 @@ class Scanner:
         return commit_instance
 
     # ------------------------------------------------------------------
-    def create_file(name, commit, la, lr):
+    def create_file(name, commit, la, lr, binary):
         try:
-            file_instance = FileChange.objects.get(sha=sha_)
+            file_instance = FileChange.objects.get(commit=commit)
         except:
-            print("Creating a file change with name " + name)
-            file_instance = FileChange.objects.create(name=name, commit=commit, lines_added=la, lines_removed=lr)
+            # find the extension
+            split = name.rsplit('.', 1)
+            ext = ""
+            if len(split) > 1:
+                ext = split[1]
+            
+            file_instance = FileChange.objects.create(name=name, ext=ext, commit=commit, lines_added=la, lines_removed=lr, binary=binary)
         return file_instance
