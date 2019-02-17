@@ -42,3 +42,12 @@ class Commit(models.Model):
 
     def __str__(self):
         return self.sha
+
+class FileChange(models.Model):
+    name = models.TextField(max_length=256, blank=False)
+    commit = models.ForeignKey(Commit, on_delete=models.CASCADE)
+    lines_added = models.IntegerField(default=0)
+    lines_removed = models.IntegerField(default=0)
+
+    def __str__(self):
+        return self.name
