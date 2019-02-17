@@ -49,7 +49,7 @@ class Scanner:
 
     # ------------------------------------------------------------------
     def log_repo(repo_url, work_dir, repo_name, repo_instance):
-        json_log = '\'{"commit":"%H","author_name":"%an","author_date":"%ad","commit_date":"%cd","author_email":"%ae"}\''
+        json_log = '\'{"commit":"%H","author_name":"%an","author_date":"%ad","commit_date":"%cd","author_email":"%ae","subject":"%f"}\''
         # python subprocess iteration doesn't have an EOF indicator that I can find.
         # We echo "EOF" to the end of the log output so we can tell when we are done
         cmd = subprocess.Popen('cd ' + work_dir + '/' + repo_name + ';git log --all --numstat --date=iso-strict --pretty=format:' + json_log + '; echo "\nEOF"', shell=True, stdout=subprocess.PIPE)
@@ -112,7 +112,7 @@ class Scanner:
                 data = json.loads(line)
 
                 author_instance = Scanner.create_author(data['author_email'])
-                commit_instance = Scanner.create_commit(repo_instance, author_instance, data['commit'], data['commit_date'], data['author_date'], 0, 0)
+                commit_instance = Scanner.create_commit(repo_instance, data["subject"], author_instance, data['commit'], data['commit_date'], data['author_date'], 0, 0)
 
                 # hand off control to file parsing
                 json_flag = False
@@ -152,11 +152,11 @@ class Scanner:
         return author_instance
 
     # ------------------------------------------------------------------
-    def create_commit(repo_instance, author_instance, sha_, author_date_, commit_date_, added, removed):
+    def create_commit(repo_instance, subject, author_instance, sha_, author_date_, commit_date_, added, removed):
         try:
             commit_instance = Commit.objects.get(sha=sha_)
         except:
-            commit_instance = Commit.objects.create(repo=repo_instance, author=author_instance, sha=sha_, commit_date=commit_date_, author_date=author_date_, lines_added=added, lines_removed=removed)
+            commit_instance = Commit.objects.create(repo=repo_instance, author=author_instance, sha=sha_, commit_date=commit_date_, author_date=author_date_, lines_added=added, lines_removed=removed, subject=subject)
         return commit_instance
 
     # ------------------------------------------------------------------

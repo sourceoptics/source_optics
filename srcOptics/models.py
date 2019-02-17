@@ -37,11 +37,12 @@ class Commit(models.Model):
     sha = models.TextField(max_length=256, blank=False)
     commit_date = models.DateTimeField(blank=False, null=True)
     author_date = models.DateTimeField(blank=False, null=True)
+    subject = models.TextField(max_length=256, blank=False)
     lines_added = models.IntegerField(default=0)
     lines_removed = models.IntegerField(default=0)
 
     def __str__(self):
-        return self.sha
+        return self.subject
 
 class FileChange(models.Model):
     name = models.TextField(max_length=256, blank=False)
