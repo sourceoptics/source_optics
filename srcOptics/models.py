@@ -15,6 +15,8 @@ class LoginCredential(models.Model):
     password = models.TextField(max_length=128,  blank=False)
     
 class Repository(models.Model):
+    class Meta:
+        verbose_name_plural = "repositories"
     organization = models.ForeignKey(Organization, on_delete=models.SET_NULL, null=True)
     cred = models.ForeignKey(LoginCredential, on_delete=models.CASCADE, null=True)
     url = models.TextField(max_length=256, blank=False)
