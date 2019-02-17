@@ -19,15 +19,14 @@ class Repository(models.Model):
         verbose_name_plural = "repositories"
     organization = models.ForeignKey(Organization, on_delete=models.SET_NULL, null=True)
     cred = models.ForeignKey(LoginCredential, on_delete=models.CASCADE, null=True)
-    url = models.TextField(max_length=256, blank=False)
+    url = models.TextField(max_length=256, unique=True, blank=False)
     name = models.TextField(max_length=32, blank=False)
     
     def __str__(self):
         return self.name
     
 class Author(models.Model):
-    email = models.TextField(max_length=64, blank=False, null=True)
-    username = models.TextField(max_length=64, blank=False, null=True)
+    email = models.TextField(max_length=64, unique=True, blank=False, null=True)
     
     def __str__(self):
         return self.email

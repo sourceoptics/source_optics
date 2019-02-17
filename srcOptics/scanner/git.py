@@ -88,11 +88,11 @@ class Scanner:
         return repo_instance
 
     # ------------------------------------------------------------------
-    def create_author(email_, username_):
+    def create_author(email_):
         try:
             author_instance = Author.objects.get(email=email_)
         except:
-            author_instance = Author.objects.create(email=email_, username=username_)
+            author_instance = Author.objects.create(email=email_)
         return author_instance
 
     # ------------------------------------------------------------------
