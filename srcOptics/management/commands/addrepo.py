@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand, CommandError
 
-from srcOptics.plugins.organizations.github import Scanner
+from srcOptics.scanner.git import Scanner
 
 from srcOptics.models import LoginCredential
 import getpass
