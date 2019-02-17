@@ -1,0 +1,11 @@
+{% include 'partials/header.html' %}
+<select id="repos">
+    <option disabled selected>Select a Repository</option>
+    {% for repo in repositories %}
+    <option value="{{repo}}">{{repo}}</option>
+    {% endfor %}
+</select>
+<table>
+    <th></th>
+</table>
+{% include 'partials/footer.html' %}
