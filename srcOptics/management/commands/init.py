@@ -10,6 +10,7 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument('-e', '--easy', action='store_true', help='Run in easy mode. Creates account admin / password')
     def handle(self, *args, **kwargs):
+        os.system('rm -rf work')
         os.system('dropdb srcopt; createdb srcopt')
         call_command('makemigrations')
         call_command('migrate')
