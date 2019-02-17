@@ -4,6 +4,7 @@ import json
 import getpass
 
 from srcOptics.models import Commit, Repository, Author, Organization
+from django.utils.dateparse import parse_datetime
 
 class Scanner:
     # ------------------------------------------------------------------
@@ -38,7 +39,7 @@ class Scanner:
     # ------------------------------------------------------------------
     def log_repo(repo_url, work_dir, repo_name, repo_instance):
         json_log = '\'{"commit":"%H","author_name":"%an","author_date":"%ad","commit_date":"%cd","author_email":"%ae"}\''
-        cmd = subprocess.Popen('cd ' + work_dir + '/' + repo_name + ';git log --pretty=format:' + json_log, shell=True, stdout=subprocess.PIPE)
+        cmd = subprocess.Popen('cd ' + work_dir + '/' + repo_name + ';git log --all --date=iso-strict --pretty=format:' + json_log, shell=True, stdout=subprocess.PIPE)
 
         for line in cmd.stdout:
             line = line.decode('utf-8')
@@ -47,7 +48,9 @@ class Scanner:
 
             author_instance = Scanner.create_author(data['author_email'], data['author_name'])
             #TODO: Using 0 for lines added/removed
-            commit_instance = Scanner.create_commit(repo_instance, author_instance, data['commit'], data['commit_date'], data['author_date'], 0, 0)
+
+            datetime = data['commit_date']
+            commit_instance = Scanner.create_commit(repo_instance, author_instance, data['commit'], parse_datetime(data['commit_date']), data['author_date'], 0, 0)
 
     # ------------------------------------------------------------------
     def scan_repo(repo_url, cred):
