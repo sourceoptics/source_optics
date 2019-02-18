@@ -35,7 +35,7 @@ class Commit(models.Model):
     repo = models.ForeignKey(Repository, on_delete=models.CASCADE, related_name='repos')
     author = models.ForeignKey(Author, on_delete=models.CASCADE, blank=False, null=True, related_name='authors')
     sha = models.TextField(max_length=256, blank=False)
-    files = models.ManyToManyField('FileChange', related_name='files')
+    files = models.ManyToManyField('File', related_name='files')
     commit_date = models.DateTimeField(blank=False, null=True)
     author_date = models.DateTimeField(blank=False, null=True)
     subject = models.TextField(max_length=256, blank=False)
@@ -57,3 +57,10 @@ class FileChange(models.Model):
 
     def __str__(self):
         return self.path
+
+class File(models.Model):
+    repo = models.ForeignKey(Repository, on_delete=models.CASCADE, related_name='repo', null=True)
+    name = models.TextField(max_length=256, blank=False, null=True)
+    path = models.TextField(max_length=256, blank=False, null=True)
+    ext = models.TextField(max_length=32, blank=False, null=True)
+    changes = models.ManyToManyField(FileChange, related_name='changes')
