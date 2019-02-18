@@ -14,26 +14,17 @@ class Creator:
     # ------------------------------------------------------------------
     def create_repo(org_name, repo_url, repo_name, cred):
         org_parent = Organization.objects.get(name=org_name)
-        try:
-            repo_instance = Repository.objects.get(name=repo_name)
-        except:
-            repo_instance = Repository.objects.create(cred=cred, url=repo_url, name=repo_name)
+        repo_instance,created = Repository.objects.get_or_create(url=repo_url, defaults={'name':repo_name, 'cred':cred})
         return repo_instance
 
     # ------------------------------------------------------------------
     def create_author(email):
-        try:
-            author_instance = Author.objects.get(email=email)
-        except:
-            author_instance = Author.objects.create(email=email)
+        author_instance,created = Author.objects.get_or_create(email=email)
         return author_instance
 
     # ------------------------------------------------------------------
     def create_commit(repo_instance, subject, author_instance, sha_, author_date_, commit_date_, added, removed):
-        try:
-            commit_instance = Commit.objects.get(sha=sha_)
-        except:
-            commit_instance = Commit.objects.create(repo=repo_instance, author=author_instance, sha=sha_, commit_date=commit_date_, author_date=author_date_, lines_added=added, lines_removed=removed, subject=subject)
+        commit_instance,created = Commit.objects.get_or_create(repo=repo_instance, author=author_instance, sha=sha_, commit_date=commit_date_, author_date=author_date_, lines_added=added, lines_removed=removed, subject=subject)
         return commit_instance
 
     # ------------------------------------------------------------------

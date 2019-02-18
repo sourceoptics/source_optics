@@ -125,4 +125,4 @@ STATIC_URL = '/srcOptics/static/'
 # This is useful for more advanced file trend analysis,
 # but will add A LOT more data and require more scan time
 # disabled by default
-RECORD_FILE_CHANGES = True
+RECORD_FILE_CHANGES = False
