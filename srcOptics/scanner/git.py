@@ -167,7 +167,7 @@ class Scanner:
     # ------------------------------------------------------------------
     def create_file(path, commit, la, lr, binary):
         try:
-            file_instance = FileChange.objects.get(commit=commit)
+            file_instance = FileChange.objects.get(commit=commit, path=path)
         except:
             # find the extension
             split = path.rsplit('.', 1)

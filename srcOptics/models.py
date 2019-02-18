@@ -20,13 +20,13 @@ class Repository(models.Model):
     organization = models.ForeignKey(Organization, on_delete=models.SET_NULL, null=True)
     cred = models.ForeignKey(LoginCredential, on_delete=models.CASCADE, null=True)
     url = models.TextField(max_length=256, unique=True, blank=False)
-    name = models.TextField(max_length=32, blank=False)
+    name = models.TextField(db_index=True, max_length=32, blank=False)
     
     def __str__(self):
         return self.name
     
 class Author(models.Model):
-    email = models.TextField(max_length=64, unique=True, blank=False, null=True)
+    email = models.TextField(db_index=True, max_length=64, unique=True, blank=False, null=True)
     
     def __str__(self):
         return self.email
@@ -34,11 +34,11 @@ class Author(models.Model):
 class Commit(models.Model):
     repo = models.ForeignKey(Repository, on_delete=models.CASCADE, related_name='repos')
     author = models.ForeignKey(Author, on_delete=models.CASCADE, blank=False, null=True, related_name='authors')
-    sha = models.TextField(max_length=256, blank=False)
-    files = models.ManyToManyField('File', related_name='files')
+    sha = models.TextField(db_index=True, max_length=256, blank=False)
+    files = models.ManyToManyField('File')
     commit_date = models.DateTimeField(blank=False, null=True)
     author_date = models.DateTimeField(blank=False, null=True)
-    subject = models.TextField(max_length=256, blank=False)
+    subject = models.TextField(db_index=True, max_length=256, blank=False)
     lines_added = models.IntegerField(default=0)
     lines_removed = models.IntegerField(default=0)
 
@@ -46,12 +46,12 @@ class Commit(models.Model):
         return self.subject
 
 class FileChange(models.Model):
-    name = models.TextField(max_length=256, blank=False, null=True)
-    path = models.TextField(max_length=256, blank=False, null=True)
+    name = models.TextField(db_index=True, max_length=256, blank=False, null=True)
+    path = models.TextField(db_index=True, max_length=256, blank=False, null=True)
     ext = models.TextField(max_length=32, blank=False)
     binary = models.BooleanField(default=False)
-    commit = models.ForeignKey(Commit, on_delete=models.CASCADE, related_name='commit')
-    repo = models.ForeignKey(Repository, on_delete=models.CASCADE, related_name='repo', null=True)
+    commit = models.ForeignKey(Commit, db_index=True, on_delete=models.CASCADE, related_name='commit')
+    repo = models.ForeignKey(Repository, on_delete=models.CASCADE, related_name='filechange_repo', null=True)
     lines_added = models.IntegerField(default=0)
     lines_removed = models.IntegerField(default=0)
 
@@ -59,8 +59,8 @@ class FileChange(models.Model):
         return self.path
 
 class File(models.Model):
-    repo = models.ForeignKey(Repository, on_delete=models.CASCADE, related_name='repo', null=True)
-    name = models.TextField(max_length=256, blank=False, null=True)
-    path = models.TextField(max_length=256, blank=False, null=True)
+    repo = models.ForeignKey(Repository, db_index=True, on_delete=models.CASCADE, related_name='file_repo', null=True)
+    name = models.TextField(db_index=True, max_length=256, blank=False, null=True)
+    path = models.TextField(db_index=True, max_length=256, blank=False, null=True)
     ext = models.TextField(max_length=32, blank=False, null=True)
     changes = models.ManyToManyField(FileChange, related_name='changes')
