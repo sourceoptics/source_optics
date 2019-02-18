@@ -54,7 +54,12 @@ class Creator:
             fName = fArray[0]
             
         filechange_instance = FileChange.objects.create(name=fName, path=path, ext=ext, commit=commit, repo=commit.repo, lines_added=la, lines_removed=lr, binary=binary)
-            
+
+        # add the file change to the global file object
+        file_instance = File.objects.get(name=fName, path=path)
+        file_instance.changes.add(filechange_instance)
+        file_instance.save()
+
         return filechange_instance
 
     # ------------------------------------------------------------------
@@ -69,11 +74,11 @@ class Creator:
             fName = fArray[0]
 
         try:
-            file_instance = File.objects.get(name=fName, path=path)
+            file_instance = File.objects.get(path=path)
 
             # update the lines added/removed
-            file_instance.lines_added += la
-            file_instance.lines_removed += lr
+            file_instance.lines_added += int(la)
+            file_instance.lines_removed += int(lr)
 
             file_instance.save()
             return file_instance

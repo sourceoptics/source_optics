@@ -122,13 +122,13 @@ class Scanner:
                     binary = True
                     fields[0] = 0
 
+                # increment the files lines added/removed
+                Creator.create_file(fields[2], last_commit, fields[0], fields[1], binary)
+
                 # WARNING: this will record a huge amount of data
                 if settings.RECORD_FILE_CHANGES:
                     #                   name       commit       lines add  lines rm
                     Creator.create_filechange(fields[2], last_commit, fields[0], fields[1], binary)
-
-                # increment the files lines added/removed
-                Creator.create_file(fields[2], last_commit, fields[0], fields[1], binary)
 
             # STAGE 1 -----------------------------------------
             if json_flag:
