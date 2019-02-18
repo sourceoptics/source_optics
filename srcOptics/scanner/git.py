@@ -165,15 +165,28 @@ class Scanner:
         return commit_instance
 
     # ------------------------------------------------------------------
-    def create_file(name, commit, la, lr, binary):
+    def create_file(path, commit, la, lr, binary):
         try:
             file_instance = FileChange.objects.get(commit=commit)
         except:
             # find the extension
-            split = name.rsplit('.', 1)
+            split = path.rsplit('.', 1)
             ext = ""
             if len(split) > 1:
                 ext = split[1]
             
-            file_instance = FileChange.objects.create(name=name, ext=ext, commit=commit, lines_added=la, lines_removed=lr, binary=binary)
+            #get the file name
+            fArray = path.rsplit('/', 1)
+
+            fName = ""
+            if len(fArray) > 1:
+                fName = fArray[1]
+            else:
+                fName = fArray[0]
+                        
+            file_instance = FileChange.objects.create(name=fName, path=path, ext=ext, commit=commit, repo=commit.repo, lines_added=la, lines_removed=lr, binary=binary)
+            
+            #add file to commit
+            commit.files.add(file_instance)
+            
         return file_instance
