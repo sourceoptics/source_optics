@@ -135,7 +135,13 @@ class Scanner:
                 data = json.loads(line)
 
                 author_instance = Creator.create_author(data['author_email'])
-                commit_instance = Creator.create_commit(repo_instance, data["subject"], author_instance, data['commit'], data['commit_date'], data['author_date'], 0, 0)
+                commit_instance, created = Creator.create_commit(repo_instance, data["subject"], author_instance, data['commit'], data['commit_date'], data['author_date'], 0, 0)
+
+                # if we have seen this commit before, causing it to
+                # not be created
+                if not created:
+                    print("Stopping at previously scanned commit " + commit_instance.sha)
+                    break
 
                 # hand off control to file parsing
                 json_flag = False
