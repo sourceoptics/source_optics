@@ -5,6 +5,9 @@
     <option value="{{repo}}">{{repo}}</option>
     {% endfor %}
 </select>
+{% for commit in commits %}
+<p>{{ commit }}</p>
+{% endfor %}
 <table>
     <th></th>
 </table>

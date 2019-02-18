@@ -2,7 +2,7 @@ from django.core.management.base import BaseCommand, CommandError
 from django.core.management import call_command
 from django.contrib.auth import get_user_model
 from srcOptics.models import Organization
-import os, getpass
+import os, getpass, subprocess
 
 
 class Command(BaseCommand):
@@ -10,8 +10,12 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument('-e', '--easy', action='store_true', help='Run in easy mode. Creates account admin / password')
     def handle(self, *args, **kwargs):
-        os.system('rm -rf work')
-        os.system('dropdb srcopt; createdb srcopt')
+        subprocess.call('rm -rf work')
+        try:
+            subprocess.call('dropdb srcopt')
+        except OSError:
+            pass
+        subprocess.call('createdb srcopt')
         call_command('makemigrations')
         call_command('migrate')
         if kwargs['easy']:

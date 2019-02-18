@@ -1,30 +1,34 @@
 from django.shortcuts import render
 from django.template import loader
 
-from ..models import Repository
+from ..models import Repository, Commit
 
 """
 Returns data for selected repository
 """
 def repo_selected(request):
     if request.method == 'GET':
-        select = request.GET.get('id', None) 
+        select = request.GET.get('repo', None)
+        print(select)
         if select:
-            repo = Commit.objects.filter(pk=selection)
-            return repo
+            commits = Commit.objects.filter(repo__name=select)
+            return commits
         else:
-            return  #anything you want to send when no id value is sent in the ajax call
+            return None
 
 """
 View function for home page of site
 """
 def index(request):
     repos = Repository.objects.all()
+    commits = repo_selected(request)
+    print(commits)
 
     context = {
         'title': 'SrcOptics',
         'stylesheet': 'main.css',
-        'repositories': repos
+        'repositories': repos,
+        'commits': commits
 
     }
     return render(request, 'dashboard.html', context=context)
