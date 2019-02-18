@@ -5,10 +5,5 @@
     <option value="{{repo}}">{{repo}}</option>
     {% endfor %}
 </select>
-{% for commit in commits %}
-<p>{{ commit }}</p>
-{% endfor %}
-<table>
-    <th></th>
-</table>
+{% include 'commit_table.html' %}
 {% include 'partials/footer.html' %}
