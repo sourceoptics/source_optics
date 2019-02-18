@@ -119,3 +119,10 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/2.1/howto/static-files/
 
 STATIC_URL = '/srcOptics/static/'
+
+# should we record changes for all files in each commit?
+#
+# This is useful for more advanced file trend analysis,
+# but will add A LOT more data and require more scan time
+# disabled by default
+RECORD_FILE_CHANGES = False

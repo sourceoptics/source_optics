@@ -4,7 +4,9 @@ import json
 import getpass
 
 from django.utils.dateparse import parse_datetime
+from django.conf import settings
 from srcOptics.models import *
+from srcOptics.create import Creator
 
 GIT_TYPES = ["https://", "http://"]
 
@@ -19,6 +21,17 @@ class Scanner:
                         repo_url = repo_url.replace(prefix, "")
                         return "%s%s@%s" % (prefix, username, repo_url)
         return repo_url
+
+        # ------------------------------------------------------------------
+    def scan_repo(repo_url, cred):
+        work_dir = os.path.abspath(os.path.dirname(__file__).rsplit("/", 2)[0]) + '/work'
+        os.system('mkdir -p ' + work_dir)
+        repo_name = repo_url.rsplit('/', 1)[1]
+
+        repo_instance, updated = Scanner.clone_repo(repo_url, work_dir, repo_name, cred)
+        Scanner.log_repo(repo_url, work_dir, repo_name, repo_instance)
+
+
 
     # ------------------------------------------------------------------
     def clone_repo(repo_url, work_dir, repo_name, cred):
@@ -44,7 +57,7 @@ class Scanner:
             print('git clone ' + repo_url + ' ' + work_dir)
 
         # TODO: Using literal string root for now...
-        repo_instance = Scanner.create_repo('root', repo_url, repo_name, cred)
+        repo_instance = Creator.create_repo('root', repo_url, repo_name, cred)
         return repo_instance, updated
 
     # ------------------------------------------------------------------
@@ -109,84 +122,23 @@ class Scanner:
                     binary = True
                     fields[0] = 0
 
-                #                   name       commit       lines add  lines rm
-                Scanner.create_file(fields[2], last_commit, fields[0], fields[1], binary)
+                # WARNING: this will record a huge amount of data
+                if settings.RECORD_FILE_CHANGES:
+                    #                   name       commit       lines add  lines rm
+                    Creator.create_filechange(fields[2], last_commit, fields[0], fields[1], binary)
+
+                # increment the files lines added/removed
+                Creator.create_file(fields[2], last_commit, fields[0], fields[1], binary)
 
             # STAGE 1 -----------------------------------------
             if json_flag:
                 data = json.loads(line)
 
-                author_instance = Scanner.create_author(data['author_email'])
-                commit_instance = Scanner.create_commit(repo_instance, data["subject"], author_instance, data['commit'], data['commit_date'], data['author_date'], 0, 0)
+                author_instance = Creator.create_author(data['author_email'])
+                commit_instance = Creator.create_commit(repo_instance, data["subject"], author_instance, data['commit'], data['commit_date'], data['author_date'], 0, 0)
 
                 # hand off control to file parsing
                 json_flag = False
                 last_commit = commit_instance
                 files_flag = True
 
-    # ------------------------------------------------------------------
-    def scan_repo(repo_url, cred):
-        work_dir = os.path.abspath(os.path.dirname(__file__).rsplit("/", 2)[0]) + '/work'
-        os.system('mkdir -p ' + work_dir)
-        repo_name = repo_url.rsplit('/', 1)[1]
-
-        repo_instance, updated = Scanner.clone_repo(repo_url, work_dir, repo_name, cred)
-        Scanner.log_repo(repo_url, work_dir, repo_name, repo_instance)
-
-    # ------------------------------------------------------------------
-    # DB helper functions
-    #
-    # Wrappers for adding objects to the database to keep that functionality
-    # out of the clone/scanning functions above.
-
-    # ------------------------------------------------------------------
-    def create_repo(org_name, repo_url, repo_name, cred):
-        org_parent = Organization.objects.get(name=org_name)
-        try:
-            repo_instance = Repository.objects.get(name=repo_name)
-        except:
-            repo_instance = Repository.objects.create(cred=cred, url=repo_url, name=repo_name)
-        return repo_instance
-
-    # ------------------------------------------------------------------
-    def create_author(email):
-        try:
-            author_instance = Author.objects.get(email=email)
-        except:
-            author_instance = Author.objects.create(email=email)
-        return author_instance
-
-    # ------------------------------------------------------------------
-    def create_commit(repo_instance, subject, author_instance, sha_, author_date_, commit_date_, added, removed):
-        try:
-            commit_instance = Commit.objects.get(sha=sha_)
-        except:
-            commit_instance = Commit.objects.create(repo=repo_instance, author=author_instance, sha=sha_, commit_date=commit_date_, author_date=author_date_, lines_added=added, lines_removed=removed, subject=subject)
-        return commit_instance
-
-    # ------------------------------------------------------------------
-    def create_file(path, commit, la, lr, binary):
-        try:
-            file_instance = FileChange.objects.get(commit=commit, path=path)
-        except:
-            # find the extension
-            split = path.rsplit('.', 1)
-            ext = ""
-            if len(split) > 1:
-                ext = split[1]
-            
-            #get the file name
-            fArray = path.rsplit('/', 1)
-
-            fName = ""
-            if len(fArray) > 1:
-                fName = fArray[1]
-            else:
-                fName = fArray[0]
-                        
-            file_instance = FileChange.objects.create(name=fName, path=path, ext=ext, commit=commit, repo=commit.repo, lines_added=la, lines_removed=lr, binary=binary)
-            
-            #add file to commit
-            commit.files.add(file_instance)
-            
-        return file_instance

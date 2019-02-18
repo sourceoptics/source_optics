@@ -63,4 +63,10 @@ class File(models.Model):
     name = models.TextField(db_index=True, max_length=256, blank=False, null=True)
     path = models.TextField(db_index=True, max_length=256, blank=False, null=True)
     ext = models.TextField(max_length=32, blank=False, null=True)
+    binary = models.BooleanField(default=False)
     changes = models.ManyToManyField(FileChange, related_name='changes')
+    lines_added = models.IntegerField(default=0)
+    lines_removed = models.IntegerField(default=0)
+
+    def __str__(self):
+        return self.path
