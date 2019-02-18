@@ -19,3 +19,5 @@ pyvenv.cfg
 pip-selfcheck.json
 __pycache__/
 work/
+/.sass-cache
+.sass-cache
