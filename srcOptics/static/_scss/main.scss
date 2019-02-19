@@ -4,8 +4,52 @@
     font-family: 'Lato', sans-serif;
 }
 
+$primary-color: #3E2723;
+$white: #fff;
+
+a {
+    color: inherit;
+    text-decoration: none;
+    transition: 200ms linear all;
+}
+
 table {
-    .tabular {
+    table-layout: fixed;
+    border-collapse: collapse;
+    width: 100%;
+
+    th {
+        background: $primary-color;
+        color: $white;
+        padding: 2rem 1.5rem;
+        vertical-align: middle;
+    }
+    td, th {
+        text-align: left;
+        word-wrap: break-word;
         
+    }
+    td {
+        vertical-align: top;
+        padding: .5rem 1.5rem;
+    }
+}
+.tabular-view {
+    //width: 800px;
+}
+
+ul.pagination {
+    display: flex;
+    list-style-type: none;
+    justify-content: center;
+    margin-top: 4rem;
+    margin-bottom: 2rem;
+    a {
+        color: $white;
+        padding: 1rem;
+        background: $primary-color;
+        &:hover {
+            background: lighten($primary-color, 20%);
+        }
     }
 }

@@ -17,4 +17,4 @@ Run `python manage.py runserver`
 ### Dev info
 To initialize the DB with a root organization and a Django admin account, run `python manage.py init` (use -e flag to default to admin/password) 
 
-Run `sass --watch --sourcemap=none --style compressed srcOptics/static/_scss:srcOptics/static` during development to build css files
+Run `sass --watch --no-source-map --style compressed srcOptics/static/_scss:srcOptics/static` during development to build css files
