@@ -1,3 +1,4 @@
+from django.contrib.postgres.fields import JSONField
 from django.db import models
 from django.contrib.auth.models import Group, User
   
@@ -70,3 +71,23 @@ class File(models.Model):
 
     def __str__(self):
         return self.path
+
+# if author = null && file = null, entry represents total stats for interval
+# if author = null && file = X, entry represents X's file stats for the given interval
+# if author = X && file = null, entry represent X's author stats for the given interval
+class Statistic(models.Model):
+    startDay = models.DateTimeField(blank=False, null=True)
+    interval = models.TextField(max_length=5, choices=[('DY', 'day'), ('WK', 'week'), ('MN', 'month')])
+    repo = models.ForeignKey(Repository, db_index=True, on_delete=models.CASCADE, null=True, related_name='repo')
+    author = models.ForeignKey(Author, db_index=True, on_delete=models.CASCADE, blank=True, null=True, related_name='author')
+    file = models.ForeignKey(File, db_index=True, on_delete=models.CASCADE, blank=True, null=True, related_name='file')
+    data = JSONField()
+
+    #data =
+    # { linesAdded: 0,
+    #   linesRemoved: 0,
+    #   linesChanged: 0,
+    #   commitTotal: 0,
+    #   filesChanged 0,
+    #   authorTotal 0
+    # }
