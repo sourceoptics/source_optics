@@ -19,7 +19,8 @@ class Repository(models.Model):
     class Meta:
         verbose_name_plural = "repositories"
     organization = models.ForeignKey(Organization, on_delete=models.SET_NULL, null=True)
-    enabled = models.BinaryField);
+    enabled = models.BinaryField(blank=False, null=True)
+    lastScanned = models.DateTimeField(blank=False, null=True)
     cred = models.ForeignKey(LoginCredential, on_delete=models.CASCADE, null=True)
     url = models.TextField(max_length=256, unique=True, blank=False)
     name = models.TextField(db_index=True, max_length=32, blank=False)
