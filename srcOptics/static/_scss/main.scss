@@ -40,14 +40,16 @@ table {
             content: '\25bc';
         }
     }
+    tr.odd {
+        background: darken($white,10%);
+    }
     td, th {
         text-align: left;
         word-wrap: break-word;
         
     }
     td {
-        vertical-align: top;
-        padding: .5rem 1.5rem;
+        padding: 1rem 1.5rem;
     }
 }
 .tabular-view {
