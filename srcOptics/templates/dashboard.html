@@ -1,10 +1,14 @@
 {% include 'partials/header.html' %}
 {% load render_table from django_tables2 %}
-<select id='repos'>
-    {% for repo in repositories %}
-    <option value='{{repo}}'>{{repo}}</option>
-    {% endfor %}
-</select>
+<form action='' method='get'>
+    <select name='repo' onchange="this.form.submit()">
+        <option selected disabled>Filter by Repository</option>
+        <option value=''>(none)</option>
+        {% for repo in repositories %}
+        <option value='{{repo}}'>{{repo}}</option>
+        {% endfor %}
+    </select>
+</form>
 {# {% include 'commit_table.html' %} #}
 <div class='tabular-view'>
     {% render_table commits %}

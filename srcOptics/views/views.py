@@ -29,7 +29,13 @@ View function for home page of site
 """
 def index(request):
     repos = Repository.objects.all()
-    table = CommitTable(Commit.objects.all())
+    filter_by_repo = request.GET.get('repo')
+    print(filter_by_repo)
+    if filter_by_repo:
+        commits = Commit.objects.filter(repo__name=filter_by_repo)
+    else:
+        commits = Commit.objects.all()
+    table = CommitTable(commits)
     RequestConfig(request, paginate={'per_page': 10}).configure(table)
     context = {
         'title': 'SrcOptics',
@@ -37,13 +43,5 @@ def index(request):
         'repositories': repos,
         'commits': table
     }
-
-    # if request.method == 'GET':
-    #     slugs = request.get_full_path().split('/')
-    #     select = slugs[slugs.index('repo') + 1]
-    #     if select:
-    #         context['commits'] = Commit.objects.filter(repo__name=select)
-    #     else:
-    #         return HttpResponseBadRequest('<h1>Bad request</h1>')
 
     return render(request, 'dashboard.html', context=context)
