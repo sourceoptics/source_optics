@@ -4,25 +4,8 @@ from django.http import *
 from django_tables2 import RequestConfig
 
 
-from ..models import Repository, Commit
+from ..models import Repository, Commit, Statistic
 from .tables import *
-
-"""
-Returns commit data for selected repository
-"""
-def repo_selected(request):
-    if request.method == 'GET':
-        slugs = request.get_full_path().split('/')
-
-        select = slugs[slugs.index('repo') + 1]
-        if select:
-            commits = Commit.objects.filter(repo__name=select)
-            context = {
-                'commits': commits
-            }
-            return render(request, 'dashboard.html', context=context)
-        else:
-            return HttpResponseBadRequest('<h1>Bad request</h1>')
 
 """
 View function for home page of site
@@ -30,18 +13,26 @@ View function for home page of site
 def index(request):
     repos = Repository.objects.all()
     filter_by_repo = request.GET.get('repo')
-    print(filter_by_repo)
     if filter_by_repo:
-        commits = Commit.objects.filter(repo__name=filter_by_repo)
+        stats = Statistic.objects.filter(repo__name=filter_by_repo)
     else:
-        commits = Commit.objects.all()
-    table = CommitTable(commits)
-    RequestConfig(request, paginate={'per_page': 10}).configure(table)
+        stats = Statistic.objects.all()
+    data = {
+        'lines_added': 12,
+        'lines_removed': 3,
+        'lines_changed': 23,
+        'commit_total': 128,
+        'files_changed': 23,
+        'author_total': 2
+    }
+    sample = Statistic(data=data)
+    #print(stats)
+    stat_table = StatTable(stats)
+    RequestConfig(request, paginate={'per_page': 10}).configure(stat_table)
     context = {
         'title': 'SrcOptics',
-        'stylesheet': 'main.css',
         'repositories': repos,
-        'commits': table
+        'stats': stat_table
     }
 
     return render(request, 'dashboard.html', context=context)

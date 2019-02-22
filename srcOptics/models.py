@@ -83,11 +83,14 @@ class Statistic(models.Model):
     file = models.ForeignKey(File, db_index=True, on_delete=models.CASCADE, blank=True, null=True, related_name='file')
     data = JSONField()
 
+    def __str__(self):
+        return str(self.data)
+
     #data =
-    # { linesAdded: 0,
-    #   linesRemoved: 0,
-    #   linesChanged: 0,
-    #   commitTotal: 0,
-    #   filesChanged 0,
-    #   authorTotal 0
+    # { lines_added: 0,
+    #   lines_removed: 0,
+    #   lines_changed: 0,
+    #   commit_total: 0,
+    #   files_changed 0,
+    #   author_total 0
     # }
