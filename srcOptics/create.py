@@ -36,16 +36,16 @@ class Creator:
         ext = ""
         if len(split) > 1:
             ext = split[1]
-                
+
         #get the file name
         fArray = path.rsplit('/', 1)
-        
+
         fName = ""
         if len(fArray) > 1:
             fName = fArray[1]
         else:
             fName = fArray[0]
-            
+
         filechange_instance = FileChange.objects.create(name=fName, path=path, ext=ext, commit=commit, repo=commit.repo, lines_added=la, lines_removed=lr, binary=binary)
 
         # add the file change to the global file object
@@ -63,7 +63,7 @@ class Creator:
         file_instance = {}
         #get the file name
         fArray = path.rsplit('/', 1)
-        
+
         fName = ""
         if len(fArray) > 1:
             fName = fArray[1]
@@ -79,16 +79,16 @@ class Creator:
             file_instance.lines_removed += int(lr)
 
             file_instance.save()
-            
+
         except:
             # find the extension
             split = path.rsplit('.', 1)
             ext = ""
             if len(split) > 1:
                 ext = split[1]
-            
+
             file_instance = File.objects.create(name=fName, path=path, ext=ext, commit=commit, repo=commit.repo, lines_added=la, lines_removed=lr, binary=binary)
-            
+
 
         # add the la/lr to the commit for its total count
         commit.lines_added += int(la)
