@@ -17,6 +17,8 @@ def index(request):
         stats = Statistic.objects.filter(repo__name=filter_by_repo)
     else:
         stats = Statistic.objects.all()
+    
+    # Dummy test data
     data = {
         'lines_added': 12,
         'lines_removed': 3,
@@ -25,9 +27,10 @@ def index(request):
         'files_changed': 23,
         'author_total': 2
     }
-    sample = Statistic(data=data)
-    #print(stats)
-    stat_table = StatTable(stats)
+    samples = []
+    for repo in repos:
+        samples.append(Statistic(repo=repo, data=data))
+    stat_table = StatTable(samples)
     RequestConfig(request, paginate={'per_page': 10}).configure(stat_table)
     context = {
         'title': 'SrcOptics',

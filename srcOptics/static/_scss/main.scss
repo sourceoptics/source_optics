@@ -24,10 +24,14 @@ table {
         vertical-align: middle;
         a {
             text-decoration: none;
-            margin-right: 1rem;
         }
-        &.num {
-            width: 8%;
+        &.lines {
+
+            //width: 15%;
+            &::before {
+                display: block;
+                //content: 'Lines';
+            }
         }
         &::after {
             font-size: .3rem;

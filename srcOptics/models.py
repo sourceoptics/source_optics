@@ -83,6 +83,9 @@ class Statistic(models.Model):
     file = models.ForeignKey(File, db_index=True, on_delete=models.CASCADE, blank=True, null=True, related_name='file')
     data = JSONField()
 
+    def get_data(self):
+        return self.data
+
     def __str__(self):
         return str(self.data)
 
