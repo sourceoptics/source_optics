@@ -70,25 +70,27 @@ class Creator:
         else:
             fName = fArray[0]
 
+        # find the extension
+        split = path.rsplit('.', 1)
+        ext = ""
+        if len(split) > 1:
+            ext = split[1]
+
         # update the global file object with the line counts
-        try:
-            file_instance = File.objects.get(path=path)
+        file_instance,created = File.objects.get_or_create(path=path, defaults={
+                    "lines_added":int(la),
+                    "lines_removed":int(lr),
+                    "name":fName,
+                    "commit":commit,
+                    "repo":commit.repo,
+                    "binary":binary,
+                    "ext":ext})
 
-            # update the lines added/removed
-            file_instance.lines_added += int(la)
-            file_instance.lines_removed += int(lr)
-
-            file_instance.save()
-            
-        except:
-            # find the extension
-            split = path.rsplit('.', 1)
-            ext = ""
-            if len(split) > 1:
-                ext = split[1]
-            
-            file_instance = File.objects.create(name=fName, path=path, ext=ext, commit=commit, repo=commit.repo, lines_added=la, lines_removed=lr, binary=binary)
-            
+        # update the la/lr if we found the file
+        if not created:
+                file_instance.lines_added += int(la)
+                file_instance.lines_removed += int(lr)
+                file_instance.save()
 
         # add the la/lr to the commit for its total count
         commit.lines_added += int(la)
