@@ -81,6 +81,7 @@ class Scanner:
 
         options = ""
         if cred is not None:
+            repo_instance = Creator.create_repo('root', repo_url, repo_name, cred)
             options += ' --config core.password=\'' + cred.password + '\''
             repo_url = Scanner.fix_repo_url(repo_url, cred.username)
 
@@ -98,7 +99,7 @@ class Scanner:
             print('git clone ' + repo_url + ' ' + work_dir)
 
         # TODO: Using literal string root for now...
-        repo_instance = Creator.create_repo('root', repo_url, repo_name, cred)
+        #repo_instance = Creator.create_repo('root', repo_url, repo_name, cred)
         return repo_instance, updated
 
     # ------------------------------------------------------------------
@@ -188,4 +189,3 @@ class Scanner:
                 re_flag = False
                 last_commit = commit_instance
                 files_flag = True
-
