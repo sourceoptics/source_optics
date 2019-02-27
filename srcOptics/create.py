@@ -95,5 +95,6 @@ class Creator:
         # add the la/lr to the commit for its total count
         commit.lines_added += int(la)
         commit.lines_removed += int(lr)
+        commit.files.add(file_instance)
         commit.save()
         return file_instance

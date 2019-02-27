@@ -10,6 +10,10 @@ import json
 
 intervals =  Statistic.INTERVALS
 
+#
+# This class aggregates commit data already scanned in based on intervals
+# Intervals include: day (DY), week (WK), and month (MN).
+#
 class Rollup:
 
     @classmethod
@@ -17,17 +21,17 @@ class Rollup:
         #make sure that we're scanning the repository for the current day as well
         today = datetime.datetime.now(tz=timezone.utc).date()
         temp_date = repo.last_scanned
-        print("TODAY: " + str(today))
+        print("Aggregating daily stats from " + str(temp_date.date()) + " to " + str(today))
         while temp_date.date() != today:
             #Commit.objects.annotate(Count("files"))
             commits = Commit.objects.filter(commit_date__contains=temp_date.date())
 
+
+            #file statistics as well as aggregate file count for total rollups
             file_total = 0
             for c in commits:
-                file_total = c.files.count()
-                print(file_total)
-
-
+                files = c.files
+                file_total = files.count()
 
 
             temp = commits.aggregate(Sum("lines_added"), Sum("lines_removed"), Sum("author"))
@@ -43,25 +47,20 @@ class Rollup:
 
             data = json.dumps(temp)
             stat = Statistic.create_total_rollup(temp_date, intervals[0], repo, data)
-            #print(stat)
-            #for commit in commits:
-            #    print("COMMIT: ",  commit.commit_date)
+            print(stat)
             temp_date += datetime.timedelta(days=1)
-            #print("TEMP  " + str(temp_date))
 
 
     @classmethod
     def compile_rollup (cls, repo, interval):
         if repo.last_scanned is None:
             repo.last_scanned = Commit.objects.filter(repo=repo).earliest("commit_date").commit_date
-        cls.aggregate_day_rollup(repo)
+        if interval[0] is 'DY':
+            cls.aggregate_day_rollup(repo)
 
     @classmethod
     def rollup_repo(cls):
         repos = Repository.objects.all()
-        print(intervals)
         for repo in repos:
-            #for i in intervals:
-                #this is the key for the interval (DY, WK, MN)
-            interval = intervals[0]
-            cls.compile_rollup(repo, interval)
+            for interval in intervals:
+                cls.compile_rollup(repo, interval)
