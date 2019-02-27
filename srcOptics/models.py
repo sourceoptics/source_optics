@@ -12,7 +12,7 @@ class Organization(models.Model):
         return self.name
 
 class LoginCredential(models.Model):
-    username = models.TextField(max_length=32, blank=False)
+    username = models.TextField(max_length=32, blank=True)
     password = models.TextField(max_length=128,  blank=True)
 
 class Repository(models.Model):
@@ -20,10 +20,10 @@ class Repository(models.Model):
         verbose_name_plural = "repositories"
     organization = models.ForeignKey(Organization, on_delete=models.SET_NULL, null=True)
     enabled = models.BooleanField(default=False)
-    lastScanned = models.DateTimeField(blank=True, null=True)
-    cred = models.ForeignKey(LoginCredential, on_delete=models.CASCADE, null=True)
+    last_scanned = models.DateTimeField(blank=True, null=True)
+    cred = models.ForeignKey(LoginCredential, on_delete=models.CASCADE, null=True, blank = True)
     url = models.TextField(max_length=256, unique=True, blank=False)
-    name = models.TextField(db_index=True, max_length=32, blank=False)
+    name = models.TextField(db_index=True, max_length=32, blank=True)
 
     def __str__(self):
         return self.name
@@ -44,7 +44,7 @@ class Commit(models.Model):
     subject = models.TextField(db_index=True, max_length=256, blank=False)
     lines_added = models.IntegerField(default=0)
     lines_removed = models.IntegerField(default=0)
-
+    
     def __str__(self):
         return self.subject
 
@@ -78,12 +78,25 @@ class File(models.Model):
 # if author = null && file = X, entry represents X's file stats for the given interval
 # if author = X && file = null, entry represent X's author stats for the given interval
 class Statistic(models.Model):
-    startDay = models.DateTimeField(blank=False, null=True)
-    interval = models.TextField(max_length=5, choices=[('DY', 'day'), ('WK', 'week'), ('MN', 'month')])
+    INTERVALS = (
+        ('DY', 'day'),
+        ('WK', 'week'),
+        ('MN', 'month')
+    )
+    start_date = models.DateTimeField(blank=False, null=True)
+    interval = models.TextField(max_length=5, choices=INTERVALS)
     repo = models.ForeignKey(Repository, db_index=True, on_delete=models.CASCADE, null=True, related_name='repo')
     author = models.ForeignKey(Author, db_index=True, on_delete=models.CASCADE, blank=True, null=True, related_name='author')
     file = models.ForeignKey(File, db_index=True, on_delete=models.CASCADE, blank=True, null=True, related_name='file')
     data = JSONField()
+
+    def __str__(self):
+        return self.data
+
+    @classmethod
+    def create_total_rollup(cls, start_date, interval, repo, data):
+        instance = cls(start_date = start_date, interval = interval, repo = repo, data = data)
+        return instance
 
     #data =
     # { linesAdded: 0,
