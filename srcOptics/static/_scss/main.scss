@@ -1,15 +1,67 @@
 @import url('https://fonts.googleapis.com/css?family=Lato');
 
-* {
-    font-family: 'Lato', sans-serif;
-}
-
 $primary-color: #3E2723;
 $white: #fff;
 
+* {
+    font-family: 'Lato', sans-serif;
+    transition: 200ms all linear;
+}
+body {
+    padding: 0;
+    margin: 0;
+}
 a {
     color: inherit;
     transition: 200ms linear all;
+}
+nav {
+    position: relative;
+    display: flex;
+    background-color: $white;
+    padding: 1rem 2rem;
+    
+    .search-field {
+        width: 100%;
+        input[type='text'] {
+            width: 80%;
+            border: 0;
+            border-bottom: 3px solid white;
+            appearance: none;
+            padding: .75rem 0 .75rem 2rem;
+            background: none;
+            font-size: 14pt;
+
+            &:focus {
+                border-bottom-color: darken($white, 10%);
+                outline: none;
+            }
+        }
+
+        &::before {
+            content: '';
+            display: block;
+            position: absolute;
+            width: 15px;
+            height: 15px;
+            top: 0; bottom: 0;
+            margin: auto;
+            background: url(img/search.svg);
+        }
+    }
+
+    .actions {
+        input[type='checkbox'] {
+            display: none;
+        }
+        label {
+            cursor: pointer;
+        }
+    }
+}
+
+section {
+    background-color: darken($white, 10%);
 }
 
 table {
