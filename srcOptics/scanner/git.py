@@ -82,11 +82,12 @@ class Scanner:
         options = ""
         if cred is not None:
             repo_instance = Creator.create_repo('root', repo_url, repo_name, cred)
-            options += ' --config core.password=\'' + cred.password + '\''
+            options += ' --config core.askpass=\'' + cred.expect_pass() + '\''
             repo_url = Scanner.fix_repo_url(repo_url, cred.username)
 
         if os.path.isdir(work_dir + '/' + repo_name) and os.path.exists(work_dir + '/' + repo_name):
-            cmd = subprocess.Popen('cd ' + work_dir + '/' + repo_name + ';git pull', shell=True, stdout=subprocess.PIPE)
+            cmd = subprocess.Popen('cd ' + work_dir + '/' + repo_name
+                                   + ';git pull', shell=True, stdout=subprocess.PIPE)
             # TODO: Need to find a better solution for checking if its up to date
             for line in cmd.stdout:
                 line = line.decode('utf-8')
@@ -96,7 +97,7 @@ class Scanner:
             print('git pull ' + repo_url + ' ' + work_dir)
         else:
             os.system('git clone ' + repo_url + ' ' + work_dir + '/' + repo_name + options)
-            print('git clone ' + repo_url + ' ' + work_dir)
+            print('git clone ' + repo_url + ' ' + work_dir + '/' + repo_name + options)
 
         # TODO: Using literal string root for now...
         #repo_instance = Creator.create_repo('root', repo_url, repo_name, cred)
@@ -106,7 +107,9 @@ class Scanner:
     def log_repo(repo_url, work_dir, repo_name, repo_instance):
         # python subprocess iteration doesn't have an EOF indicator that I can find.
         # We echo "EOF" to the end of the log output so we can tell when we are done
-        cmd_string = 'cd ' + work_dir + '/' + repo_name + ';git log --all --numstat --date=iso-strict --pretty=format:' + PRETTY_STRING + '; echo "\nEOF"'
+        cmd_string = ('cd ' + work_dir + '/' + repo_name
+                      + ';git log --all --numstat --date=iso-strict --pretty=format:'
+                      + PRETTY_STRING + '; echo "\nEOF"')
         cmd = subprocess.Popen(cmd_string, shell=True, stdout=subprocess.PIPE)
 
         # Parsing happens in two stages. The first stage is a pretty string containing easily parsed fields for
@@ -114,15 +117,15 @@ class Scanner:
         # commit. Pretty string is parsed using the regex PARSER_RE
         #
         # First stage:
-        # {"commit":"d76f7f8a7c0b7a8875fdcea54107739697fcd82b","author_name":"srcoptics","author_date":"Fri Feb 15 13:25:18 2019 -0500",
-        # "commit_date":"Fri Feb 15 13:25:18 2019 -0500","author_email":"47673373+srcoptics@users.noreply.github.com","files":"Initial-commit"}
+        # DEL%HDEL%anDEL...
         #
         # Second Stage (lines added  lines removed     filename):
         # 2       0       README.md
         # ...
         #
-        # The _flag booleans control which stage we are in. Once a pretty string is read we switch to stage two (files_flag)
-        # Because files will point to their commit, we keep a record of the "last" commit for when we are in files mode
+        # The _flag booleans control which stage we are in. Once a pretty string
+        # is read we switch to stage two (files_flag) Because files will point to their
+        # commit, we keep a record of the "last" commit for when we are in files mode
 
         # currently parsing with regular expressions
         re_flag = True
@@ -177,7 +180,12 @@ class Scanner:
                 data = PARSER_RE.match(line).groupdict()
 
                 author_instance = Creator.create_author(data['author_email'])
-                commit_instance, created = Creator.create_commit(repo_instance, data["subject"], author_instance, data['commit'], data['commit_date'], data['author_date'], 0, 0)
+                commit_instance, created = Creator.create_commit(repo_instance,
+                                                                 data["subject"],
+                                                                 author_instance,
+                                                                 data['commit'],
+                                                                 data['commit_date'],
+                                                                 data['author_date'], 0, 0)
 
                 # if we have seen this commit before, causing it to
                 # not be created
