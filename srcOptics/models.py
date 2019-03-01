@@ -44,7 +44,7 @@ class Commit(models.Model):
     subject = models.TextField(db_index=True, max_length=256, blank=False)
     lines_added = models.IntegerField(default=0)
     lines_removed = models.IntegerField(default=0)
-    
+
     def __str__(self):
         return self.subject
 
@@ -96,6 +96,16 @@ class Statistic(models.Model):
     @classmethod
     def create_total_rollup(cls, start_date, interval, repo, data):
         instance = cls(start_date = start_date, interval = interval, repo = repo, data = data)
+        return instance
+
+    @classmethod
+    def create_author_rollup(cls, start_date, interval, repo, author, data):
+        instance = cls(start_date = start_date, interval = interval, repo = repo, author = author, data = data)
+        return instance
+
+    @classmethod
+    def create_file_rollup(cls, start_date, interval, repo, file, data):
+        instance = cls(start_date = start_date, interval = interval, repo = repo, file = file, data = data)
         return instance
 
     #data =
