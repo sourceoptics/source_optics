@@ -18,8 +18,10 @@ class Creator:
         return repo_instance
 
     # ------------------------------------------------------------------
-    def create_author(email):
+    def create_author(email, repo):
         author_instance,created = Author.objects.get_or_create(email=email)
+        author_instance.repos.add(repo)
+        author_instance.save()
         return author_instance
 
     # also return if created so that the scanner can determine if we have

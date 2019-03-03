@@ -30,6 +30,7 @@ class Repository(models.Model):
 
 class Author(models.Model):
     email = models.TextField(db_index=True, max_length=64, unique=True, blank=False, null=True)
+    repos = models.ManyToManyField(Repository, related_name='author_repos')
 
     def __str__(self):
         return self.email
