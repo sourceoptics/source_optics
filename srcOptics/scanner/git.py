@@ -7,6 +7,7 @@ from django.utils.dateparse import parse_datetime
 from django.conf import settings
 from srcOptics.models import *
 from srcOptics.create import Creator
+from django.db import transaction
 
 GIT_TYPES = ["https://", "http://"]
 
@@ -63,7 +64,8 @@ class Scanner:
                         return "%s%s@%s" % (prefix, username, repo_url)
         return repo_url
 
-        # ------------------------------------------------------------------
+    # ------------------------------------------------------------------
+    @transaction.atomic
     def scan_repo(repo_url, cred):
         work_dir = os.path.abspath(os.path.dirname(__file__).rsplit("/", 2)[0]) + '/work'
         os.system('mkdir -p ' + work_dir)
