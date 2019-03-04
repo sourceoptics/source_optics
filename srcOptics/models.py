@@ -30,7 +30,6 @@ class LoginCredential(models.Model):
         # from vespene
         fd = open(settings.SYMMETRIC_SECRET_KEY, "r")
         symmetric = fd.read()
-        print(symmetric)
         fd.close()
         ff = fernet.Fernet(symmetric)
         enc = ff.encrypt(self.password.encode('utf-8'))
@@ -50,7 +49,6 @@ class LoginCredential(models.Model):
     # create an expect file for git clone
     def expect_pass(self):
         pw = self.unencrypt_password()
-        print(pw)
         (fd, fname) = tempfile.mkstemp()
         fh = open(fname, "w")
         fh.write("#!/bin/bash\n")
@@ -58,7 +56,6 @@ class LoginCredential(models.Model):
         fh.close()
         os.close(fd)
         os.chmod(fname, 0o700)
-        print(fname)
         return fname
 
 
