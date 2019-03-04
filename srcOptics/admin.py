@@ -12,6 +12,7 @@ class RepoAdmin(admin.ModelAdmin):
     actions = [scan_selected]
 
 admin.site.register(Organization)
+admin.site.register(Statistic)
 admin.site.register(Repository, RepoAdmin)
 admin.site.register(Author)
 admin.site.register(Commit)

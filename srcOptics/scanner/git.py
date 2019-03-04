@@ -43,7 +43,7 @@ PRETTY_STRING = ('\'' + DEL + '%H' + DEL
 #   ')')
 #
 # Example match: ''
-PARSER_RE_STRING = ('(' + DEL + '(?P<commit>.*)' + DEL 
+PARSER_RE_STRING = ('(' + DEL + '(?P<commit>.*)' + DEL
     + '(?P<author_name>.*)' + DEL
     + '(?P<author_date>.*)' + DEL
     + '(?P<commit_date>.*)' + DEL

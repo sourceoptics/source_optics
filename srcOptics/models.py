@@ -58,22 +58,22 @@ class LoginCredential(models.Model):
         os.chmod(fname, 0o700)
         return fname
 
-
 class Repository(models.Model):
     class Meta:
         verbose_name_plural = "repositories"
     organization = models.ForeignKey(Organization, on_delete=models.SET_NULL, null=True)
     enabled = models.BooleanField(default=False)
-    lastScanned = models.DateTimeField(blank=True, null=True)
-    cred = models.ForeignKey(LoginCredential, on_delete=models.CASCADE, null=True)
+    last_scanned = models.DateTimeField(blank=True, null=True)
+    cred = models.ForeignKey(LoginCredential, on_delete=models.CASCADE, null=True, blank = True)
     url = models.TextField(max_length=256, unique=True, blank=False)
-    name = models.TextField(db_index=True, max_length=32, blank=False)
+    name = models.TextField(db_index=True, max_length=32, blank=True)
 
     def __str__(self):
         return self.name
 
 class Author(models.Model):
     email = models.TextField(db_index=True, max_length=64, unique=True, blank=False, null=True)
+    repos = models.ManyToManyField(Repository, related_name='author_repos')
 
     def __str__(self):
         return self.email
@@ -122,15 +122,58 @@ class File(models.Model):
 # if author = null && file = X, entry represents X's file stats for the given interval
 # if author = X && file = null, entry represent X's author stats for the given interval
 class Statistic(models.Model):
-    startDay = models.DateTimeField(blank=False, null=True)
-    interval = models.TextField(max_length=5, choices=[('DY', 'day'), ('WK', 'week'), ('MN', 'month')])
+    INTERVALS = (
+        ('DY', 'day'),
+        ('WK', 'week'),
+        ('MN', 'month')
+    )
+    start_date = models.DateTimeField(blank=False, null=True)
+    interval = models.TextField(max_length=5, choices=INTERVALS)
     repo = models.ForeignKey(Repository, db_index=True, on_delete=models.CASCADE, null=True, related_name='repo')
     author = models.ForeignKey(Author, db_index=True, on_delete=models.CASCADE, blank=True, null=True, related_name='author')
     file = models.ForeignKey(File, db_index=True, on_delete=models.CASCADE, blank=True, null=True, related_name='file')
-    data = JSONField()
+    lines_added = models.IntegerField(blank = True, null = True)
+    lines_removed = models.IntegerField(blank = True, null = True)
+    lines_changed = models.IntegerField(blank = True, null = True)
+    commit_total = models.IntegerField(blank = True, null = True)
+    files_changed = models.IntegerField(blank = True, null = True)
+    author_total = models.IntegerField(blank = True, null = True)
+
+    def __str__(self):
+        if self.author is None:
+            return "TOTAL " + str(self.interval[0]) + " " + str(self.start_date.date())
+        else:
+            return "AUTHOR: " + str(self.author) + " " + str(self.interval[0]) + " " + str(self.start_date.date())
+
+    #    return str({'la': self.lines_added, 'lr': self.lines_removed, 'lc' : self.lines_changed,
+    #            'ct': self.commit_total, 'fc': self.files_changed, 'at': self.author_total})
+
+    @classmethod
+    def create_total_rollup(cls, start_date, interval, repo, lines_added, lines_removed,
+                            lines_changed, commit_total, files_changed, author_total):
+        instance = cls(start_date = start_date, interval = interval, repo = repo, lines_added = lines_added,
+        lines_removed = lines_removed, lines_changed = lines_changed, commit_total = commit_total, files_changed = files_changed,
+        author_total = author_total)
+        instance.save()
+        return instance
+
+    @classmethod
+    def create_author_rollup(cls, start_date, interval, repo, author, lines_added, lines_removed,
+                            lines_changed, commit_total, files_changed):
+        instance = cls(start_date = start_date, interval = interval, repo = repo, author = author, lines_added = lines_added,
+        lines_removed = lines_removed, lines_changed = lines_changed, commit_total = commit_total,
+        files_changed = files_changed, author_total = 0)
+        instance.save()
+        return instance
+
+    @classmethod
+    def create_file_rollup(cls, start_date, interval, repo, file, data):
+        instance = cls(start_date = start_date, interval = interval, repo = repo, file = file, data = data)
+        return instance
 
     #data =
     # { linesAdded: 0,
+
     #   linesRemoved: 0,
     #   linesChanged: 0,
     #   commitTotal: 0,

@@ -18,8 +18,10 @@ class Creator:
         return repo_instance
 
     # ------------------------------------------------------------------
-    def create_author(email):
+    def create_author(email, repo):
         author_instance,created = Author.objects.get_or_create(email=email)
+        author_instance.repos.add(repo)
+        author_instance.save()
         return author_instance
 
     # also return if created so that the scanner can determine if we have
@@ -95,5 +97,6 @@ class Creator:
         # add the la/lr to the commit for its total count
         commit.lines_added += int(la)
         commit.lines_removed += int(lr)
+        commit.files.add(file_instance)
         commit.save()
         return file_instance
