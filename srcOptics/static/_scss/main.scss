@@ -21,6 +21,13 @@ body {
     padding: 0;
     margin: 0;
 }
+h1, h2, h3, h4, h5, h6 {
+    font-weight: normal;
+    color: $text;
+}
+h1 {
+    font-size: 2rem;
+}
 a {
     color: inherit;
     transition: 200ms linear all;
@@ -43,6 +50,7 @@ nav {
 
 section {
     background-color: $secondary;
+    padding: 1rem 4rem;
 }
 
 input[type='month'], 
@@ -69,13 +77,13 @@ select {
     }
 }
 input[type='month'] {
-    //width: 100px;
+    width: 130px;
     background-image: url(https://cdn1.iconfinder.com/data/icons/cc_mono_icon_set/blacks/16x16/calendar_2.png);
     &::-webkit-inner-spin-button {
       display: none;
     }
     &::-webkit-calendar-picker-indicator {
-      opacity: 0;
+      display: none;
     }
 }
 select {
@@ -91,5 +99,8 @@ select {
     }
     .float-left {
         margin-right: auto;
+    }
+    .spacer {
+        padding-right: 1rem;
     }
 }

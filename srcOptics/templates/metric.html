@@ -9,7 +9,7 @@
             </label>
             <label>Graph</label>
         </div>
-        <div class='dropdown float-right'>
+        <div class='dropdown float-right spacer'>
             <label>Granularity</label>
             <select name='gran'>
                 <option>Daily</option>
@@ -18,8 +18,11 @@
             </select>
         </div>
         <div class='dropdown'>
-            <label>Date</label>
-            <input type='month' />
+            <label>From</label>
+            <input type='month' value='{% now "Y\-m" %}' required/>
+            <label>To</label>
+            <input type='month' value='' required/>
+
         </div>
     </div>
 

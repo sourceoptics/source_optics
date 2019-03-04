@@ -7,6 +7,8 @@ from django_tables2 import RequestConfig
 from ..models import Repository, Commit, Statistic
 from .tables import *
 
+from random import randint
+
 """
 View function for home page of site
 """
@@ -17,19 +19,16 @@ def index(request):
         stats = Statistic.objects.filter(repo__name=filter_by_repo)
     else:
         stats = Statistic.objects.all()
-    
-    # Dummy test data
-    data = {
-        'lines_added': 12,
-        'lines_removed': 3,
-        'lines_changed': 23,
-        'commit_total': 128,
-        'files_changed': 23,
-        'author_total': 2
-    }
     samples = []
     for repo in repos:
-        samples.append(Statistic(repo=repo, data=data))
+        samples.append(Statistic(repo=repo, data={
+        'lines_added': randint(50,500),
+        'lines_removed': randint(50,500),
+        'lines_changed': randint(50,500),
+        'commit_total': randint(500,5000),
+        'files_changed': randint(50,500),
+        'author_total': randint(1,30)
+    }))
     stat_table = StatTable(samples)
     RequestConfig(request, paginate={'per_page': 10}).configure(stat_table)
     context = {

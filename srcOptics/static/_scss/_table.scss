@@ -1,5 +1,5 @@
 .tabular-view {
-    padding: 4rem;
+    //padding: 4rem;
 }
 
 table {
@@ -8,11 +8,14 @@ table {
     width: 100%;
 
     th {
+        position: relative;
         background: $gray;
         color: $text;
-        padding: 2rem 1.5rem;
         vertical-align: middle;
+
         a {
+            display: inline-block;
+            padding: 2rem 1.5rem;
             text-decoration: none;
         }
         &.lines {
@@ -22,8 +25,11 @@ table {
             }
         }
         &::after {
+            position: absolute;
+            top:0; bottom:0; right: 0;
+            height: 10px;
+            margin: auto;
             font-size: .3rem;
-            position: relative;
         }
         &.asc::after {
             content: '\25b2';

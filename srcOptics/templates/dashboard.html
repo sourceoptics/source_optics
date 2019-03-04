@@ -1,15 +1,7 @@
 {% include 'partials/header.html' %}
-<form action='' method='get'>
-    <select name='repo' onchange="this.form.submit()">
-        <option selected disabled>Filter by Repository</option>
-        <option value=''>(none)</option>
-        {% for repo in repositories %}
-        <option value='{{repo}}'>{{repo}}</option>
-        {% endfor %}
-    </select>
-</form>
 {# {% include 'commit_table.html' %} #}
 <section>
+    <h1>Recent Repositories</h1>
    {% include 'metric.html' %}
 </section>
 {% include 'partials/footer.html' %}
