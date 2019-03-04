@@ -89,19 +89,38 @@ class Statistic(models.Model):
     repo = models.ForeignKey(Repository, db_index=True, on_delete=models.CASCADE, null=True, related_name='repo')
     author = models.ForeignKey(Author, db_index=True, on_delete=models.CASCADE, blank=True, null=True, related_name='author')
     file = models.ForeignKey(File, db_index=True, on_delete=models.CASCADE, blank=True, null=True, related_name='file')
-    data = JSONField()
+    lines_added = models.IntegerField(blank = True, null = True)
+    lines_removed = models.IntegerField(blank = True, null = True)
+    lines_changed = models.IntegerField(blank = True, null = True)
+    commit_total = models.IntegerField(blank = True, null = True)
+    files_changed = models.IntegerField(blank = True, null = True)
+    author_total = models.IntegerField(blank = True, null = True)
 
     def __str__(self):
-        return self.data
+        if self.author is None:
+            return "TOTAL " + str(self.interval[0]) + " " + str(self.start_date.date())
+        else:
+            return "AUTHOR: " + str(self.author) + " " + str(self.interval[0]) + " " + str(self.start_date.date())
+
+    #    return str({'la': self.lines_added, 'lr': self.lines_removed, 'lc' : self.lines_changed,
+    #            'ct': self.commit_total, 'fc': self.files_changed, 'at': self.author_total})
 
     @classmethod
-    def create_total_rollup(cls, start_date, interval, repo, data):
-        instance = cls(start_date = start_date, interval = interval, repo = repo, data = data)
+    def create_total_rollup(cls, start_date, interval, repo, lines_added, lines_removed,
+                            lines_changed, commit_total, files_changed, author_total):
+        instance = cls(start_date = start_date, interval = interval, repo = repo, lines_added = lines_added,
+        lines_removed = lines_removed, lines_changed = lines_changed, commit_total = commit_total, files_changed = files_changed,
+        author_total = author_total)
+        instance.save()
         return instance
 
     @classmethod
-    def create_author_rollup(cls, start_date, interval, repo, author, data):
-        instance = cls(start_date = start_date, interval = interval, repo = repo, author = author, data = data)
+    def create_author_rollup(cls, start_date, interval, repo, author, lines_added, lines_removed,
+                            lines_changed, commit_total, files_changed):
+        instance = cls(start_date = start_date, interval = interval, repo = repo, author = author, lines_added = lines_added,
+        lines_removed = lines_removed, lines_changed = lines_changed, commit_total = commit_total,
+        files_changed = files_changed, author_total = 0)
+        instance.save()
         return instance
 
     @classmethod
@@ -111,6 +130,7 @@ class Statistic(models.Model):
 
     #data =
     # { linesAdded: 0,
+
     #   linesRemoved: 0,
     #   linesChanged: 0,
     #   commitTotal: 0,
