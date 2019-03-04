@@ -2,6 +2,12 @@ from django.contrib.postgres.fields import JSONField
 from django.db import models
 from django.contrib.auth.models import Group, User
 
+from cryptography import fernet
+import binascii
+from django.conf import settings
+import tempfile
+import os
+
 class Organization(models.Model):
     # parent = models.ForeignKey('self', on_delete=models.SET_NULL, null=True)
     name = models.TextField(max_length=32, blank=False)
@@ -12,8 +18,45 @@ class Organization(models.Model):
         return self.name
 
 class LoginCredential(models.Model):
-    username = models.TextField(max_length=32, blank=True)
-    password = models.TextField(max_length=128,  blank=True)
+    username = models.TextField(max_length=32, blank=False)
+    password = models.TextField(max_length=128,  blank=False)
+
+    def __str__(self):
+        return self.username
+
+    # encrypt the password when we save this
+    #  (password needs to be unencrypted when saved)
+    def save(self, *args, **kwargs):
+        # from vespene
+        fd = open(settings.SYMMETRIC_SECRET_KEY, "r")
+        symmetric = fd.read()
+        fd.close()
+        ff = fernet.Fernet(symmetric)
+        enc = ff.encrypt(self.password.encode('utf-8'))
+        self.password = binascii.hexlify(enc).decode('utf-8')
+        super().save(*args, **kwargs)
+
+    # also from vespene
+    def unencrypt_password(self):
+        fd = open(settings.SYMMETRIC_SECRET_KEY, "r")
+        symmetric = fd.read()
+        fd.close()
+        ff = fernet.Fernet(symmetric)
+        enc = binascii.unhexlify(self.password)
+        msg = ff.decrypt(enc)
+        return msg.decode('utf-8')
+
+    # create an expect file for git clone
+    def expect_pass(self):
+        pw = self.unencrypt_password()
+        (fd, fname) = tempfile.mkstemp()
+        fh = open(fname, "w")
+        fh.write("#!/bin/bash\n")
+        fh.write("echo %s" % pw)
+        fh.close()
+        os.close(fd)
+        os.chmod(fname, 0o700)
+        return fname
 
 class Repository(models.Model):
     class Meta:

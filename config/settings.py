@@ -127,3 +127,7 @@ STATIC_URL = '/srcOptics/static/'
 # but will add A LOT more data and require more scan time
 # disabled by default
 RECORD_FILE_CHANGES = False
+
+# The location of the symmetric key for password encryption
+# should be created in init
+SYMMETRIC_SECRET_KEY = '/etc/srcoptics/cred.key'
