@@ -1,0 +1,79 @@
+.tabular-view {
+    padding: 4rem;
+}
+
+table {
+    table-layout: fixed;
+    border-collapse: collapse;
+    width: 100%;
+
+    th {
+        background: $gray;
+        color: $text;
+        padding: 2rem 1.5rem;
+        vertical-align: middle;
+        a {
+            text-decoration: none;
+        }
+        &.lines {
+            &::before {
+                display: block;
+                //content: 'Lines';
+            }
+        }
+        &::after {
+            font-size: .3rem;
+            position: relative;
+        }
+        &.asc::after {
+            content: '\25b2';
+        }
+        &.desc::after {
+            content: '\25bc';
+        }
+    }
+    @for $i from 1 through length($colors) {
+        tr:nth-of-type(#{length($colors)}n+#{$i}) .repo {
+            font-weight: bold;
+            color: $white;
+            background: nth($colors, $i);
+        }
+    }
+    tr.odd {
+        background: darken($white,2%);
+    }
+    tr.even {
+        background: $white;
+    }
+    td, th {
+        text-align: center;
+        word-wrap: break-word;
+        
+    }
+    
+    td {
+        padding: 3rem 1.5rem;
+
+        
+    }
+}
+
+ul.pagination {
+    display: flex;
+    list-style-type: none;
+    justify-content: center;
+    margin-top: 4rem;
+    margin-bottom: 2rem;
+    li.active a {
+        background: lighten($primary, 10%);
+    }
+    a {
+        text-decoration: none;
+        color: $white;
+        padding: 1rem;
+        background: $primary;
+        &:hover {
+            background: lighten($primary, 20%);
+        }
+    }
+}

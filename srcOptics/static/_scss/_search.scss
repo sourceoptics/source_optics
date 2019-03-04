@@ -1,0 +1,28 @@
+.search-field {
+    width: 100%;
+    input[type='text'] {
+        width: 80%;
+        border: 0;
+        border-bottom: 3px solid white;
+        appearance: none;
+        padding: .75rem 0 .75rem 2rem;
+        background: none;
+        font-size: 14pt;
+
+        &:focus {
+            border-bottom-color: darken($white, 10%);
+            outline: none;
+        }
+    }
+
+    &::before {
+        content: '';
+        display: block;
+        position: absolute;
+        width: 15px;
+        height: 15px;
+        top: 0; bottom: 0;
+        margin: auto;
+        background: url(img/search.svg);
+    }
+}

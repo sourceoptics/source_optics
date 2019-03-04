@@ -1,7 +1,17 @@
-@import url('https://fonts.googleapis.com/css?family=Lato');
+@import url('https://fonts.googleapis.com/css?family=Lato:400,700');
 
-$primary-color: #3E2723;
+$primary: #3E2723;
+$secondary: #EBEAEA;
 $white: #fff;
+$gray: #E2E2E2;
+$neutral: #D5D5D5;
+$text: #5F5F5F;
+
+$colors: #333D5C, #5C3353, #AD3838, #57958B, #AD5838, #B55D7F;
+
+@import '_switch';
+@import '_table';
+@import '_search';
 
 * {
     font-family: 'Lato', sans-serif;
@@ -20,35 +30,6 @@ nav {
     display: flex;
     background-color: $white;
     padding: 1rem 2rem;
-    
-    .search-field {
-        width: 100%;
-        input[type='text'] {
-            width: 80%;
-            border: 0;
-            border-bottom: 3px solid white;
-            appearance: none;
-            padding: .75rem 0 .75rem 2rem;
-            background: none;
-            font-size: 14pt;
-
-            &:focus {
-                border-bottom-color: darken($white, 10%);
-                outline: none;
-            }
-        }
-
-        &::before {
-            content: '';
-            display: block;
-            position: absolute;
-            width: 15px;
-            height: 15px;
-            top: 0; bottom: 0;
-            margin: auto;
-            background: url(img/search.svg);
-        }
-    }
 
     .actions {
         input[type='checkbox'] {
@@ -61,73 +42,54 @@ nav {
 }
 
 section {
-    background-color: darken($white, 10%);
+    background-color: $secondary;
 }
 
-table {
-    table-layout: fixed;
-    border-collapse: collapse;
-    width: 100%;
+input[type='month'], 
+input[type='week'], 
+select {
+    
+    background-color: $neutral;
+    background-repeat: no-repeat;
+    background-size: 18px;
+    background-position: right 10px top 7px;
+    color: darken($gray, 60%);
+    border: none;
+    font-size: 11pt;
+    padding: 6px 20px;
+    margin: 1rem;
+    border-radius: 20px;
+    -webkit-appearance: none;
 
-    th {
-        background: $primary-color;
-        color: $white;
-        padding: 2rem 1.5rem;
-        vertical-align: middle;
-        a {
-            text-decoration: none;
-        }
-        &.lines {
-
-            //width: 15%;
-            &::before {
-                display: block;
-                //content: 'Lines';
-            }
-        }
-        &::after {
-            font-size: .3rem;
-            position: relative;
-        }
-        &.asc::after {
-            content: '\25b2';
-        }
-        &.desc::after {
-            content: '\25bc';
-        }
+    &:focus {
+        outline: none;
     }
-    tr.odd {
-        background: darken($white,10%);
-    }
-    td, th {
-        text-align: left;
-        word-wrap: break-word;
-        
-    }
-    td {
-        padding: 1rem 1.5rem;
+    &:hover {
+        background-color: lighten($neutral, 2%);
     }
 }
-.tabular-view {
-    //width: 800px;
+input[type='month'] {
+    //width: 100px;
+    background-image: url(https://cdn1.iconfinder.com/data/icons/cc_mono_icon_set/blacks/16x16/calendar_2.png);
+    &::-webkit-inner-spin-button {
+      display: none;
+    }
+    &::-webkit-calendar-picker-indicator {
+      opacity: 0;
+    }
+}
+select {
+    min-width: 120px;
+    background-image: url(img/down.svg);
 }
 
-ul.pagination {
+.flex-row {
     display: flex;
-    list-style-type: none;
-    justify-content: center;
-    margin-top: 4rem;
-    margin-bottom: 2rem;
-    li.active a {
-        background: lighten($primary-color, 10%);
+    align-items: center;
+    .float-right {
+        margin-left: auto;
     }
-    a {
-        text-decoration: none;
-        color: $white;
-        padding: 1rem;
-        background: $primary-color;
-        &:hover {
-            background: lighten($primary-color, 20%);
-        }
+    .float-left {
+        margin-right: auto;
     }
 }
