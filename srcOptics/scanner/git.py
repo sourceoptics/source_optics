@@ -179,7 +179,7 @@ class Scanner:
             if re_flag:
                 data = PARSER_RE.match(line).groupdict()
 
-                author_instance = Creator.create_author(data['author_email'])
+                author_instance = Creator.create_author(data['author_email'], repo_instance)
                 commit_instance, created = Creator.create_commit(repo_instance,
                                                                  data["subject"],
                                                                  author_instance,
