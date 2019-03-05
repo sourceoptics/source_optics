@@ -131,7 +131,30 @@ class Rollup:
 
     @classmethod
     def aggregate_author_rollup(cls, repo, author, interval):
-        a = 1
+        date_index = cls.get_first_day(repo.last_scanned, interval)
+
+        while date_index < cls.today:
+            end_date = cls.get_end_day(date_index, interval)
+            print("AUHTOR RANGE: (" + str(interval[0]) + ") " + str(date_index) + " TO " + str(end_date))
+
+            #Gets the total stats for each day in the given interval
+            #If author and file = none, we are getting total stats
+            days = Statistic.objects.filter(interval = 'DY', author = author, repo = repo, file = None, start_date__range=(date_index, end_date))
+
+            #Aggregates total stats for the interval
+            data = days.aggregate(lines_added=Sum("lines_added"), lines_removed = Sum("lines_removed"),
+                                lines_changed = Sum("lines_changed"), commit_total = Sum("commit_total"),
+                                files_changed = Sum("files_changed"), author_total = Sum("author_total"))
+            
+            #Creates row for given interval
+            stat = Statistic.create_author_rollup(date_index, interval[0], repo, author, data['lines_added'], data['lines_removed'],
+            data['lines_changed'], data['commit_total'], data['files_changed'])
+
+            print(stat)
+
+            #Increment to next week or month
+            end_date = end_date + datetime.timedelta(days=1)
+            date_index = end_date.replace(hour=0, minute=0, second=0, microsecond=0)
 
     #Compile rollup for interval by aggregating daily stats
     @classmethod
@@ -143,7 +166,7 @@ class Rollup:
 
         while date_index < cls.today:
             end_date = cls.get_end_day(date_index, interval)
-            print("RANGE: " + str(date_index) + " TO " + str(end_date))
+            print("TOTAL RANGE: (" + str(interval[0]) + ") " + str(date_index) + " TO " + str(end_date))
 
             #Gets the total stats for each day in the given interval
             #If author and file = none, we are getting total stats
