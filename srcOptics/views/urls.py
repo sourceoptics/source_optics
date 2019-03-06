@@ -4,5 +4,5 @@ from . import views
 
 urlpatterns = [
     path('', views.index),
-    re_path(r'^repo/.*$', views.index),
+    re_path(r'^repo/.*$', views.index, name='index'),
 ]

@@ -51,6 +51,7 @@ nav {
 section {
     background-color: $secondary;
     padding: 1rem 4rem;
+    min-height: 90vh;
 }
 
 input[type='month'], 
@@ -83,7 +84,7 @@ input[type='month'] {
       display: none;
     }
     &::-webkit-calendar-picker-indicator {
-      display: none;
+      opacity: 0;
     }
 }
 select {
