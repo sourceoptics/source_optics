@@ -108,7 +108,7 @@ class Scanner:
     def log_repo(repo_url, work_dir, repo_name, repo_instance):
         # python subprocess iteration doesn't have an EOF indicator that I can find.
         # We echo "EOF" to the end of the log output so we can tell when we are done
-        cmd_string = ('git log --all --numstat --date=iso-strict --pretty=format:'
+        cmd_string = ('git log --all --numstat --date=iso --pretty=format:'
                       + PRETTY_STRING + '; echo "\nEOF"')
         cmd = subprocess.Popen(cmd_string, shell=True, stdout=subprocess.PIPE, cwd=work_dir + '/' + repo_name)
 
@@ -184,8 +184,8 @@ class Scanner:
                                                                  data["subject"],
                                                                  author_instance,
                                                                  data['commit'],
-                                                                 data['commit_date'],
-                                                                 data['author_date'], 0, 0)
+                                                                 parse_datetime(data['commit_date']),
+                                                                 parse_datetime(data['author_date']), 0, 0)
 
                 # if we have seen this commit before, causing it to
                 # not be created
