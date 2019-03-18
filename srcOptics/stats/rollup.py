@@ -56,7 +56,7 @@ class Rollup:
     def aggregate_day_rollup(cls,repo):
 
         date_index = repo.last_scanned
-        print("Aggregating daily stats from " + str(date_index.date()) + " to " + str(cls.today))
+        #print("Aggregating daily stats from " + str(date_index.date()) + " to " + str(cls.today))
 
         # Daily rollups aren't dependent on the time
         # This allows us to scan the current day
@@ -135,7 +135,7 @@ class Rollup:
 
         while date_index < cls.today:
             end_date = cls.get_end_day(date_index, interval)
-            print("AUHTOR RANGE: (" + str(interval[0]) + ") " + str(date_index) + " TO " + str(end_date))
+            #print("AUHTOR RANGE: (" + str(interval[0]) + ") " + str(date_index) + " TO " + str(end_date))
 
             #Gets the total stats for each day in the given interval
             #If author and file = none, we are getting total stats
@@ -145,12 +145,12 @@ class Rollup:
             data = days.aggregate(lines_added=Sum("lines_added"), lines_removed = Sum("lines_removed"),
                                 lines_changed = Sum("lines_changed"), commit_total = Sum("commit_total"),
                                 files_changed = Sum("files_changed"), author_total = Sum("author_total"))
-            
+
             #Creates row for given interval
             stat = Statistic.create_author_rollup(date_index, interval[0], repo, author, data['lines_added'], data['lines_removed'],
             data['lines_changed'], data['commit_total'], data['files_changed'])
 
-            print(stat)
+            #print(stat)
 
             #Increment to next week or month
             end_date = end_date + datetime.timedelta(days=1)
@@ -166,7 +166,7 @@ class Rollup:
 
         while date_index < cls.today:
             end_date = cls.get_end_day(date_index, interval)
-            print("TOTAL RANGE: (" + str(interval[0]) + ") " + str(date_index) + " TO " + str(end_date))
+            #print("TOTAL RANGE: (" + str(interval[0]) + ") " + str(date_index) + " TO " + str(end_date))
 
             #Gets the total stats for each day in the given interval
             #If author and file = none, we are getting total stats
@@ -181,7 +181,7 @@ class Rollup:
             stat = Statistic.create_total_rollup(date_index, interval[0], repo, data['lines_added'], data['lines_removed'],
             data['lines_changed'], data['commit_total'], data['files_changed'], data['author_total'])
 
-            print(stat)
+            #print(stat)
 
             #Increment to next week or month
             end_date = end_date + datetime.timedelta(days=1)
@@ -214,22 +214,20 @@ class Rollup:
 
 
 
-    #Compute rollups for all repos scanned in
+    #Compute rollups for specified repo passed in by daemon
     @classmethod
-    def rollup_repo(cls):
-        repos = Repository.objects.all()
-        for repo in repos:
+    def rollup_repo(cls, repo):
 
-            #This means that the repo has not been scanned
-            if repo.last_scanned is None:
-                #So we set the last scanned field to the earliest commit field
-                repo.last_scanned = Commit.objects.filter(repo=repo).earliest("commit_date").commit_date
+        #This means that the repo has not been scanned
+        if repo.last_scanned is None:
+            #So we set the last scanned field to the earliest commit field
+            repo.last_scanned = Commit.objects.filter(repo=repo).earliest("commit_date").commit_date
 
-            for interval in intervals:
-                cls.compile_total_rollup(repo, interval)
+        for interval in intervals:
+            cls.compile_total_rollup(repo, interval)
 
-            cls.compile_author_rollups(repo)
+        cls.compile_author_rollups(repo)
 
-            #Set last scanned date to today
-            repo.last_scanned = cls.today
-            repo.save()
+        #Set last scanned date to today
+        repo.last_scanned = cls.today
+        repo.save()

@@ -64,6 +64,7 @@ class Repository(models.Model):
     organization = models.ForeignKey(Organization, on_delete=models.SET_NULL, null=True)
     enabled = models.BooleanField(default=False)
     last_scanned = models.DateTimeField(blank=True, null=True)
+    last_pulled = models.DateTimeField(blank = True, null = True)
     cred = models.ForeignKey(LoginCredential, on_delete=models.CASCADE, null=True, blank = True)
     url = models.TextField(max_length=256, unique=True, blank=False)
     name = models.TextField(db_index=True, max_length=32, blank=True)

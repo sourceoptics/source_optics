@@ -2,8 +2,10 @@ import os
 import subprocess
 import getpass
 import re
+import datetime
 
 from django.utils.dateparse import parse_datetime
+from django.utils import timezone
 from django.conf import settings
 from srcOptics.models import *
 from srcOptics.create import Creator
@@ -88,7 +90,7 @@ class Scanner:
             repo_url = Scanner.fix_repo_url(repo_url, cred.username)
 
         if os.path.isdir(work_dir + '/' + repo_name) and os.path.exists(work_dir + '/' + repo_name):
-            cmd = subprocess.Popen('git pull', shell=True, stdout=subprocess.PIPE, cwd=work_dir + '/' + repo_name)
+            cmd = subprocess.Popen('git pull' + options, shell=True, stdout=subprocess.PIPE, cwd=work_dir + '/' + repo_name)
             # TODO: Need to find a better solution for checking if its up to date
             for line in cmd.stdout:
                 line = line.decode('utf-8')
@@ -100,6 +102,8 @@ class Scanner:
             os.system('git clone ' + repo_url + ' ' + work_dir + '/' + repo_name + options)
             print('git clone ' + repo_url + ' ' + work_dir + '/' + repo_name + options)
 
+        repo_instance.last_pulled = datetime.datetime.now(tz=timezone.utc)
+        repo_instance.save()
         # TODO: Using literal string root for now...
         #repo_instance = Creator.create_repo('root', repo_url, repo_name, cred)
         return repo_instance, updated
