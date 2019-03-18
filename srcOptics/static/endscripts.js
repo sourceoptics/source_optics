@@ -1,14 +1,8 @@
-// var repos = document.getElementById('repos');
+function detailView(e) {
+    var val = e.toElement.hash.substring(1);
+    console.log(val);
+}
 
-// var loadCommits = function() {
-//     const Http = new XMLHttpRequest();
-//     Http.open('GET', 'repo/' + repos.options[repos.selectedIndex].value)
-//     Http.send();
-//     Http.onreadystatechange=(e)=>{
-//         console.log(Http.responseText);
-//       document.body.innerHTML = Http.responseText;
-//     }
-// };
-// loadCommits();
-
-// repos.onchange = loadCommits;
+document.querySelectorAll('.repo').forEach(function(e) {
+    e.addEventListener('click', detailView);
+});

@@ -1,77 +1,107 @@
-@import url('https://fonts.googleapis.com/css?family=Lato');
+@import url('https://fonts.googleapis.com/css?family=Lato:400,700');
+
+$primary: #3E2723;
+$secondary: #EBEAEA;
+$white: #fff;
+$gray: #E2E2E2;
+$neutral: #D5D5D5;
+$text: #5F5F5F;
+
+$colors: #333D5C, #5C3353, #AD3838, #57958B, #AD5838, #B55D7F;
+
+@import '_switch';
+@import '_table';
+@import '_search';
 
 * {
     font-family: 'Lato', sans-serif;
+    transition: 200ms all linear;
 }
-
-$primary-color: #3E2723;
-$white: #fff;
-
+body {
+    padding: 0;
+    margin: 0;
+}
+h1, h2, h3, h4, h5, h6 {
+    font-weight: normal;
+    color: $text;
+}
+h1 {
+    font-size: 2rem;
+}
 a {
     color: inherit;
     transition: 200ms linear all;
 }
-
-table {
-    table-layout: fixed;
-    border-collapse: collapse;
-    width: 100%;
-
-    th {
-        background: $primary-color;
-        color: $white;
-        padding: 2rem 1.5rem;
-        vertical-align: middle;
-        a {
-            text-decoration: none;
-            margin-right: 1rem;
-        }
-        &.num {
-            width: 8%;
-        }
-        &::after {
-            font-size: .3rem;
-            position: relative;
-        }
-        &.asc::after {
-            content: '\25b2';
-        }
-        &.desc::after {
-            content: '\25bc';
-        }
-    }
-    tr.odd {
-        background: darken($white,10%);
-    }
-    td, th {
-        text-align: left;
-        word-wrap: break-word;
-        
-    }
-    td {
-        padding: 1rem 1.5rem;
-    }
-}
-.tabular-view {
-    //width: 800px;
-}
-
-ul.pagination {
+nav {
+    position: relative;
     display: flex;
-    list-style-type: none;
-    justify-content: center;
-    margin-top: 4rem;
-    margin-bottom: 2rem;
-    li.active a {
-        background: lighten($primary-color, 10%);
-    }
-    a {
-        text-decoration: none;
-        color: $white;
-        padding: 1rem;
-        background: $primary-color;
-        &:hover {
-            background: lighten($primary-color, 20%);
+    background-color: $white;
+    padding: 1rem 2rem;
+
+    .actions {
+        input[type='checkbox'] {
+            display: none;
         }
+        label {
+            cursor: pointer;
+        }
+    }
+}
+
+section {
+    background-color: $secondary;
+    padding: 1rem 4rem;
+    min-height: 90vh;
+}
+
+input[type='month'], 
+input[type='week'], 
+select {
+    
+    background-color: $neutral;
+    background-repeat: no-repeat;
+    background-size: 18px;
+    background-position: right 10px top 7px;
+    color: darken($gray, 60%);
+    border: none;
+    font-size: 11pt;
+    padding: 6px 20px;
+    margin: 1rem;
+    border-radius: 20px;
+    -webkit-appearance: none;
+
+    &:focus {
+        outline: none;
+    }
+    &:hover {
+        background-color: lighten($neutral, 2%);
+    }
+}
+input[type='month'] {
+    width: 130px;
+    background-image: url(https://cdn1.iconfinder.com/data/icons/cc_mono_icon_set/blacks/16x16/calendar_2.png);
+    &::-webkit-inner-spin-button {
+      display: none;
+    }
+    &::-webkit-calendar-picker-indicator {
+      opacity: 0;
+    }
+}
+select {
+    min-width: 120px;
+    background-image: url(img/down.svg);
+}
+
+.flex-row {
+    display: flex;
+    align-items: center;
+    .float-right {
+        margin-left: auto;
+    }
+    .float-left {
+        margin-right: auto;
+    }
+    .spacer {
+        padding-right: 1rem;
     }
 }
