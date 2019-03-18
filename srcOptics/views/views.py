@@ -14,15 +14,16 @@ View function for home page of site
 """
 def index(request):
     repos = Repository.objects.all()
-    filter_by_repo = request.GET.get('repo')
-    if filter_by_repo:
-        stats = Statistic.objects.filter(repo__name=filter_by_repo)
+    date = request.GET.get('date')
+    if date:
+        print(date)
+        # stats = Statistic.objects.filter(interval=filter_by_repo)
     else:
         stats = Statistic.objects.all()
     samples = []
     print(stats)
     stat_table = StatTable(stats)
-    # RequestConfig(request, paginate={'per_page': 10}).configure(stat_table)
+    RequestConfig(request, paginate={'per_page': 10}).configure(stat_table)
     context = {
         'title': 'SrcOptics',
         'repositories': repos,
