@@ -170,18 +170,3 @@ class Statistic(models.Model):
     def create_file_rollup(cls, start_date, interval, repo, file, data):
         instance = cls(start_date = start_date, interval = interval, repo = repo, file = file, data = data)
         return instance
-
-    def get_data(self):
-        return self.data
-
-    def __str__(self):
-        return str(self.data)
-
-    #data =
-    # { linesAdded: 0,
-    #   linesRemoved: 0,
-    #   linesChanged: 0,
-    #   commitTotal: 0,
-    #   filesChanged 0,
-    #   authorTotal 0
-    # }
