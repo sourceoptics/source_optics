@@ -171,3 +171,4 @@ class Statistic(models.Model):
     def create_file_rollup(cls, start_date, interval, repo, file, data):
         instance = cls(start_date = start_date, interval = interval, repo = repo, file = file, data = data)
         return instance
+    

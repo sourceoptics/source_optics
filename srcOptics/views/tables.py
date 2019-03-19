@@ -8,9 +8,16 @@ class StatTable(tables.Table):
     lines_changed = tables.Column(verbose_name='∆', attrs={"th": {"class": "lines"}})
     lines_added = tables.Column(verbose_name='+', attrs={"th": {"class": "lines"}})
     lines_removed = tables.Column(verbose_name='-', attrs={"th": {"class": "lines"}})
-    repo = tables.TemplateColumn('<a href="#{{record.repo}}">{{record.repo}}</a>',  attrs={"td": {"class": "repo"}})
+    start_date = tables.Column()
+    repo = tables.Column(attrs={"td": {"class": "repo"}})
     
     class Meta:
         model = Statistic
-        exclude = ('author', 'id', 'start_date', 'interval', 'file')
+        exclude = (
+            'author',
+            'id',
+            'file',
+            # 'interval'
+        )
+        sequence = ('repo','...')
         template_name = 'table.html'
