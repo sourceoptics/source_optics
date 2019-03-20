@@ -2,7 +2,8 @@ from django.shortcuts import render
 from django.template import loader
 from django.http import *
 from django_tables2 import RequestConfig
-from datetime import datetime
+from django.db.models import Sum
+from datetime import datetime, timedelta
 
 
 from ..models import Repository, Commit, Statistic
@@ -17,17 +18,20 @@ def index(request):
     repos = Repository.objects.all()
     start = request.GET.get('s')
     end = request.GET.get('e')
-    if start and end:
+    if not start or not end:
+        end = datetime.now()
+        start = end - timedelta(days=7)
+    else:
         start = datetime.strptime(start, '%Y-%m-%d')
         end = datetime.strptime(end, '%Y-%m-%d')
-        duration = (end - start).days
-        if duration > 7:
-            stats = Statistic.objects.filter(interval='MN', start_date__gte=start)
-        else:
-            stats = Statistic.objects.filter(interval='WK', start_date__gte=start)
-        # stats = Statistic.objects.filter(interval=filter_by_repo)
-    else:
-        stats = Statistic.objects.all()
+    stats = []
+    for repo in repos:
+        days = Statistic.objects.filter(interval='DY', repo=repo, start_date__range=(start, end))
+        days = days.aggregate(lines_added=Sum("lines_added"), lines_removed=Sum("lines_removed"),
+                        lines_changed=Sum("lines_changed"), commit_total=Sum("commit_total"),
+                        files_changed=Sum("files_changed"), author_total=Sum("author_total"))
+        days['repo'] = repo
+        stats.append(days)
     samples = []
     stat_table = StatTable(stats)
     RequestConfig(request, paginate={'per_page': 10}).configure(stat_table)

@@ -20,9 +20,9 @@
         <div class='float-right dropdown'>
             <form id='range'>
                 <label>From</label>
-                <input type='date' name='s' value='{{request.GET.s}}' max='{% now "Y\-m\-d" %}' onchange='this.form.submit()' required/>
+                <input type='date' name='s' class='start' value='{{request.GET.s}}' max='{% now "Y\-m\-d" %}' onchange='this.form.submit()' required/>
                 <label>To</label>
-                <input type='date' name='e' value='{% if request.GET.e %}{{request.GET.e}}{% else %}{% now "Y\-m\-d" %}{% endif %}' max='{% now "Y\-m\-d" %}' onchange='this.form.submit()'  required/>
+                <input type='date' name='e' class='end' value='{% if request.GET.e %}{{request.GET.e}}{% else %}{% now "Y\-m\-d" %}{% endif %}' max='{% now "Y\-m\-d" %}' onchange='this.form.submit()'  required/>
             </form>
         </div>
     </div>
