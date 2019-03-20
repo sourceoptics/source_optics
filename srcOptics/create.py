@@ -27,8 +27,17 @@ class Creator:
     # also return if created so that the scanner can determine if we have
     # processed this commit before. It should check if created is false
     # ------------------------------------------------------------------
-    def create_commit(repo_instance, subject, author_instance, sha_, author_date_, commit_date_, added, removed):
-        commit_instance,created = Commit.objects.get_or_create(repo=repo_instance, author=author_instance, sha=sha_, commit_date=commit_date_, author_date=author_date_, lines_added=added, lines_removed=removed, subject=subject)
+    def create_commit(repo_instance, subject, author_instance, commit_sha, adate, cdate, added, removed):
+        commit_instance,created = Commit.objects.get_or_create(sha=commit_sha,
+                                                               defaults={
+                                                                   'subject':subject,
+                                                                   'repo':repo_instance,
+                                                                   'author':author_instance,
+                                                                   'author_date':adate,
+                                                                   'commit_date':cdate,
+                                                                   'lines_added':added,
+                                                                   'lines_removed':removed})
+
         return (commit_instance, created)
 
     # ------------------------------------------------------------------
