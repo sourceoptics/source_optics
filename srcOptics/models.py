@@ -67,7 +67,7 @@ class Repository(models.Model):
     last_pulled = models.DateTimeField(blank = True, null = True)
     cred = models.ForeignKey(LoginCredential, on_delete=models.CASCADE, null=True, blank = True)
     url = models.TextField(max_length=256, unique=True, blank=False)
-    name = models.TextField(db_index=True, max_length=32, blank=True)
+    name = models.TextField(db_index=True, max_length=32, blank=False, unique = True, null = False)
 
     def __str__(self):
         return self.name
@@ -171,4 +171,3 @@ class Statistic(models.Model):
     def create_file_rollup(cls, start_date, interval, repo, file, data):
         instance = cls(start_date = start_date, interval = interval, repo = repo, file = file, data = data)
         return instance
-    
