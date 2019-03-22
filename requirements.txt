@@ -1,8 +1,4 @@
 django
 psycopg2-binary
 django-tables2
-<<<<<<< Updated upstream
 plotly
-=======
-plotly
->>>>>>> Stashed changes
