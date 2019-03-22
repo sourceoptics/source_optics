@@ -103,8 +103,6 @@ class Scanner:
             os.system('git clone ' + repo_url + ' ' + work_dir + '/' + repo_name + options)
             print('git clone ' + repo_url + ' ' + work_dir + '/' + repo_name + options)
 
-        repo_instance.last_pulled = datetime.datetime.now(tz=timezone.utc)
-        repo_instance.save()
         # TODO: Using literal string root for now...
         #repo_instance = Creator.create_repo('root', repo_url, repo_name, cred)
         return repo_instance, updated

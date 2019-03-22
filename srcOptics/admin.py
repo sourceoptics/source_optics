@@ -11,6 +11,8 @@ def scan_selected(modeladmin, request, queryset):
         Scanner.scan_repo(rep.url, rep.cred)
 
 class RepoAdmin(admin.ModelAdmin):
+    list_display = ('name', 'last_pulled', 'last_scanned', 'enabled')
+    fields = ['organization', 'enabled', 'cred','name', 'url']
     actions = [scan_selected]
 
 class LoginCredentialForm(ModelForm):
@@ -18,6 +20,7 @@ class LoginCredentialForm(ModelForm):
     class Meta:
         model = LoginCredential
         fields = '__all__'
+
 
 class LoginCredentialAdmin(admin.ModelAdmin):
     form = LoginCredentialForm

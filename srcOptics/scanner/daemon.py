@@ -12,8 +12,8 @@ from srcOptics.models import Repository
 class Daemon:
 
     threshold = 30
-    repo_sleep = 60
-    thread_sleep = 60
+    repo_sleep = 5
+    thread_sleep = 5
 
     @classmethod
     def scan(cls):
@@ -30,12 +30,15 @@ class Daemon:
                     scan_time_start = time.clock()
                     Scanner.scan_repo(repo.url, repo.cred)
                     scan_time_total = time.clock() - scan_time_start
-                    print ("Scan time for " + str(repo) + ": " + str(scan_time_total) + "s")
+                    print ("Scaning complete. Operation time for " + str(repo) + ": " + str(scan_time_total) + "s")
+                    repo.last_pulled = datetime.datetime.now(tz=timezone.utc)
+                    print("last_pulled: "  + str(repo.last_pulled))
+                    repo.save()
                     print ("Aggregating stats for " + str(repo))
                     stat_time_start = time.clock()
                     Rollup.rollup_repo(repo)
                     stat_time_total = time.clock() - stat_time_start
-                    print ("Rollup time for " + str(repo) + ": " + str(stat_time_total) + "s")
+                    print ("Rollup complete. Operation time for " + str(repo) + ": " + str(stat_time_total) + "s")
                 time.sleep(cls.repo_sleep)
             time.sleep(cls.thread_sleep)
             print("Checking for new data...")
