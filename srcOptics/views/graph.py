@@ -34,10 +34,36 @@ def commits_by_repo(request):
         x=names,
         y=commits,
         marker=dict(color=graph_color,line=dict(color=graph_color,width=1)),
-        name='commits',
+        name='Commits',
         orientation='v',
     )
-    layout = go.Layout(title="Commits per Repository", xaxis={'title':'repository name'}, yaxis={'title':'commits'})
+    layout = go.Layout(
+        title="Commits per Repository",
+        margin={
+            # 'l':50,
+            # 'r':50,
+            # 'b':100,
+            # 't':100,
+            # 'pad':20
+        },
+        xaxis={
+            'title':'Repository',
+            'tickfont':{
+                'color': '#696969',
+                'size': 18,
+            }
+        },
+        yaxis={
+            'title':'Commits',
+            'tickfont':{
+                'color': '#696969',
+                'size': 18,
+            }
+        },
+        font={'family': 'Lato, san-serif'},
+        width=1060,
+        height=600
+    )
     fig = go.Figure(data=[trace],layout=layout)
     # save to a div element
     element = opy.plot(fig, auto_open=False, output_type='div')
