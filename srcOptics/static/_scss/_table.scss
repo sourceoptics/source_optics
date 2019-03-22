@@ -40,6 +40,7 @@ table {
     }
     @for $i from 1 through length($colors) {
         tr:nth-of-type(#{length($colors)}n+#{$i}) .repo {
+            cursor: pointer;
             font-weight: bold;
             color: $white;
             background: nth($colors, $i);
@@ -63,7 +64,7 @@ table {
     tr.odd {
         background: darken($white,2%);
     }
-    tr.even {
+    tr, tr.even {
         background: $white;
     }
     td, th {

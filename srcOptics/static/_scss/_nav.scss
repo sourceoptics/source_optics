@@ -1,0 +1,65 @@
+
+nav {
+    position: relative;
+    display: flex;
+    align-items: center;
+    //justify-content: center;
+    background-color: $purple;
+    padding: 1rem 0;
+
+    header {
+        color: $white;
+        padding: 7px 35px;
+        font-size: 18pt;
+        text-decoration: none;
+    }
+
+    .actions {
+        input[type='checkbox'] {
+            display: none;
+        }
+        label {
+            cursor: pointer;
+        }
+    }
+
+    .search-field {
+        position: relative;
+        width: 30%;
+
+        input[type='text'] {
+            color: $white;
+            width: 100%;
+            border: 0;
+            //border-bottom: 3px solid white;
+            appearance: none;
+            padding: .5rem 0 .5rem 3rem;
+            background: rgba($white, .2);
+            font-size: 12pt;
+
+            &:focus {
+                border-bottom-color: darken($white, 10%);
+                outline: none;
+            }
+            &::placeholder {
+                color: darken($white, 30%);
+            }
+            &::-ms-input-placeholder {
+                color: darken($white, 30%);
+            }
+        }
+
+        &::before {
+            content: '';
+            display: block;
+            position: absolute;
+            width: 15px;
+            height: 15px;
+            top: 0; bottom: 0; left: 1rem;
+            margin: auto;
+            background: url(img/search.svg);
+            background-repeat: no-repeat;
+        }
+    }
+
+}

@@ -1,9 +1,17 @@
-function detailView(e) {
-    console.log(e.target.innerHTML);
-}
-
 document.querySelectorAll('.repo').forEach(function(e) {
-    e.addEventListener('click', detailView);
+    e.addEventListener('click', function() {
+        if(this.classList.contains('expand')) {
+            this.classList.remove('expand');
+        } else {
+            this.classList.add('expand');
+            var template = `
+                <div class='details'>
+                    ${this.innerHTML}
+                </div>
+            `;
+            this.parentElement.insertAdjacentHTML('afterend', template);
+        }
+    });
 });
 
 // Sets default start date back a week

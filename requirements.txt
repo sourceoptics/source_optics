@@ -1,3 +1,4 @@
 django
 psycopg2-binary
 django-tables2
+plotly
