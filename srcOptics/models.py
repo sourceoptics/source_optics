@@ -174,7 +174,7 @@ class Statistic(models.Model):
                             lines_changed, commit_total, files_changed):
         instance = cls(start_date = start_date, interval = interval, repo = repo, author = author, lines_added = lines_added,
         lines_removed = lines_removed, lines_changed = lines_changed, commit_total = commit_total,
-        files_changed = files_changed, author_total = 0)
+        files_changed = files_changed, author_total = 1)
         instance.save()
         return instance
 

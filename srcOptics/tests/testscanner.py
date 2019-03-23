@@ -40,3 +40,6 @@ class ScanTest(TestCase):
         readme = File.objects.get(path="README.md")
         self.assertEqual(readme.lines_added, 2)
         self.assertEqual(readme.ext, "md")
+
+        repos = Repository.objects.all()
+        self.assertEqual(len(repos), 1)

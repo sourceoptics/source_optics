@@ -91,7 +91,7 @@ class Scanner:
             repo_url = Scanner.fix_repo_url(repo_url, cred.username)
 
         if os.path.isdir(work_dir + '/' + repo_name) and os.path.exists(work_dir + '/' + repo_name):
-            cmd = subprocess.Popen('git pull' + options, shell=True, stdout=subprocess.PIPE, cwd=work_dir + '/' + repo_name)
+            cmd = subprocess.Popen('git pull', shell=True, stdout=subprocess.PIPE, cwd=work_dir + '/' + repo_name)
             # TODO: Need to find a better solution for checking if its up to date
             for line in cmd.stdout:
                 line = line.decode('utf-8')

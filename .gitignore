@@ -21,3 +21,5 @@ __pycache__/
 work/
 /.sass-cache
 .sass-cache
+.coverage/
+htmlcov/
