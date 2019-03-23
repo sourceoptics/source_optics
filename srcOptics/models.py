@@ -10,7 +10,7 @@ import os
 
 class Organization(models.Model):
     # parent = models.ForeignKey('self', on_delete=models.SET_NULL, null=True)
-    name = models.TextField(max_length=32, blank=False)
+    name = models.TextField(max_length=32, blank=False, unique=True)
     admins = models.ManyToManyField(User, related_name='admins')
     members = models.ManyToManyField(User, related_name='members')
 
@@ -67,7 +67,7 @@ class Repository(models.Model):
     last_pulled = models.DateTimeField(blank = True, null = True)
     cred = models.ForeignKey(LoginCredential, on_delete=models.CASCADE, null=True, blank = True)
     url = models.TextField(max_length=256, unique=True, blank=False)
-    name = models.TextField(db_index=True, max_length=32, blank=False, unique= True, null=False)
+    name = models.TextField(db_index=True, max_length=32, blank=False, unique=True, null=False)
 
     def __str__(self):
         return self.name
@@ -89,6 +89,12 @@ class Commit(models.Model):
     subject = models.TextField(db_index=True, max_length=256, blank=False)
     lines_added = models.IntegerField(default=0)
     lines_removed = models.IntegerField(default=0)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['repo', 'commit_date']),
+            models.Index(fields=['author', 'commit_date'])
+        ]
 
     def __str__(self):
         return self.subject
@@ -148,6 +154,11 @@ class Statistic(models.Model):
 
     #    return str({'la': self.lines_added, 'lr': self.lines_removed, 'lc' : self.lines_changed,
     #            'ct': self.commit_total, 'fc': self.files_changed, 'at': self.author_total})
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['interval', 'author', 'repo', 'file', 'start_date']),
+        ]
 
     @classmethod
     def create_total_rollup(cls, start_date, interval, repo, lines_added, lines_removed,

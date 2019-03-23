@@ -226,7 +226,6 @@ class Rollup:
         if repo.last_scanned is None:
             #So we set the last scanned field to the earliest commit field
             repo.last_scanned = Commit.objects.filter(repo=repo).earliest("commit_date").commit_date
-            commits = Commit.objects.filter(repo=repo)
 
         for interval in intervals:
             cls.compile_total_rollup(repo, interval)

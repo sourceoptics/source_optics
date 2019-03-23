@@ -21,3 +21,7 @@ migrate:
 # target: server - runs application servero
 server:
 	python manage.py runserver
+
+# target: install - initializes starting database
+install:
+	python manage.py init -es
