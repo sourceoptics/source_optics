@@ -141,7 +141,8 @@ class Rollup:
 
             #Gets the total stats for each day in the given interval
             #If author and file = none, we are getting total stats
-            days = Statistic.objects.filter(interval = 'DY', author = author, repo = repo, file = None, start_date__range=(date_index, end_date))
+            days = Statistic.objects.filter(interval = 'DY', author = author, repo = repo,
+                                            file = None, start_date__range=(date_index, end_date))
 
             #Aggregates total stats for the interval
             data = days.aggregate(lines_added=Sum("lines_added"), lines_removed = Sum("lines_removed"),

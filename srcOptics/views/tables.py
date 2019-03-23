@@ -14,7 +14,7 @@ class StatTable(tables.Table):
     lines_added = ColumnNumber(verbose_name='+', attrs={"th": {"class": "lines"}})
     lines_removed = ColumnNumber(verbose_name='-', attrs={"th": {"class": "lines"}})
     start_date = tables.Column()
-    repo = tables.Column(attrs={"td": {"class": "repo"}})
+    repo = tables.Column(attrs={"td": {"class": "repo"}}, linkify={'viewname': 'repos'})
     
     class Meta:
         model = Statistic
