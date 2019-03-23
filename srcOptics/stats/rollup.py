@@ -217,6 +217,7 @@ class Rollup:
 
 
     #Compute rollups for specified repo passed in by daemon
+    #TODO: Index commit_date and repo together
     @classmethod
     def rollup_repo(cls, repo):
 
