@@ -61,8 +61,8 @@ def commits_by_repo(request):
             }
         },
         font={'family': 'Lato, san-serif'},
-        width=1060,
-        height=600
+        # width=1060,
+        # height=600
     )
     fig = go.Figure(data=[trace],layout=layout)
     # save to a div element

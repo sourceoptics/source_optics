@@ -1,16 +1,27 @@
 {% include 'partials/header.html' %}
 <section>
   <h1>{{ title}}</h1>
-  <div class='sw-container'>
-    <label>Graph</label>
-    <label class='switch'>
-      <input type='checkbox' />
-      <a href="/">
-	<span class='slider sp round'></span>
-      </a>
-    </label>
-    <label>Tabular</label>
-  </div>
+  <div class='tabular-view'>
+    <div class='flex-row'>
+          <div class='sw-container'>
+              <label>Tabular</label>
+              <label class='switch'>
+                <input type='checkbox' data-off='/' data-on='/repos' checked/>
+            <span class='slider sp round'></span>
+              </label>
+              <label>Graph</label>
+          </div>
+          <div class='float-right dropdown'>
+              <form id='range'>
+                  <label>From</label>
+                  <input type='date' name='s' class='start' value='{{request.GET.s}}' max='{% now "Y\-m\-d" %}' onchange='this.form.submit()' required/>
+                  <label>To</label>
+                  <input type='date' name='e' class='end' value='{% if request.GET.e %}{{request.GET.e}}{% else %}{% now "Y\-m\-d" %}{% endif %}' max='{% now "Y\-m\-d" %}' onchange='this.form.submit()'  required/>
+              </form>
+          </div>
+      </div>
+    </div>
   {{ data| safe }}
+  </div>
 </section>
 {% include 'partials/footer.html' %}
