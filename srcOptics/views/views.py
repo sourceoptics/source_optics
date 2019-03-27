@@ -26,7 +26,7 @@ def index(request):
         end = datetime.strptime(end, '%Y-%m-%d')
     stats = []
     for repo in repos:
-        days = Statistic.objects.filter(interval='DY', repo=repo, author = None, file = None, start_date__range=(start, end))
+        days = Statistic.objects.filter(interval='DY', repo=repo, author=None, file=None, start_date__range=(start, end))
         days = days.aggregate(lines_added=Sum("lines_added"), lines_removed=Sum("lines_removed"),
                         lines_changed=Sum("lines_changed"), commit_total=Sum("commit_total"),
                         files_changed=Sum("files_changed"), author_total=Sum("author_total"))

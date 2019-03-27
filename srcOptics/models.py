@@ -165,11 +165,6 @@ class Statistic(models.Model):
         BrinIndex(fields=['interval', 'lines_added', 'lines_removed', 'lines_changed', 'commit_total', 'files_changed', 'author_total'])
         ]
 
-        unique_together = ("start_date", "interval", "repo", "author")
-
-
-
-
     @classmethod
     def create_total_rollup(cls, start_date, interval, repo, lines_added, lines_removed,
                             lines_changed, commit_total, files_changed, author_total):
