@@ -8,6 +8,7 @@ import binascii
 from django.conf import settings
 import tempfile
 import os
+import subprocess
 
 class Organization(models.Model):
     # parent = models.ForeignKey('self', on_delete=models.SET_NULL, null=True)
@@ -58,6 +59,25 @@ class LoginCredential(models.Model):
         os.close(fd)
         os.chmod(fname, 0o700)
         return fname
+
+    def git_pull_with_expect_file(self, path):
+        # expect format of Username for 'https://github.ncsu.edu':
+        (_, fname) = tempfile.mkstemp()
+        fh = open(fname, "w")
+        script = """
+        #!/usr/bin/expect -f
+        spawn git pull
+        expect "Password for*:"
+        send "%s\n";
+        interact
+        """ % self.unencrypt_password()
+        fh.write(script)
+        fh.close()
+        cmd = subprocess.Popen("/usr/bin/expect -f %s" % fname, shell=True,
+                               stdout=subprocess.PIPE, cwd=path)
+        cmd.wait()
+        os.remove(fname)
+        return cmd.returncode
 
 class Repository(models.Model):
     class Meta:
