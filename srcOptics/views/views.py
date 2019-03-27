@@ -54,3 +54,30 @@ def index(request):
     }
 
     return render(request, 'dashboard.html', context=context)
+    
+
+def repo_details(request):
+    repo = Repository.objects.get(name=request.GET.get('repo'))
+    repos = [repo]
+    start = request.GET.get('start')
+    end = request.GET.get('end')
+    if not start or not end:
+        end = datetime.now()
+        start = end - timedelta(days=7)
+    else:
+        start = datetime.strptime(start, '%Y-%m-%d')
+        end = datetime.strptime(end, '%Y-%m-%d')
+    days = Statistic.objects.filter(interval='DY', repo=repo, author = None, file = None, start_date__range=(start, end))
+    stats = days.aggregate(lines_added=Sum("lines_added"), lines_removed=Sum("lines_removed"),
+                        lines_changed=Sum("lines_changed"), commit_total=Sum("commit_total"),
+                        files_changed=Sum("files_changed"), author_total=Sum("author_total"))
+    stats['repo'] = repo
+    stat_table = StatTable(stats)
+    RequestConfig(request, paginate={'per_page': 10}).configure(stat_table)
+    context = {
+        'title': repo,
+        'repositories': repo,
+        'stats': stat_table
+    }
+
+    return render(request, 'repo_details.html', context=context)
