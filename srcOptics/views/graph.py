@@ -95,9 +95,6 @@ def commits_by_repo(request):
     commits = []
     names = []
 
-    #commits over timezone
-    dates = []
-    commits_by_date = []
 
     start = request.GET.get('s')
     end = request.GET.get('e')
@@ -111,6 +108,10 @@ def commits_by_repo(request):
 
     line_elements = ""
     for r in repos:
+        #commits over timezone
+        dates = []
+        commits_by_date = []
+
         names.append(r.name)
         stats_set = Statistic.objects.filter(interval='DY', repo=r, author=None, start_date__range=(start, end))
         aggregate_data = stats_set.aggregate(commit_total=Sum("commit_total"))
@@ -120,8 +121,10 @@ def commits_by_repo(request):
             commits_by_date.append(stat.commit_total)
 
         commits.append(aggregate_data['commit_total'])
-        line_element = create_scatter_plot("Commits Over Time", "Date", "Commits", dates, commits_by_date)
+        line_element = create_scatter_plot(r.name, "Date", "Commits", dates, commits_by_date)
         line_elements = line_elements + line_element
+        dates = []
+        commits_by_date = []
 
 
     bar_element = create_bar_graph("Commits Per Repository", "Repository", "Commits", names, commits)
