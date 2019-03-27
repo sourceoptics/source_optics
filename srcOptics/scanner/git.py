@@ -71,19 +71,16 @@ class Scanner:
     def scan_repo(repo_url, name, cred):
         work_dir = os.path.abspath(os.path.dirname(__file__).rsplit("/", 2)[0]) + '/work'
         os.system('mkdir -p ' + work_dir)
+
         if name is None:
             repo_name = repo_url.rsplit('/', 1)[1]
         else:
             repo_name = name
-        repo_instance, updated = Scanner.clone_repo(repo_url, work_dir, repo_name, cred)
+        repo_instance = Scanner.clone_repo(repo_url, work_dir, repo_name, cred)
         Scanner.log_repo(repo_url, work_dir, repo_name, repo_instance)
-
-
 
     # ------------------------------------------------------------------
     def clone_repo(repo_url, work_dir, repo_name, cred):
-
-        updated = 0
 
         options = ""
         repo_instance = Creator.create_repo('root', repo_url, repo_name, cred)
@@ -93,21 +90,19 @@ class Scanner:
             repo_url = Scanner.fix_repo_url(repo_url, cred.username)
 
         if os.path.isdir(work_dir + '/' + repo_name) and os.path.exists(work_dir + '/' + repo_name):
-            cmd = subprocess.Popen('git pull', shell=True, stdout=subprocess.PIPE, cwd=work_dir + '/' + repo_name)
-            # TODO: Need to find a better solution for checking if its up to date
-            for line in cmd.stdout:
-                line = line.decode('utf-8')
-                if "Already up to date." in line:
-                    updated = 1
-                    break
-            print('git pull ' + repo_url + ' ' + work_dir)
-        else:
-            os.system('git clone ' + repo_url + ' ' + work_dir + '/' + repo_name + options)
-            print('git clone ' + repo_url + ' ' + work_dir + '/' + repo_name + options)
 
-        # TODO: Using literal string root for now...
-        #repo_instance = Creator.create_repo('root', repo_url, repo_name, cred)
-        return repo_instance, updated
+            print('git pull ' + repo_url + ' ' + work_dir)
+            if cred is not None:
+                cred.git_pull_with_expect_file(path=work_dir + '/' + repo_name)
+            else:
+                cmd = subprocess.Popen('git pull', shell=True, stdout=subprocess.PIPE, cwd=work_dir + '/' + repo_name)
+                cmd.wait()
+
+        else:
+            print('git clone ' + repo_url + ' ' + work_dir + '/' + repo_name + options)
+            os.system('git clone ' + repo_url + ' ' + work_dir + '/' + repo_name + options)
+
+        return repo_instance
 
     # ------------------------------------------------------------------
     def log_repo(repo_url, work_dir, repo_name, repo_instance):
