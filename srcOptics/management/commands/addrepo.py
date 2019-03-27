@@ -18,5 +18,5 @@ class Command(BaseCommand):
         password = getpass.getpass('Password: ')
         cred = LoginCredential.objects.create(username=username, password=password)
         
-        Scanner.scan_repo(kwargs['repo_url'], cred)
+        Scanner.scan_repo(kwargs['repo_url'], None, cred)
         #print(kwargs['repo_url'] + " added")

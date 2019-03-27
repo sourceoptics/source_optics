@@ -14,7 +14,7 @@ class ScanTest(TestCase):
         cred = LoginCredential(username='srcoptics', password='bigbig2019')
         cred.save()
         # run the end-to-end scanner        
-        Scanner.scan_repo(REPO_NAME, cred)
+        Scanner.scan_repo(REPO_NAME, None, cred)
 
     def assert_commit(self, commit, sha, subject, author, la, lr):
         self.assertEqual(commit.subject, subject)

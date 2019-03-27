@@ -25,3 +25,7 @@ server:
 # target: install - initializes starting database
 install:
 	python manage.py init -es
+
+# target: compilecss - compiles minified CSS files from SASS files in static directory
+compilecss:
+	sass --no-source-map --style compressed srcOptics/static/_scss:srcOptics/static

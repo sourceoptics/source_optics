@@ -22,7 +22,7 @@ class RollupTest(TestCase):
         cred = LoginCredential(username='srcoptics', password='bigbig2019')
         cred.save()
         # Scan our demo repo
-        Scanner.scan_repo(REPO, cred)
+        Scanner.scan_repo(REPO, None, cred)
 
     def rollup(self):
         repo = Repository.objects.get(name="")

@@ -16,25 +16,37 @@ View function for home page of site
 """
 def index(request):
     repos = Repository.objects.all()
-    start = request.GET.get('s')
-    end = request.GET.get('e')
+
+    # Get query strings
+    start = request.GET.get('start')
+    end = request.GET.get('end')
+
+    # Sets default date range to a week if no query string is specified
     if not start or not end:
         end = datetime.now()
         start = end - timedelta(days=7)
     else:
         start = datetime.strptime(start, '%Y-%m-%d')
         end = datetime.strptime(end, '%Y-%m-%d')
+
+    # Loop through repos and add appropriate statistics to table
     stats = []
     for repo in repos:
+        # Get statistics objects in the appropriate interval
         days = Statistic.objects.filter(interval='DY', repo=repo, author=None, file=None, start_date__range=(start, end))
-        days = days.aggregate(lines_added=Sum("lines_added"), lines_removed=Sum("lines_removed"),
+        
+        # Calculate sums from statistics objects into an object
+        totals = days.aggregate(lines_added=Sum("lines_added"), lines_removed=Sum("lines_removed"),
                         lines_changed=Sum("lines_changed"), commit_total=Sum("commit_total"),
                         files_changed=Sum("files_changed"), author_total=Sum("author_total"))
-        days['repo'] = repo
-        stats.append(days)
-    samples = []
+
+        # Add repository name to object and append to stats list
+        totals['repo'] = repo
+        stats.append(totals)
+
     stat_table = StatTable(stats)
     RequestConfig(request, paginate={'per_page': 10}).configure(stat_table)
+    
     context = {
         'title': 'SrcOptics',
         'repositories': repos,

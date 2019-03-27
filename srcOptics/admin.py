@@ -8,7 +8,7 @@ from srcOptics.scanner.git import Scanner
 def scan_selected(modeladmin, request, queryset):
     for rep in queryset:
         print("Scanning repository: " + rep.url)
-        Scanner.scan_repo(rep.url, rep.cred)
+        Scanner.scan_repo(rep.url, rep.name, rep.cred)
 
 class RepoAdmin(admin.ModelAdmin):
     list_display = ('name', 'last_pulled', 'last_scanned', 'enabled')
