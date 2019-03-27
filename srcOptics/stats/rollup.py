@@ -8,7 +8,6 @@ from srcOptics.create import Creator
 import datetime
 import json
 
-
 intervals =  Statistic.INTERVALS
 
 #
@@ -57,8 +56,6 @@ class Rollup:
 
         date_index = repo.last_scanned
         #print("Aggregating daily stats from " + str(date_index.date()) + " to " + str(cls.today))
-
-
 
         # Daily rollups aren't dependent on the time
         # This allows us to scan the current day
@@ -210,11 +207,8 @@ class Rollup:
         authors = Author.objects.filter(repos__in=[repo]).iterator()
         for author in authors:
             cls.aggregate_author_rollup_day(repo, author)
-            #week
             cls.aggregate_author_rollup(repo, author, intervals[1])
-            #month
             cls.aggregate_author_rollup(repo, author, intervals[2])
-
 
 
     #Compute rollups for specified repo passed in by daemon

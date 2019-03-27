@@ -68,11 +68,13 @@ class Scanner:
 
     # ------------------------------------------------------------------
     @transaction.atomic
-    def scan_repo(repo_url, cred):
+    def scan_repo(repo_url, name, cred):
         work_dir = os.path.abspath(os.path.dirname(__file__).rsplit("/", 2)[0]) + '/work'
         os.system('mkdir -p ' + work_dir)
-        repo_name = repo_url.rsplit('/', 1)[1]
-
+        if name is None:
+            repo_name = repo_url.rsplit('/', 1)[1]
+        else:
+            repo_name = name
         repo_instance, updated = Scanner.clone_repo(repo_url, work_dir, repo_name, cred)
         Scanner.log_repo(repo_url, work_dir, repo_name, repo_instance)
 

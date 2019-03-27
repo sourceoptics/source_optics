@@ -1,5 +1,6 @@
 from django.contrib.postgres.fields import JSONField
 from django.db import models
+from django.contrib.postgres.indexes import BrinIndex
 from django.contrib.auth.models import Group, User
 
 from cryptography import fernet
@@ -80,11 +81,11 @@ class Author(models.Model):
         return self.email
 
 class Commit(models.Model):
-    repo = models.ForeignKey(Repository, on_delete=models.CASCADE, related_name='repos')
-    author = models.ForeignKey(Author, on_delete=models.CASCADE, blank=False, null=True, related_name='authors')
+    repo = models.ForeignKey(Repository, db_index=True, on_delete=models.CASCADE, related_name='repos')
+    author = models.ForeignKey(Author, db_index=True, on_delete=models.CASCADE, blank=False, null=True, related_name='authors')
     sha = models.TextField(db_index=True, max_length=256, blank=False)
     files = models.ManyToManyField('File')
-    commit_date = models.DateTimeField(blank=False, null=True)
+    commit_date = models.DateTimeField(db_index=True,blank=False, null=True)
     author_date = models.DateTimeField(blank=False, null=True)
     subject = models.TextField(db_index=True, max_length=256, blank=False)
     lines_added = models.IntegerField(default=0)
@@ -92,9 +93,11 @@ class Commit(models.Model):
 
     class Meta:
         indexes = [
-            models.Index(fields=['repo', 'commit_date']),
-            models.Index(fields=['author', 'commit_date'])
+            models.Index(fields=['commit_date', 'repo']),
+            models.Index(fields=['commit_date', 'author']),
+            BrinIndex(fields=['lines_added', 'lines_removed']),
         ]
+
 
     def __str__(self):
         return self.subject
@@ -134,11 +137,11 @@ class Statistic(models.Model):
         ('WK', 'week'),
         ('MN', 'month')
     )
-    start_date = models.DateTimeField(blank=False, null=True)
-    interval = models.TextField(max_length=5, choices=INTERVALS)
+    start_date = models.DateTimeField(db_index=True, blank=False, null=True)
+    interval = models.TextField(db_index=True, max_length=5, choices=INTERVALS)
     repo = models.ForeignKey(Repository, db_index=True, on_delete=models.CASCADE, null=True, related_name='repo')
     author = models.ForeignKey(Author, db_index=True, on_delete=models.CASCADE, blank=True, null=True, related_name='author')
-    file = models.ForeignKey(File, db_index=True, on_delete=models.CASCADE, blank=True, null=True, related_name='file')
+    file = models.ForeignKey(File, on_delete=models.CASCADE, blank=True, null=True, related_name='file')
     lines_added = models.IntegerField(blank = True, null = True)
     lines_removed = models.IntegerField(blank = True, null = True)
     lines_changed = models.IntegerField(blank = True, null = True)
@@ -157,8 +160,15 @@ class Statistic(models.Model):
 
     class Meta:
         indexes = [
-            models.Index(fields=['interval', 'author', 'repo', 'file', 'start_date']),
+        models.Index(fields=['start_date', 'interval', 'repo'], name='total_rollup'),
+        models.Index(fields=['start_date', 'interval', 'repo', 'author'], name='author_rollup'),
+        BrinIndex(fields=['interval', 'lines_added', 'lines_removed', 'lines_changed', 'commit_total', 'files_changed', 'author_total'])
         ]
+
+        unique_together = ("start_date", "interval", "repo", "author")
+
+
+
 
     @classmethod
     def create_total_rollup(cls, start_date, interval, repo, lines_added, lines_removed,
