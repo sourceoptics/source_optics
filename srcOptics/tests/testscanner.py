@@ -8,12 +8,12 @@ class ScanTest(TestCase):
 
     def init(self):
         Organization.objects.create(name="root")
-    
+
     def scan(self):
         # our test login information
-        cred = LoginCredential(username='srcoptics', password='bigbig2019')
+        cred = LoginCredential(name='demouser',username='srcoptics', password='bigbig2019')
         cred.save()
-        # run the end-to-end scanner        
+        # run the end-to-end scanner
         Scanner.scan_repo(REPO_NAME, None, cred)
 
     def assert_commit(self, commit, sha, subject, author, la, lr):

@@ -20,8 +20,11 @@ class Organization(models.Model):
         return self.name
 
 class LoginCredential(models.Model):
+    name = models.TextField(max_length=64, blank=False)
     username = models.TextField(max_length=32, blank=False)
     password = models.TextField(max_length=128,  blank=False)
+    description = models.TextField(max_length=128, blank=True, null=True)
+
 
     def __str__(self):
         return self.username

@@ -16,16 +16,16 @@ class RollupTest(TestCase):
         #rm_process = subprocess.Popen("rm -rf " + work_dir)
         #rm_process.wait()
         Organization.objects.create(name="root")
-    
+
     def scan(self):
         # our test login information
-        cred = LoginCredential(username='srcoptics', password='bigbig2019')
+        cred = LoginCredential(name='demouser', username='srcoptics', password='bigbig2019')
         cred.save()
         # Scan our demo repo
         Scanner.scan_repo(REPO, None, cred)
 
     def rollup(self):
-        repo = Repository.objects.get(name="")
+        repo = Repository.objects.get(name=REPO_NAME)
         Rollup.rollup_repo(repo)
 
     def assert_commit(self, commit, sha, subject, author, la, lr):
@@ -53,16 +53,16 @@ class RollupTest(TestCase):
         one = Commit.objects.get(sha="d76f7f8a7c0b7a8875fdcea54107739697fcd82b")
         self.assert_commit(commit=one, sha="d76f7f8a7c0b7a8875fdcea54107739697fcd82b",
                            subject="Initial-commit", author="47673373+srcoptics@users.noreply.github.com", la=2, lr=0)
-        
+
         # Rollup data for scanned repo
         self.rollup()
 
         # Verify some generated total statistics
-        repo = Repository.objects.get(name="")
+        repo = Repository.objects.get(name=REPO_NAME)
         first_date = date(2019, 2, 15)
         total_statistic = Statistic.objects.get(repo=repo, interval="DY", author=None, start_date__contains=first_date)
         self.assert_statistic(statistic=total_statistic, repo=repo, author=None, la=2, lr=0, lc=2, at=1, ct=1)
-        
+
         author = Author.objects.get(email="47673373+srcoptics@users.noreply.github.com")
         author_statistic = Statistic.objects.get(repo=repo, interval="DY", author=author, start_date__contains=first_date)
         self.assert_statistic(statistic=author_statistic, repo=repo, author=author, la=2, lr=0, lc=2, at=1, ct=1)
