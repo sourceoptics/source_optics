@@ -45,7 +45,7 @@ input[type='month'],
 input[type='week'],
 input[type='date'], 
 select {
-    
+    //box-sizing: content-box;
     background-color: $neutral;
     background-repeat: no-repeat;
     background-size: 18px;
@@ -80,13 +80,21 @@ input[type='date'] {
     }
 }
 select {
-    min-width: 120px;
+    //margin: 0;
+    min-width: 130px;
+    padding: 8px 20px;
+    padding-right: 60px;
     background-image: url(img/down.svg);
 }
 
 .flex-row {
     display: flex;
     align-items: center;
+    
+    form {
+      display: flex;
+      align-items: center;
+    }
     .float-right {
         margin-left: auto;
     }
@@ -96,4 +104,8 @@ select {
     .spacer {
         padding-right: 1rem;
     }
+}
+
+.no-margin {
+    margin: 0;
 }

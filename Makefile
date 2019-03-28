@@ -28,4 +28,4 @@ install:
 
 # target: compilecss - compiles minified CSS files from SASS files in static directory
 compilecss:
-	sass --no-source-map --style compressed srcOptics/static/_scss:srcOptics/static
+	sass --update --sourcemap=none --style compressed srcOptics/static/_scss:srcOptics/static
