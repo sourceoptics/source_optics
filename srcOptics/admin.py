@@ -15,6 +15,13 @@ class RepoAdmin(admin.ModelAdmin):
     fields = ['organization', 'enabled', 'cred','name', 'url']
     actions = [scan_selected]
 
+class CommitAdmin(admin.ModelAdmin):
+    list_display = ('sha', 'subject', 'repo', 'author', 'commit_date')
+
+class StatAdmin(admin.ModelAdmin):
+    list_display = ('start_date', 'interval', 'repo', 'author', 'commit_total',
+    'lines_added', 'lines_removed', 'lines_changed', 'files_changed', 'author_total')
+
 class LoginCredentialForm(ModelForm):
     password = forms.CharField(widget=PasswordInput())
     class Meta:
@@ -26,10 +33,10 @@ class LoginCredentialAdmin(admin.ModelAdmin):
     form = LoginCredentialForm
 
 admin.site.register(Organization)
-admin.site.register(Statistic)
+admin.site.register(Statistic, StatAdmin)
 admin.site.register(Repository, RepoAdmin)
 admin.site.register(Author)
-admin.site.register(Commit)
+admin.site.register(Commit, CommitAdmin)
 admin.site.register(FileChange)
 admin.site.register(File)
 admin.site.register(LoginCredential, LoginCredentialAdmin)
