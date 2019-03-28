@@ -9,10 +9,17 @@
                 <input type='checkbox' data-off='/' data-on='/repos' checked/>
             <span class='slider sp round'></span>
               </label>
+              <form id='range' method='GET'>
+                <select name='attr' onchange=this.form.submit()>
+                  {% for a in attribute %}
+
+                  <option value ={{a.0}}>{{a.1}} </option>
+
+                  {% endfor %}
+                </select>
               <label>Graph</label>
           </div>
           <div class='float-right dropdown'>
-              <form id='range'>
                   <label>From</label>
                   <input type='date' name='start' class='start' value='{{request.GET.start}}' max='{% now "Y\-m\-d" %}' onchange='this.form.submit()' required/>
                   <label>To</label>

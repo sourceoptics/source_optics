@@ -6,6 +6,7 @@ from django_tables2 import RequestConfig
 from datetime import datetime, timedelta
 
 
+
 from ..models import Repository, Commit, Statistic
 from .tables import *
 
@@ -95,8 +96,11 @@ def commits_by_repo(request):
     commits = []
     names = []
 
+
+    attributes = Statistic.ATTRIBUTES
     start = request.GET.get('start')
     end = request.GET.get('end')
+    attribute = request.GET.get('attr')
 
     if not start or not end:
         end = datetime.now()
@@ -109,27 +113,26 @@ def commits_by_repo(request):
     for r in repos:
         #commits over timezone
         dates = []
-        commits_by_date = []
+        attribute_by_date = []
 
         names.append(r.name)
         stats_set = Statistic.objects.filter(interval='DY', repo=r, author=None, start_date__range=(start, end))
-        aggregate_data = stats_set.aggregate(commit_total=Sum("commit_total"))
+        #aggregate_data = stats_set.aggregate(data=Sum(attribute))
 
         for stat in stats_set:
             dates.append(stat.start_date)
-            commits_by_date.append(stat.commit_total)
+            attribute_by_date.append(getattr(stat, attribute))
 
-        commits.append(aggregate_data['commit_total'])
-        line_element = create_scatter_plot(r.name, "Date", "Commits", dates, commits_by_date)
+        #commits.append(aggregate_data['commit_total'])
+        line_element = create_scatter_plot(r.name, "Date", attribute.title(), dates, attribute_by_date)
         line_elements = line_elements + line_element
-        dates = []
-        commits_by_date = []
 
 
-    bar_element = create_bar_graph("Commits Per Repository", "Repository", "Commits", names, commits)
+    #bar_element = create_bar_graph("Commits Per Repository", "Repository", "Commits", names, commits)
 
     context = {
         'title': "Commits by repo",
-        'data' : bar_element + line_elements
+        'data' : line_elements,
+        'attribute': attributes
     }
     return render(request, 'repo_view.html', context=context)

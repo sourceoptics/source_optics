@@ -160,10 +160,19 @@ class Statistic(models.Model):
         ('WK', 'week'),
         ('MN', 'month')
     )
+    ATTRIBUTES = (
+        ('commit_total', "Total Commits"),
+        ('lines_added', "Lines Added"),
+        ('lines_removed', "Lines Removed"),
+        ('lines_changed', "Lines Changed"),
+        ('files_changed', "Files Changed"),
+        ('author_total', "Total Authors"),
+        )
     start_date = models.DateTimeField(db_index=True, blank=False, null=True)
     interval = models.TextField(db_index=True, max_length=5, choices=INTERVALS)
     repo = models.ForeignKey(Repository, db_index=True, on_delete=models.CASCADE, null=True, related_name='repo')
     author = models.ForeignKey(Author, db_index=True, on_delete=models.CASCADE, blank=True, null=True, related_name='author')
+    attributes = models.TextField(max_length=24, choices=ATTRIBUTES)
     file = models.ForeignKey(File, on_delete=models.CASCADE, blank=True, null=True, related_name='file')
     lines_added = models.IntegerField(blank = True, null = True)
     lines_removed = models.IntegerField(blank = True, null = True)
