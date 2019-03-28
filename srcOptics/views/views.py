@@ -56,8 +56,8 @@ def index(request):
     return render(request, 'dashboard.html', context=context)
     
 
-def repo_details(request):
-    repo = Repository.objects.get(name=request.GET.get('repo'))
+def repo_details(request, slug):
+    repo = Repository.objects.get(name=slug)
     repos = [repo]
     start = request.GET.get('start')
     end = request.GET.get('end')

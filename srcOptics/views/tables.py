@@ -1,6 +1,7 @@
 import django_tables2 as tables
 from ..models import Statistic
 from django.contrib.humanize.templatetags.humanize import intcomma
+from django_tables2.utils import A
 
 class ColumnNumber(tables.Column):
     def render(self,value):
@@ -14,7 +15,7 @@ class StatTable(tables.Table):
     lines_added = ColumnNumber(verbose_name='+', attrs={"th": {"class": "lines"}})
     lines_removed = ColumnNumber(verbose_name='-', attrs={"th": {"class": "lines"}})
     start_date = tables.Column()
-    repo = tables.Column(attrs={"td": {"class": "repo"}}, linkify={'viewname': 'repo_details'})
+    repo = tables.Column(attrs={"td": {"class": "repo"}}, linkify=('repo_details', {'slug': tables.A('repo')}))
     
     class Meta:
         model = Statistic

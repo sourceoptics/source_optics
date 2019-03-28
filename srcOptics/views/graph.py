@@ -95,9 +95,8 @@ def commits_by_repo(request):
     commits = []
     names = []
 
-
-    start = request.GET.get('s')
-    end = request.GET.get('e')
+    start = request.GET.get('start')
+    end = request.GET.get('end')
 
     if not start or not end:
         end = datetime.now()
