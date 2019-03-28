@@ -109,6 +109,10 @@ def commits_by_repo(request):
         start = datetime.strptime(start, '%Y-%m-%d')
         end = datetime.strptime(end, '%Y-%m-%d')
 
+    # Default attribute if no query string is specified
+    if not attribute:
+        attribute = Statistic.ATTRIBUTES[0][0]
+
     line_elements = ""
     for r in repos:
         #commits over timezone
