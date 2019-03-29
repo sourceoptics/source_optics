@@ -11,8 +11,8 @@ def scan_selected(modeladmin, request, queryset):
         Scanner.scan_repo(rep.url, rep.name, rep.cred)
 
 class RepoAdmin(admin.ModelAdmin):
-    list_display = ('name', 'last_pulled', 'last_scanned', 'enabled')
-    fields = ['organization', 'enabled', 'cred','name', 'url']
+    list_display = ('name','last_pulled', 'last_scanned', 'enabled')
+    fields = ['organization', 'enabled', 'tags', 'cred','name', 'url']
     actions = [scan_selected]
 
 class CommitAdmin(admin.ModelAdmin):
@@ -39,4 +39,5 @@ admin.site.register(Author)
 admin.site.register(Commit, CommitAdmin)
 admin.site.register(FileChange)
 admin.site.register(File)
+admin.site.register(Tag)
 admin.site.register(LoginCredential, LoginCredentialAdmin)

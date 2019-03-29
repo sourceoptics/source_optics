@@ -88,6 +88,7 @@ class Repository(models.Model):
     organization = models.ForeignKey(Organization, on_delete=models.SET_NULL, null=True)
     enabled = models.BooleanField(default=True)
     last_scanned = models.DateTimeField(blank=True, null=True)
+    tags = models.ManyToManyField('Tag', related_name='tags', blank=True)
     last_pulled = models.DateTimeField(blank = True, null = True)
     cred = models.ForeignKey(LoginCredential, on_delete=models.CASCADE, null=True, blank = True)
     url = models.TextField(max_length=256, unique=True, blank=False)
@@ -102,6 +103,14 @@ class Author(models.Model):
 
     def __str__(self):
         return self.email
+
+class Tag(models.Model):
+    name = models.TextField(max_length=64, blank=True, null=True)
+    repos = models.ManyToManyField(Repository, related_name='tagged_repos', blank=True)
+
+    def __str__(self):
+        return self.name
+
 
 class Commit(models.Model):
     repo = models.ForeignKey(Repository, db_index=True, on_delete=models.CASCADE, related_name='repos')
