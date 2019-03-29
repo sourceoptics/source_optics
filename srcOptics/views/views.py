@@ -5,8 +5,9 @@ from django_tables2 import RequestConfig
 from django.db.models import Sum
 from datetime import datetime, timedelta
 
+from django.db.models import Q
 
-from ..models import Repository, Commit, Statistic
+from ..models import *
 from .tables import *
 
 from random import randint
@@ -15,11 +16,21 @@ from random import randint
 View function for home page of site
 """
 def index(request):
-    repos = Repository.objects.all()
 
     # Get query strings
     start = request.GET.get('start')
     end = request.GET.get('end')
+    filter = request.GET.get('filter')
+
+    repos = None
+    if filter is None:
+        repos = Repository.objects.all()
+    else:
+        repos = Repository.objects.filter(name__contains=filter)
+        tag_query = Tag.objects.filter(name__contains=filter)
+        for tag in tag_query:
+            #for r in tag.repos.all():
+                repos |= tag.repos.all()
 
     # Sets default date range to a week if no query string is specified
     if not start or not end:
@@ -29,12 +40,15 @@ def index(request):
         start = datetime.strptime(start, '%Y-%m-%d')
         end = datetime.strptime(end, '%Y-%m-%d')
 
+
     # Loop through repos and add appropriate statistics to table
     stats = []
     for repo in repos:
+
+
         # Get statistics objects in the appropriate interval
         days = Statistic.objects.filter(interval='DY', repo=repo, author=None, file=None, start_date__range=(start, end))
-        
+
         # Calculate sums from statistics objects into an object
         totals = days.aggregate(lines_added=Sum("lines_added"), lines_removed=Sum("lines_removed"),
                         lines_changed=Sum("lines_changed"), commit_total=Sum("commit_total"),
@@ -46,7 +60,7 @@ def index(request):
 
     stat_table = StatTable(stats)
     RequestConfig(request, paginate={'per_page': 10}).configure(stat_table)
-    
+
     context = {
         'title': 'SrcOptics',
         'repositories': repos,
@@ -54,7 +68,7 @@ def index(request):
     }
 
     return render(request, 'dashboard.html', context=context)
-    
+
 
 def repo_details(request, slug):
     repo = Repository.objects.get(name=slug)

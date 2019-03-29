@@ -128,6 +128,7 @@ def commits_by_repo(request):
             attribute_by_date.append(getattr(stat, attribute))
 
         #commits.append(aggregate_data['commit_total'])
+        attribute = attribute.replace("_", " ")
         line_element = create_scatter_plot(r.name, "Date", attribute.title(), dates, attribute_by_date)
         line_elements = line_elements + line_element
 

@@ -3,8 +3,13 @@
     <a href='/'>{srcOptics}</a>
   </header>
   <div class='search-field'>
-    <input type='text' placeholder='Search' />
+    <form id='search' type='get'>
+    <input type='text' name='filter' placeholder='Search' />
+      </form>
   </div>
+
+  <button id='submit_search' type='submit'> Submit </button>
+
   <!--
       <div class='actions'>
         <input type='checkbox' id='settings' name='actions'/>
