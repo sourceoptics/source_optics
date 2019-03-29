@@ -135,7 +135,7 @@ def commits_by_repo(request):
     #bar_element = create_bar_graph("Commits Per Repository", "Repository", "Commits", names, commits)
 
     context = {
-        'title': "Commits by repo",
+        'title': "Repo Statistics Over Time",
         'data' : line_elements,
         'attribute': attributes
     }
