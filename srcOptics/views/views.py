@@ -5,8 +5,6 @@ from django_tables2 import RequestConfig
 from django.db.models import Sum
 from datetime import datetime, timedelta
 
-from django.db.models import Q
-
 from ..models import *
 from .tables import *
 
@@ -20,14 +18,14 @@ def index(request):
     # Get query strings
     start = request.GET.get('start')
     end = request.GET.get('end')
-    filter = request.GET.get('filter')
+    search = request.GET.get('filter')
 
     repos = None
-    if filter is None:
+    if not search:
         repos = Repository.objects.all()
     else:
-        repos = Repository.objects.filter(name__contains=filter)
-        tag_query = Tag.objects.filter(name__contains=filter)
+        repos = Repository.objects.filter(name__icontains=search)
+        tag_query = Tag.objects.filter(name__icontains=search)
         for tag in tag_query:
             repos |= tag.repos.all()
 

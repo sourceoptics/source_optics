@@ -98,14 +98,13 @@ def commits_by_repo(request):
     start = request.GET.get('start')
     end = request.GET.get('end')
     attribute = request.GET.get('attr')
-    filter = request.GET.get('filter')
+    search = request.GET.get('filter')
 
-    repos = None
-    if filter is None:
+    if not search:
         repos = Repository.objects.all()
     else:
-        repos = Repository.objects.filter(name__contains=filter)
-        tag_query = Tag.objects.filter(name__contains=filter)
+        repos = Repository.objects.filter(name__icontains=search)
+        tag_query = Tag.objects.filter(name__icontains=search)
         for tag in tag_query:
             repos |= tag.repos.all()
 

@@ -27,7 +27,7 @@ nav {
         position: relative;
         width: 30%;
 
-        input[type='text'] {
+        input {
             color: $white;
             width: 100%;
             border: 0;
@@ -46,6 +46,9 @@ nav {
             }
             &::-ms-input-placeholder {
                 color: darken($white, 30%);
+            }
+            &::-webkit-search-cancel-button {
+                margin-right:1rem;
             }
         }
 

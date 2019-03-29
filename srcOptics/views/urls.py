@@ -1,6 +1,6 @@
 from django.urls import path, re_path
 
-from . import views,graph
+from . import views, graph, api
 
 urlpatterns = [
     path('', views.index),
@@ -8,4 +8,5 @@ urlpatterns = [
     path('repos/', graph.commits_by_repo, name='repos'),
     # path('repo_details/', views.repo_details, name='repo_details'),
     path('repos/<slug>/', views.repo_details, name='repo_details'),
+    path('q/<query>/', api.search, name='api')
 ]

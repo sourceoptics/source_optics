@@ -10,7 +10,9 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/2.1/ref/settings/
 """
 
-import os
+import os, django
+
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", __file__)
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -38,7 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'srcOptics',
-    'django_tables2'
+    'django_tables2',
 ]
 
 MIDDLEWARE = [
@@ -131,3 +133,5 @@ RECORD_FILE_CHANGES = False
 # The location of the symmetric key for password encryption
 # should be created in init
 SYMMETRIC_SECRET_KEY = '/etc/srcoptics/cred.key'
+
+django.setup()
