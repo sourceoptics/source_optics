@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 
 
 
-from ..models import Repository, Commit, Statistic
+from ..models import Repository, Commit, Statistic, Tag
 from .tables import *
 
 from random import randint
@@ -92,15 +92,27 @@ def create_scatter_plot(title, x_axis_title, y_axis_title, x_axis_data, y_axis_d
     return element
 
 def commits_by_repo(request):
-    repos = Repository.objects.all()
-    commits = []
-    names = []
 
 
     attributes = Statistic.ATTRIBUTES
     start = request.GET.get('start')
     end = request.GET.get('end')
     attribute = request.GET.get('attr')
+    filter = request.GET.get('filter')
+
+    repos = None
+    if filter is None:
+        repos = Repository.objects.all()
+    else:
+        repos = Repository.objects.filter(name__contains=filter)
+        tag_query = Tag.objects.filter(name__contains=filter)
+        for tag in tag_query:
+            repos |= tag.repos.all()
+
+    commits = []
+    names = []
+
+
 
     if not start or not end:
         end = datetime.now()
@@ -128,8 +140,7 @@ def commits_by_repo(request):
             attribute_by_date.append(getattr(stat, attribute))
 
         #commits.append(aggregate_data['commit_total'])
-        attribute = attribute.replace("_", " ")
-        line_element = create_scatter_plot(r.name, "Date", attribute.title(), dates, attribute_by_date)
+        line_element = create_scatter_plot(r.name, "Date", attribute.replace("_", " ").title(), dates, attribute_by_date)
         line_elements = line_elements + line_element
 
 

@@ -29,8 +29,7 @@ def index(request):
         repos = Repository.objects.filter(name__contains=filter)
         tag_query = Tag.objects.filter(name__contains=filter)
         for tag in tag_query:
-            #for r in tag.repos.all():
-                repos |= tag.repos.all()
+            repos |= tag.repos.all()
 
     # Sets default date range to a week if no query string is specified
     if not start or not end:
