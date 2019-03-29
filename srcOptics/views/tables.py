@@ -16,7 +16,7 @@ class StatTable(tables.Table):
     lines_removed = ColumnNumber(verbose_name='-', attrs={"th": {"class": "lines"}})
     start_date = tables.Column()
     repo = tables.Column(attrs={"td": {"class": "repo"}}, linkify=('repo_details', {'slug': tables.A('repo')}))
-    
+
     class Meta:
         model = Statistic
         exclude = (

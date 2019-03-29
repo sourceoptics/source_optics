@@ -172,7 +172,6 @@ class Statistic(models.Model):
     interval = models.TextField(db_index=True, max_length=5, choices=INTERVALS)
     repo = models.ForeignKey(Repository, db_index=True, on_delete=models.CASCADE, null=True, related_name='repo')
     author = models.ForeignKey(Author, db_index=True, on_delete=models.CASCADE, blank=True, null=True, related_name='author')
-    attributes = models.TextField(max_length=24, choices=ATTRIBUTES)
     file = models.ForeignKey(File, on_delete=models.CASCADE, blank=True, null=True, related_name='file')
     lines_added = models.IntegerField(blank = True, null = True)
     lines_removed = models.IntegerField(blank = True, null = True)
