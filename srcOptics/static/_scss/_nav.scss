@@ -32,7 +32,7 @@ nav {
             width: 100%;
             border: 0;
             //border-bottom: 3px solid white;
-            appearance: none;
+            -webkit-appearance: none;
             padding: .5rem 0 .5rem 3rem;
             background: rgba($white, .2);
             font-size: 12pt;
@@ -42,7 +42,7 @@ nav {
                 outline: none;
 
                 & + .results {
-                    visibility: visible;
+                    display: block;
                 }
             }
             &::placeholder {
@@ -69,7 +69,7 @@ nav {
         }
         
         .results {
-            visibility: hidden;
+            display: none;
             position: absolute;
             list-style-type: none;
             background: $white;
@@ -93,6 +93,9 @@ nav {
                 &:not(:last-of-type) {
                     border-bottom: solid 1px $gray;
                 }
+            }
+            &:hover {
+                display: block;
             }
         }
     }

@@ -45,6 +45,7 @@ input[type='month'],
 input[type='week'],
 input[type='date'], 
 select {
+    border-sizing: border-box;
     transition: 200ms all linear;
     background-color: $neutral;
     background-repeat: no-repeat;
