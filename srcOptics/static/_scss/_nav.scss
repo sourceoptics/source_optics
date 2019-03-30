@@ -40,6 +40,10 @@ nav {
             &:focus {
                 border-bottom-color: darken($white, 10%);
                 outline: none;
+
+                & + .results {
+                    display: block;
+                }
             }
             &::placeholder {
                 color: darken($white, 30%);
@@ -62,6 +66,34 @@ nav {
             margin: auto;
             background: url(img/search.svg);
             background-repeat: no-repeat;
+        }
+        
+        .results {
+            //display: none;
+            position: absolute;
+            list-style-type: none;
+            background: $white;
+            padding: 0;
+            width: 100%;
+            top: 20px;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.16), 
+                        0 3px 6px rgba(0,0,0,0.23);
+
+            li {
+                span {
+                    cursor: pointer;
+                    display: block;
+                    padding: 1rem;
+                    
+                    &:hover {
+                        background: $blue;
+                        color: $white;
+                    }
+                }
+                &:not(:last-of-type) {
+                    border-bottom: solid 1px $gray;
+                }
+            }
         }
     }
 

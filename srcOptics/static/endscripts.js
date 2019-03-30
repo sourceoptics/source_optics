@@ -1,5 +1,5 @@
 /**
- * @file 
+ * @file endscripts.js
  * Provides additional tweaks to front-end components
  *
  * These additional scripts are intended to be run at the end
@@ -36,31 +36,60 @@ if(switches.length) {
     });
 }
 
+/** 
+ * Used to submit search query along with existing query strings
+ * @param obj Object / node to pull value from
+ * @param e Event
+ */
+var submitQuery = function(obj, e) {
+    e.preventDefault();
+    document.getElementById('filter').value = obj.value;
+    form.submit();
+};
 
+// Search elements
 var search = document.querySelector('#search input');
+var searchForm = document.getElementById('search');
+var results = document.querySelector('.results');
+
 if(search) {
+    // Replaces default submit in search box
+    searchForm.addEventListener('submit', submitQuery.bind(null, search), true);
+
+    /** 
+     * Triggers live search using ajax and populates results
+     */
     search.onkeyup = function() {
+        
+        // Check if search box is not empty
         if(this.value) {
+            
+            // Make a new ajax GET request
             let Http = new XMLHttpRequest();
             Http.open('GET', '/q/' + this.value);
+
             Http.onload = function() {
-                if(Http.status === 200) {
-                    let results = JSON.parse(Http.responseText);
-                    results.forEach(function(result) {
-                        console.log(result.fields.name);
+                if(Http.status === 200) { // if successful
+
+                    // Parse request response into an array of JSON objects
+                    let res = JSON.parse(Http.responseText);
+
+                    // Initialize results to be empty, loop through and create elements
+                    results.innerHTML = '';
+                    res.forEach(function(e) {
+                        results.innerHTML += `<li><span onclick="submitQuery({value:'${e.fields.name}'},event);">${e.fields.name}</span></li>`;
                     });
-                } else {
+
+                    // Add result for searching a query manually
+                    results.innerHTML += `<li><span onclick="searchForm.dispatchEvent(new Event('submit'));">Search for '${search.value}'</span></li>`;
+
+                } else { // if fail, print response text to console
                     console.log('Internal error: ' + Http.responseText);
                 }
             }
             Http.send();
         }
     }
-    document.getElementById('search').addEventListener('submit', function(e) {
-        e.preventDefault();
-        document.getElementById('filter').value = search.value;
-        form.submit();
-    }, true);
 }
 
 
