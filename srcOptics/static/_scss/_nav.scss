@@ -42,7 +42,7 @@ nav {
                 outline: none;
 
                 & + .results {
-                    display: block;
+                    visibility: visible;
                 }
             }
             &::placeholder {
@@ -69,7 +69,7 @@ nav {
         }
         
         .results {
-            //display: none;
+            visibility: hidden;
             position: absolute;
             list-style-type: none;
             background: $white;

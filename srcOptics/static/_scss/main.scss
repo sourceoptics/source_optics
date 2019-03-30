@@ -17,7 +17,6 @@ $colors: #333D5C, #5C3353, #AD3838, #57958B, #AD5838, #B55D7F;
 
 * {
     font-family: 'Lato', sans-serif;
-    transition: 200ms all linear;
 }
 body {
     padding: 0;
@@ -46,7 +45,7 @@ input[type='month'],
 input[type='week'],
 input[type='date'], 
 select {
-    //box-sizing: content-box;
+    transition: 200ms all linear;
     background-color: $neutral;
     background-repeat: no-repeat;
     background-size: 18px;
