@@ -98,14 +98,15 @@ def attributes_by_repo(request):
 
     # Attribute query parameter
     attribute = request.GET.get('attr')
+    # Default attribute(total commits) if no query string is specified
+    if not attribute:
+        attribute = Statistic.ATTRIBUTES[0][0]
     
     repos = util.query(request)
 
     start, end = util.get_date_range(request)
 
-    # Default attribute(total commits)if no query string is specified
-    if not attribute:
-        attribute = Statistic.ATTRIBUTES[0][0]
+    
     line_elements = ""
     # Iterate over repo queryset
     for r in repos:
@@ -140,6 +141,11 @@ def attribute_graphs(request, slug):
     #list of possible attribute values to filter by. Defined in models.py for Statistic object
     attributes = Statistic.ATTRIBUTES
 
+    # Attribute query parameter
+    attribute = request.GET.get('attr')
+    # Default attribute(total commits) if no query string is specified
+    if not attribute:
+        attribute = Statistic.ATTRIBUTES[0][0]
 
     #If there isn't a filter query parameter, list all repository organization
     #TODO: filter by organization
@@ -149,24 +155,23 @@ def attribute_graphs(request, slug):
 
 
     line_elements = ""
-    for attribute in attributes:
-        #array for dates
-        dates = []
-        #array for attribute values
-        attribute_by_date = []
-        #Filter Rollup table for daily interval statistics for the current repository over the specified time range
-        stats_set = Statistic.objects.filter(interval='DY', repo=repo, author=None, start_date__range=(start, end))
-        #aggregate_data = stats_set.aggregate(data=Sum(attribute))
+    #array for dates
+    dates = []
+    #array for attribute values
+    attribute_by_date = []
+    #Filter Rollup table for daily interval statistics for the current repository over the specified time range
+    stats_set = Statistic.objects.filter(interval='DY', repo=repo, author=None, start_date__range=(start, end))
+    #aggregate_data = stats_set.aggregate(data=Sum(attribute))
 
 
-        #adds dates and attribute values to their appropriate arrays to render into graph data
-        for stat in stats_set:
-            dates.append(stat.start_date)
-            attribute_by_date.append(getattr(stat, attribute[0]))
+    #adds dates and attribute values to their appropriate arrays to render into graph data
+    for stat in stats_set:
+        dates.append(stat.start_date)
+        attribute_by_date.append(getattr(stat, attribute))
 
-        #creates a scatter plot for each element
-        line_element = create_scatter_plot(repo.name, "Date", attribute[0].replace("_", " ").title(), dates, attribute_by_date)
-        line_elements = line_elements + line_element
+    #creates a scatter plot for each element
+    line_element = create_scatter_plot(repo.name, "Date", attribute.replace("_", " ").title(), dates, attribute_by_date)
+    line_elements = line_elements + line_element
 
 
     return line_elements, attributes

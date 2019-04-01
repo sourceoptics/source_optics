@@ -3,17 +3,30 @@
     <h1>{{title}}</h1>
    {% load render_table from django_tables2 %}
     <div class='tabular-view'>
-        <div class='flex-row'>
-            <div class='float-right dropdown'>
-                <form id='range'>
-                    <label>From</label>
-                    <input type='date' name='start' class='start' value='{{request.GET.start}}' max='{% now "Y\-m\-d" %}' onchange='this.form.submit()' required/>
-                    <label>To</label>
-                    <input type='date' name='end' class='end' value='{% if request.GET.end %}{{request.GET.end}}{% else %}{% now "Y\-m\-d" %}{% endif %}' max='{% now "Y\-m\-d" %}' onchange='this.form.submit()'  required/>
-                </form>
-            </div>
-        </div>
-
+        <form id='range' method='GET'> 
+          <div class='flex-row'>
+              <!-- <div class='sw-container'>
+                  <label>Tabular</label>
+                  <label class='switch'>
+                    <input type='checkbox' data-off='/' data-on='/repos' checked/>
+                    <span class='slider sp round'></span>
+                  </label>
+                  <label>Graph</label>
+              </div> -->
+              <div class='float-right dropdown'>
+                  <label>From</label>
+                  <input type='date' name='start' class='start' value='{{request.GET.start}}' max='{% now "Y\-m\-d" %}' onchange='this.form.submit()' required/>
+                  <label>To</label>
+                  <input type='date' name='end' class='end' value='{% if request.GET.end %}{{request.GET.end}}{% else %}{% now "Y\-m\-d" %}{% endif %}' max='{% now "Y\-m\-d" %}' onchange='this.form.submit()'  required/>
+                  <input type='hidden' id='filter' name='filter'/>
+              </div>
+          </div>
+          <select class='no-margin' name='attr' onchange='this.form.submit()'>
+            {% for a in attribute %}
+            <option value='{{a.0}}' {% if request.GET.attr == a.0 %}selected{% endif %}>{{a.1}}</option>
+            {% endfor %}
+          </select>
+        </form>
         <div>
         {{ data| safe }}
         </div>    
