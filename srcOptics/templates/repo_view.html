@@ -21,7 +21,7 @@
           </div>
       </div>
       <select class='no-margin' name='attr' onchange='this.form.submit()'>
-        {% for a in attribute %}
+        {% for a in attributes %}
         <option value='{{a.0}}' {% if request.GET.attr == a.0 %}selected{% endif %}>{{a.1}}</option>
         {% endfor %}
       </select>

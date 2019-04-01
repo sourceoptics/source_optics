@@ -15,16 +15,12 @@ from random import randint
 View function for home page of site
 """
 def index(request):
-
     repos = util.query(request)
-
     start, end = util.get_date_range(request)
-
-
-    # Loop through repos and add appropriate statistics to table
     stats = util.get_stats(repos, start, end)
-
+    
     stat_table = StatTable(stats)
+    
     RequestConfig(request, paginate={'per_page': 10}).configure(stat_table)
 
     context = {
@@ -46,9 +42,11 @@ def repo_details(request, slug):
     stat_table = StatTable(stats)
     RequestConfig(request, paginate={'per_page': 10}).configure(stat_table)
 
-    line_elements, attributes = graph.attribute_graphs(request, slug)
+    line_elements = graph.attribute_graphs(request, slug)
 
-    author_elements, attributes = graph.attribute_author_graphs(request, slug)
+    author_elements = graph.attribute_author_graphs(request, slug)
+
+    attributes = Statistic.ATTRIBUTES
 
     context = {
         'title': repo,
@@ -56,6 +54,6 @@ def repo_details(request, slug):
         'stats': stat_table,
         'data': line_elements,
         'author_data': author_elements,
-        'attribute': attributes
+        'attributes': attributes
     }
     return render(request, 'repo_details.html', context=context)

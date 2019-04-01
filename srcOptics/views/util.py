@@ -6,14 +6,16 @@ from django.db.models import Sum
 from ..models import *
 
 """
-Returns a list of Repository objects by search query
-that matches repo names or tag objects
+Returns a JSON list of repositories by search query
 """
 def search(request, query):
     repos = query(request)
     data = serializers.serialize('json',repos)
     return HttpResponse(data, content_type='application/json')
 
+"""
+Returns a list of Repository objects from filter query
+"""
 def query(request):
     search = request.GET.get('filter')
 
@@ -27,6 +29,10 @@ def query(request):
             repos |= tag.repos.all()
     return repos
 
+"""
+Returns a list of Statistic objects from start / end date in
+a given list of repositories
+"""
 def get_stats(repos, start, end):
     # Loop through repos and add appropriate statistics to table
     stats = []
@@ -44,6 +50,9 @@ def get_stats(repos, start, end):
         stats.append(totals)
     return stats
 
+"""
+Returns a start and end date from query strings or defaults to one week
+"""
 def get_date_range(request):
     # Get query strings
     start = request.GET.get('start')
