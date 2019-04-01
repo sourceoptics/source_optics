@@ -48,11 +48,14 @@ def repo_details(request, slug):
 
     line_elements, attributes = graph.attribute_graphs(request, slug)
 
+    author_elements, attributes = graph.attribute_author_graphs(request, slug)
+
     context = {
         'title': repo,
         'repository': [repo],
         'stats': stat_table,
         'data': line_elements,
+        'author_data': author_elements,
         'attribute': attributes
     }
     return render(request, 'repo_details.html', context=context)
