@@ -91,6 +91,25 @@ def create_scatter_plot(title, x_axis_title, y_axis_title, x_axis_data, y_axis_d
     element = opy.plot(fig, auto_open=False, output_type='div')
     return element
 
+# Uses the provided parameters to generate a graph and returns it
+def generate_graph_data(repo, start, end, author, attribute):
+    # Array for dates
+    dates = []
+    # Array for attribute values
+    attribute_by_date = []
+    # Filter Rollup table for daily interval statistics for the current repository over the specified time range
+    stats_set = Statistic.objects.filter(interval='DY', repo=repo, author=author, start_date__range=(start, end))
+    #aggregate_data = stats_set.aggregate(data=Sum(attribute))
+
+    # Adds dates and attribute values to their appropriate arrays to render into graph data
+    for stat in stats_set:
+        dates.append(stat.start_date)
+        attribute_by_date.append(getattr(stat, attribute))
+
+    # Creates a scatter plot for each element
+    line_element = create_scatter_plot(repo.name, "Date", attribute.replace("_", " ").title(), dates, attribute_by_date)
+    return line_element
+
 def attributes_by_repo(request):
 
     # List of possible attribute values to filter by. Defined in models.py for Statistic object
@@ -102,30 +121,17 @@ def attributes_by_repo(request):
     if not attribute:
         attribute = Statistic.ATTRIBUTES[0][0]
     
+    # Query for repos based on the request (filter)
     repos = util.query(request)
 
+    # Get start and end date for date range
     start, end = util.get_date_range(request)
 
     
     line_elements = ""
-    # Iterate over repo queryset
+    # Iterate over repo queryset, generating attribute graph for each
     for r in repos:
-        #array for dates
-        dates = []
-        #array for attribute values
-        attribute_by_date = []
-        #Filter Rollup table for daily interval statistics for the current repository over the specified time range
-        stats_set = Statistic.objects.filter(interval='DY', repo=r, author=None, start_date__range=(start, end))
-        #aggregate_data = stats_set.aggregate(data=Sum(attribute))
-
-
-        #adds dates and attribute values to their appropriate arrays to render into graph data
-        for stat in stats_set:
-            dates.append(stat.start_date)
-            attribute_by_date.append(getattr(stat, attribute))
-
-        #creates a scatter plot for each repository
-        line_element = create_scatter_plot(r.name, "Date", attribute.replace("_", " ").title(), dates, attribute_by_date)
+        line_element = generate_graph_data(r, start, end, None, attribute)
         line_elements = line_elements + line_element
 
     context = {
@@ -147,32 +153,16 @@ def attribute_graphs(request, slug):
     if not attribute:
         attribute = Statistic.ATTRIBUTES[0][0]
 
-    #If there isn't a filter query parameter, list all repository organization
-    #TODO: filter by organization
-    repo = Repository.objects.get(name = slug )
+    # Get the repo object for the selected repository
+    repo = Repository.objects.get(name = slug)
 
+    # Get start and end date of date range
     start, end = util.get_date_range(request)
 
-
+    # Generate a graph for displayed repository based on selected attribute
     line_elements = ""
-    #array for dates
-    dates = []
-    #array for attribute values
-    attribute_by_date = []
-    #Filter Rollup table for daily interval statistics for the current repository over the specified time range
-    stats_set = Statistic.objects.filter(interval='DY', repo=repo, author=None, start_date__range=(start, end))
-    #aggregate_data = stats_set.aggregate(data=Sum(attribute))
-
-
-    #adds dates and attribute values to their appropriate arrays to render into graph data
-    for stat in stats_set:
-        dates.append(stat.start_date)
-        attribute_by_date.append(getattr(stat, attribute))
-
-    #creates a scatter plot for each element
-    line_element = create_scatter_plot(repo.name, "Date", attribute.replace("_", " ").title(), dates, attribute_by_date)
+    line_element = generate_graph_data(repo, start, end, None, attribute)
     line_elements = line_elements + line_element
-
 
     return line_elements, attributes
 
@@ -187,34 +177,20 @@ def attribute_author_graphs(request, slug):
     if not attribute:
         attribute = Statistic.ATTRIBUTES[0][0]
 
-    #If there isn't a filter query parameter, list all repository organization
-    #TODO: filter by organization
-    repo = Repository.objects.get(name = slug )
+    # Get the repo object for the selected repository
+    repo = Repository.objects.get(name = slug)
 
+    # Get start and end date of date range
     start, end = util.get_date_range(request)
 
+    # Get every author with displayed repo
     authors = Author.objects.filter(repos__in=[repo]).iterator()
 
+    # Generate a graph for each author based on selected attribute for the displayed repo
+    # TODO: Limit number of authors
     line_elements = ""
     for author in authors:
-
-        #array for dates
-        dates = []
-        #array for attribute values
-        attribute_by_date = []
-        #Filter Rollup table for daily interval statistics for the current repository over the specified time range
-        stats_set = Statistic.objects.filter(interval='DY', repo=repo, author=author, start_date__range=(start, end))
-        #aggregate_data = stats_set.aggregate(data=Sum(attribute))
-
-
-        #adds dates and attribute values to their appropriate arrays to render into graph data
-        for stat in stats_set:
-            dates.append(stat.start_date)
-            attribute_by_date.append(getattr(stat, attribute))
-
-        #creates a scatter plot for each element
-        line_element = create_scatter_plot(repo.name, "Date", attribute.replace("_", " ").title(), dates, attribute_by_date)
+        line_element = generate_graph_data(repo, start, end, author, attribute)
         line_elements = line_elements + line_element
-
 
     return line_elements, attributes
