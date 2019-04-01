@@ -4,6 +4,7 @@ from django.http import *
 from django_tables2 import RequestConfig
 from django.db.models import Sum
 from datetime import datetime, timedelta
+from . import graph
 
 from ..models import *
 from .tables import *
@@ -85,10 +86,14 @@ def repo_details(request, slug):
     stats['repo'] = repo
     stat_table = StatTable(stats)
     RequestConfig(request, paginate={'per_page': 10}).configure(stat_table)
+
+    line_elements, attributes = graph.attribute_graphs(request, slug)
+
     context = {
         'title': repo,
-        'repositories': repo,
-        'stats': stat_table
+        'repository': repos,
+        'stats': stat_table,
+        'data': line_elements,
+        'attribute': attributes
     }
-
     return render(request, 'repo_details.html', context=context)
