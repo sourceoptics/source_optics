@@ -1,14 +1,13 @@
 from django.shortcuts import render
 from django.template import loader
-from django.db.models import Sum
+
 from django.http import *
 from django_tables2 import RequestConfig
-from datetime import datetime, timedelta
-
-
 
 from ..models import Repository, Commit, Statistic, Tag
 from .tables import *
+
+from . import util
 
 from random import randint
 
@@ -94,46 +93,21 @@ def create_scatter_plot(title, x_axis_title, y_axis_title, x_axis_data, y_axis_d
 
 def attributes_by_repo(request):
 
-    #list of possible attribute values to filter by. Defined in models.py for Statistic object
+    # List of possible attribute values to filter by. Defined in models.py for Statistic object
     attributes = Statistic.ATTRIBUTES
-    #start date query parameter
-    start = request.GET.get('start')
-    #end date query parameterd
-    end = request.GET.get('end')
-    #attribute query parameter
+
+    # Attribute query parameter
     attribute = request.GET.get('attr')
-    #search filter query parameter
-    search = request.GET.get('filter')
+    
+    repos = util.query(request)
 
-    #If there isn't a filter query parameter, list all repository organization
-    #TODO: filter by organization
-    if not search:
-        repos = Repository.objects.all()
-    else:
-        #If there is a filter query parameter, list repositories which match the filter
-        #This includes repository name and repository tags
-        #Note that a filter "ta" will return repos with the tag "tag1"
-        repos = Repository.objects.filter(name__icontains=search)
-        tag_query = Tag.objects.filter(name__icontains=search)
-        for tag in tag_query:
-            #Join the repos meeting the filter to the queryset
-            repos |= tag.repos.all()
-
-
-
-    #If start or end query parameters aren't defined, default to the last week starting from current day
-    if not start or not end:
-        end = datetime.now()
-        start = end - timedelta(days=7)
-    else:
-        start = datetime.strptime(start, '%Y-%m-%d')
-        end = datetime.strptime(end, '%Y-%m-%d')
+    start, end = util.get_date_range(request)
 
     # Default attribute(total commits)if no query string is specified
     if not attribute:
         attribute = Statistic.ATTRIBUTES[0][0]
     line_elements = ""
-    #Iterate over repo queryset
+    # Iterate over repo queryset
     for r in repos:
         #array for dates
         dates = []
@@ -153,8 +127,6 @@ def attributes_by_repo(request):
         line_element = create_scatter_plot(r.name, "Date", attribute.replace("_", " ").title(), dates, attribute_by_date)
         line_elements = line_elements + line_element
 
-
-
     context = {
         'title': "Repo Statistics Over Time",
         'data' : line_elements,
@@ -167,22 +139,14 @@ def attribute_graphs(request, slug):
 
     #list of possible attribute values to filter by. Defined in models.py for Statistic object
     attributes = Statistic.ATTRIBUTES
-    #start date query parameter
-    start = request.GET.get('start')
-    #end date query parameterd
-    end = request.GET.get('end')
+
 
     #If there isn't a filter query parameter, list all repository organization
     #TODO: filter by organization
     repo = Repository.objects.get(name = slug )
 
-    #If start or end query parameters aren't defined, default to the last week starting from current day
-    if not start or not end:
-        end = datetime.now()
-        start = end - timedelta(days=7)
-    else:
-        start = datetime.strptime(start, '%Y-%m-%d')
-        end = datetime.strptime(end, '%Y-%m-%d')
+    start, end = util.get_date_range(request)
+
 
     line_elements = ""
     for attribute in attributes:
