@@ -70,8 +70,10 @@ class LoginCredential(models.Model):
         script = """
         #!/usr/bin/expect -f
         spawn git pull
-        expect "Password for*:"
-        send "%s\n";
+        expect {
+        "Password for*:" { send "%s\n"; }
+        "Already up to date." { }
+        }
         interact
         """ % self.unencrypt_password()
         fh.write(script)
