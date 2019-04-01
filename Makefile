@@ -7,7 +7,7 @@ help:
 
 # target: test - calls the "test" django command
 test:
-	django-admin.py test --settings=$(TEST_SETTINGS)
+	python manage.py test
 
 # target: update - install (and update) pip requirements
 update:
