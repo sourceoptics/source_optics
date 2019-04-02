@@ -50,7 +50,6 @@ def repo_details(request, slug):
 
     context = {
         'title': repo,
-        'repository': [repo],
         'stats': stat_table,
         'data': line_elements,
         'author_data': author_elements,
