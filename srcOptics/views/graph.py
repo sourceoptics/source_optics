@@ -106,9 +106,7 @@ def attributes_by_repo(request):
             row=i+1,
             col=1
         )
-
-
-    # figure['layout'].update(subplot_titles=tuple(subplot_titles))
+    figure['layout'].update(height=800)
 
     graph = opy.plot(figure, auto_open=False, output_type='div')
 
