@@ -11,98 +11,22 @@ from . import util
 
 from random import randint
 
+from plotly import tools
 import plotly.graph_objs as go
 import plotly.offline as opy
 
-GRAPH_COLOR = 'rgba(100, 50, 125, 1.0)'
+GRAPH_COLORS = [
+    'rgba(100, 50, 125, 1.0)',
+    'rgba(100, 50, 0, 1.0)',
+    'rgba(100, 50, 0, 1.0)',
+    'rgba(100, 50, 0, 1.0)',
+    'rgba(100, 50, 0, 1.0)',
+]
+
 
 """
 View basic graph for a repo
 """
-
-"""
-Creates bar graph and returns bar graph element
-"""
-def create_bar_graph(**kwargs):
-    # use plotly to make the graph
-    # its html will be added to the data field of the context
-    trace = go.Bar(
-        x=kwargs['x_axis_data'],
-        y=kwargs['y_axis_data'],
-        marker={
-            'color': GRAPH_COLOR,
-            'line': {
-                'color': GRAPH_COLOR,
-                'width': 1
-            }
-        }
-        ,
-        name='Commits',
-        orientation='v',
-    )
-    layout = go.Layout(
-        title=kwargs['title'],
-        margin={
-            # 'l':50,
-            # 'r':50,
-            # 'b':100,
-            # 't':100,
-            # 'pad':20
-        },
-        xaxis={
-            'title': kwargs['x_axis_title'],
-            'tickfont': {
-                'color': '#696969',
-                'size': 18,
-            }
-        },
-        yaxis={
-            'title': kwargs['y_axis_title'],
-            'tickfont': {
-                'color': '#696969',
-                'size': 18,
-            }
-        },
-        font={'family': 'Lato, san-serif'},
-        # width=1060,
-        # height=600
-    )
-    fig = go.Figure(data=[trace],layout=layout)
-    # save to a div element
-    element = opy.plot(fig, auto_open=False, output_type='div')
-    return element
-
-"""
-Creates and returns the HTML for a scatter plot.
-"""
-def create_scatter_plot(**kwargs):
-    # Create traces
-    trace0 = go.Scatter(
-        x=kwargs['x_axis_data'],
-        y=kwargs['y_axis_data'],
-        mode='lines+markers',
-        name='lines+markers',
-        marker={
-            'size': 14, 
-            'line': {
-                'width':1
-            },
-            'color': GRAPH_COLOR
-        },
-    )
-
-    layout = go.Layout(
-        title=kwargs['title'],
-        xaxis={
-            'title': kwargs['x_axis_title'],
-        },
-        yaxis={
-            'title': kwargs['y_axis_title'],
-        },
-    )
-    fig = go.Figure(data = [trace0], layout=layout)
-    element = opy.plot(fig, auto_open=False, output_type='div')
-    return element
 
 # Uses the provided parameters to generate a graph and returns it
 def generate_graph_data(**kwargs):
@@ -126,14 +50,28 @@ def generate_graph_data(**kwargs):
         attribute_by_date.append(getattr(stat, kwargs['attribute']))
 
     # Creates a scatter plot for each element
-    line_element = create_scatter_plot(
-        title=kwargs['repo'].name, 
-        x_axis_title='Date', 
-        y_axis_title=kwargs['attribute'].replace("_", " ").title(), 
-        x_axis_data=dates,
-        y_axis_data=attribute_by_date
+
+    # Create traces
+    trace0 = go.Scatter(
+        x=dates,
+        y=attribute_by_date,
+        mode='lines+markers',
+        name=kwargs['repo'].name,
+        marker={
+            'size': 10, 
+            'line': {
+                'width': 1
+            },
+            'color': GRAPH_COLORS[kwargs['row']-1]
+        },
     )
-    return line_element
+
+    fig = kwargs.get('figure')
+    if fig:
+        fig.append_trace(trace0, kwargs['row'], 1)
+        return fig
+    else:
+        return go.Figure(data=[trace0])
 
 def attributes_by_repo(request):
 
@@ -148,20 +86,33 @@ def attributes_by_repo(request):
         attribute = Statistic.ATTRIBUTES[0][0]
     
     # Query for repos based on the request (filter)
-    repos = util.query(request)
+    repos = util.query(request.GET.get('filter'))
 
     # Get start and end date for date range
     start, end = util.get_date_range(request)
     
-    line_elements = ""
+    figure = tools.make_subplots(
+        rows=len(repos),
+        cols=1
+    )
     # Iterate over repo queryset, generating attribute graph for each
-    for repo in repos:
-        line_element = generate_graph_data(repo=repo, start=start, end=end, attribute=attribute)
-        line_elements += line_element
+    for i in range(len(repos)):
+        figure = generate_graph_data(
+            figure=figure,
+            repo=repos[i],
+            start=start,
+            end=end,
+            attribute=attribute,
+            row=i+1,
+        )
+    
+    figure['layout'].update(title='test')
+
+    graph = opy.plot(figure, auto_open=False, output_type='div')
 
     context = {
         'title': "Repo Statistics Over Time",
-        'data' : line_elements,
+        'data' : graph,
         'attributes': attributes
     }
     return render(request, 'repo_view.html', context=context)
@@ -175,17 +126,19 @@ def attribute_graphs(request, slug):
         attribute = Statistic.ATTRIBUTES[0][0]
 
     # Get the repo object for the selected repository
-    repo = Repository.objects.get(name = slug)
+    repo = Repository.objects.get(name=slug)
 
     # Get start and end date of date range
     start, end = util.get_date_range(request)
 
     # Generate a graph for displayed repository based on selected attribute
-    line_elements = ""
-    line_element = generate_graph_data(repo=repo, start=start, end=end, attribute=attribute)
-    line_elements += line_element
+    figure = generate_graph_data(repo=repo, start=start, end=end, attribute=attribute, row=1)
 
-    return line_elements
+    figure['layout'].update(title='test')
+
+    graph = opy.plot(figure, auto_open=False, output_type='div')
+
+    return graph
 
 def attribute_author_graphs(request, slug):
     # Attribute query parameter
@@ -196,7 +149,7 @@ def attribute_author_graphs(request, slug):
         attribute = Statistic.ATTRIBUTES[0][0]
 
     # Get the repo object for the selected repository
-    repo = Repository.objects.get(name = slug)
+    repo = Repository.objects.get(name=slug)
 
     # Get start and end date of date range
     start, end = util.get_date_range(request)
@@ -206,9 +159,22 @@ def attribute_author_graphs(request, slug):
     authors = Author.objects.filter(repos__in=[repo])[:5]
 
     # Generate a graph for each author based on selected attribute for the displayed repo
-    line_elements = ""
-    for author in authors:
-        line_element = generate_graph_data(repo=repo, start=start, end=end, author=author, attribute=attribute)
-        line_elements += line_element
+    figure = tools.make_subplots(
+        rows=len(authors),
+        cols=1
+    )
+    for i in range(len(authors)):
+        figure = generate_graph_data(
+            figure=figure,
+            repo=repo,
+            start=start,
+            end=end,
+            author=authors[i],
+            attribute=attribute,
+            row=i+1
+        )
+    figure['layout'].update(height=600, title='Contributor Graphs')
 
-    return line_elements
+    graph = opy.plot(figure, auto_open=False, output_type='div')
+
+    return graph

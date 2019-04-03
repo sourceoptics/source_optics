@@ -8,23 +8,21 @@ from ..models import *
 """
 Returns a JSON list of repositories by search query
 """
-def search(request, query):
-    repos = query(request)
+def search(request, q):
+    repos = query(q)
     data = serializers.serialize('json',repos)
     return HttpResponse(data, content_type='application/json')
 
 """
 Returns a list of Repository objects from filter query
 """
-def query(request):
-    search = request.GET.get('filter')
-
+def query(q):
     repos = None
-    if not search:
+    if not q:
         repos = Repository.objects.all()
     else:
-        repos = Repository.objects.filter(name__icontains=search)
-        tag_query = Tag.objects.filter(name__icontains=search)
+        repos = Repository.objects.filter(name__icontains=q)
+        tag_query = Tag.objects.filter(name__icontains=q)
         for tag in tag_query:
             repos |= tag.repos.all()
     return repos

@@ -15,7 +15,7 @@ from random import randint
 View function for home page of site
 """
 def index(request):
-    repos = util.query(request)
+    repos = util.query(request.GET.get('filter'))
     start, end = util.get_date_range(request)
     stats = util.get_stats(repos, start, end)
     
@@ -50,7 +50,6 @@ def repo_details(request, slug):
 
     context = {
         'title': repo,
-        'repository': [repo],
         'stats': stat_table,
         'data': line_elements,
         'author_data': author_elements,

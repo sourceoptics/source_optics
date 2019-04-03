@@ -4,7 +4,7 @@
         <div class='sw-container'>
             <label>Tabular</label>
             <label class='switch'>
-              <input type='checkbox' data-off='/' data-on='/repos'/>
+              <input type='checkbox' data-off='/?{{ request.GET.urlencode }}' data-on='/repos?{{ request.GET.urlencode }}'/>
 		      <span class='slider sp round'></span>
             </label>
             <label>Graph</label>

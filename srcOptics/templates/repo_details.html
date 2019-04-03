@@ -1,7 +1,6 @@
 {% include 'partials/header.html' %}
 <section>
     <h1>{{title}}</h1>
-   {% load render_table from django_tables2 %}
     <div class='tabular-view'>
         <form id='range' method='GET'> 
           <div class='flex-row'>
@@ -29,8 +28,7 @@
         </form>
         <div>
         {{ data| safe }}
-        </div>    
-        {% render_table stats %}
+        </div>
         <div>
         {{ author_data| safe }}
         </div>

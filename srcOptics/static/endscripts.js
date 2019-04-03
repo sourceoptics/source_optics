@@ -11,11 +11,14 @@
 /** Set default start date back one week from current
  * date on #range .start input element
  */
+
+const defaultRange = 7;
+
 var form = document.getElementById('range');
 let start = form.querySelector('.start');
 if(!start.value) {
     let now = new Date();
-    now.setDate(now.getDate() - 7);
+    now.setDate(now.getDate() - defaultRange);
     start.value = now.toISOString().split('T')[0];
 }
 
