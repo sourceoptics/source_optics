@@ -2,6 +2,11 @@ from django.core.management.base import BaseCommand, CommandError
 from srcOptics.stats.rollup import Rollup
 from srcOptics.models import *
 
+#
+# The stat management command is used to generate statistics for an
+# already cloned repository. The user must provide the repository name
+# as a single parameter.
+#
 class Command(BaseCommand):
     help = 'Generates tabular statistics off of the job queue'
 
@@ -9,5 +14,5 @@ class Command(BaseCommand):
         parser.add_argument('repo_name', type=str, help='Repository Name')
 
     def handle(self, *args, **kwargs):
-        r = Repository.objects.get(name=kwargs['repo_name'])
-        Rollup.rollup_repo(repo=r)
+        repo = Repository.objects.get(name=kwargs['repo_name'])
+        Rollup.rollup_repo(repo=repo)
