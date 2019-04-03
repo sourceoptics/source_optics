@@ -5,6 +5,11 @@ from srcOptics.scanner.git import Scanner
 from srcOptics.models import LoginCredential
 import getpass
 
+
+#
+# The addrepo management command is used to add a repository to the
+# database. The user should pass in the URL as the only parameter
+#
 class Command(BaseCommand):
     help = 'Adds a repository to a queue'
 
@@ -18,5 +23,5 @@ class Command(BaseCommand):
         password = getpass.getpass('Password: ')
         cred = LoginCredential.objects.create(username=username, password=password)
         
+        # Scan the repository, passing in the URL and LoginCredential
         Scanner.scan_repo(kwargs['repo_url'], None, cred)
-        #print(kwargs['repo_url'] + " added")

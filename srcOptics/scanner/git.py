@@ -54,9 +54,15 @@ PARSER_RE_STRING = ('(' + DEL + '(?P<commit>.*)' + DEL
     + ')')
 PARSER_RE = re.compile(PARSER_RE_STRING, re.VERBOSE)
 
+
+#
+# This class clones a repository (GIT) using a provided URL and credential
+# and proceeds to execute git log on it to scan its data
+#
 class Scanner:
+
     # -----------------------------------------------------------------
-    # adds the github username into the https URL
+    # Adds the github username into the URL, taken from Vespene code
     def fix_repo_url(repo_url, username):
         if username != '':
             if "@" not in repo_url:
@@ -67,6 +73,7 @@ class Scanner:
         return repo_url
 
     # ------------------------------------------------------------------
+    # Entrypoint method which calls the clone and scan methods
     @transaction.atomic
     def scan_repo(repo_url, name, cred):
         work_dir = os.path.abspath(os.path.dirname(__file__).rsplit("/", 2)[0]) + '/work'
@@ -80,11 +87,13 @@ class Scanner:
         Scanner.log_repo(repo_url, work_dir, repo_name, repo_instance)
 
     # ------------------------------------------------------------------
+    # Clones the repo if it doesn't exist in the work folder and pulls if it does
     def clone_repo(repo_url, work_dir, repo_name, cred):
 
         options = ""
         repo_instance = Creator.create_repo('root', repo_url, repo_name, cred)
 
+        # If a credential was provided, add the password in an expect file to the git config
         if cred is not None:
             options += ' --config core.askpass=\'' + cred.expect_pass() + '\''
             repo_url = Scanner.fix_repo_url(repo_url, cred.username)
@@ -105,7 +114,9 @@ class Scanner:
         return repo_instance
 
     # ------------------------------------------------------------------
+    # Uses git log to gather the commit data for a repository
     def log_repo(repo_url, work_dir, repo_name, repo_instance):
+        
         # python subprocess iteration doesn't have an EOF indicator that I can find.
         # We echo "EOF" to the end of the log output so we can tell when we are done
         cmd_string = ('git log --all --numstat --date=iso-strict-local --pretty=format:'
