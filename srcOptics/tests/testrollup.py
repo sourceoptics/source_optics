@@ -1,4 +1,4 @@
-from django.test import TestCase
+from django.test import TransactionTestCase, TestCase
 from srcOptics.models import *
 from srcOptics.scanner.git import Scanner
 from srcOptics.stats.rollup import Rollup
@@ -9,7 +9,7 @@ import os
 REPO ='https://github.com/srcoptics/srcoptics_test'
 REPO_NAME = "srcoptics_test"
 
-class RollupTest(TestCase):
+class RollupTest(TransactionTestCase):
 
     def init(self):
         #work_dir = os.path.abspath(os.path.dirname(__file__).rsplit("/", 2)[0]) + '/work'
@@ -55,7 +55,8 @@ class RollupTest(TestCase):
                            subject="Initial-commit", author="47673373+srcoptics@users.noreply.github.com", la=2, lr=0)
 
         # Rollup data for scanned repo
-        self.rollup()
+        with self.settings(MULTITHREAD_AGGREGATE=False):
+            self.rollup()
 
         # Verify some generated total statistics
         repo = Repository.objects.get(name=REPO_NAME)

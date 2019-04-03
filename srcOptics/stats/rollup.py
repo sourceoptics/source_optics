@@ -5,8 +5,10 @@ from django.conf import settings
 from django.utils import timezone
 from srcOptics.models import *
 from srcOptics.create import Creator
+import concurrent.futures
 import datetime
 import json
+from django.db import transaction
 
 intervals =  Statistic.INTERVALS
 
@@ -198,6 +200,15 @@ class Rollup:
         else:
             last_scanned = cls.aggregate_interval_rollup(repo, interval)
 
+    @classmethod
+    def compile_author_rollups_thread (cls, repo, author):
+        cls.aggregate_author_rollup_day(repo, author)
+        cls.aggregate_author_rollup(repo, author, intervals[1])
+        cls.aggregate_author_rollup(repo, author, intervals[2])
+
+        # We need to manually close the database connection here or
+        # else Django will leave it dangling
+        connection.close()
 
     #We only want to iterate through the authors once.
     #Currently, this seems like the easiest way to do so
@@ -205,15 +216,26 @@ class Rollup:
     def compile_author_rollups (cls, repo):
         #Need to compile authors separately. Iterator is used for memory efficiency
         authors = Author.objects.filter(repos__in=[repo]).iterator()
-        for author in authors:
-            cls.aggregate_author_rollup_day(repo, author)
-            cls.aggregate_author_rollup(repo, author, intervals[1])
-            cls.aggregate_author_rollup(repo, author, intervals[2])
 
+        # Django unit tests can be run as parallel, but this causes problems with
+        # lingering postgres connections. use the concurrent flag to disable
+        # multi-threaded aggregation so that the unit tests behave
+        #
+        #   hopefully this will go away eventually
+        if settings.MULTITHREAD_AGGREGATE is True:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=settings.MAX_THREAD_COUNT) as pool:
+                for author in authors:
+                    pool.submit(cls.compile_author_rollups_thread, repo, author)
+        else:
+            for author in authors:
+                cls.aggregate_author_rollup_day(repo, author)
+                cls.aggregate_author_rollup(repo, author, intervals[1])
+                cls.aggregate_author_rollup(repo, author, intervals[2])
 
     #Compute rollups for specified repo passed in by daemon
     #TODO: Index commit_date and repo together
     @classmethod
+    @transaction.atomic
     def rollup_repo(cls, repo):
 
         #This means that the repo has not been scanned
