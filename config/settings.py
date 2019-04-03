@@ -103,6 +103,14 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+TEMPLATE_CONTEXT_PROCESSORS = (
+  "django.core.context_processors.request",
+  "django.core.context_processors.auth",
+  "django.core.context_processors.debug",
+  "django.core.context_processors.i18n",
+  "thetrailbehind.context_processors.canonical_url",
+  "thetrailbehind.context_processors.gmapkey",
+)
 
 # Internationalization
 # https://docs.djangoproject.com/en/2.1/topics/i18n/
