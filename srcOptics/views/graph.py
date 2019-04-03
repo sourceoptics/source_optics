@@ -14,6 +14,7 @@ from random import randint
 from plotly import tools
 import plotly.graph_objs as go
 import plotly.offline as opy
+import math
 
 GRAPH_COLORS = (
     '#e6194b', '#3cb44b', '#ffe119', '#4363d8', '#f58231', '#911eb4', '#46f0f0', '#f032e6', '#bcf60c', '#fabebe', '#008080', '#e6beff', '#9a6324', '#fffac8', '#800000', '#aaffc3', '#808000', '#ffd8b1', '#000075', '#808080', '#ffffff', '#000000'
@@ -51,20 +52,18 @@ def generate_graph_data(**kwargs):
     trace0 = go.Scatter(
         x=dates,
         y=attribute_by_date,
-        mode='lines+markers',
-        name=kwargs['repo'].name,
-        marker={
-            'size': 10, 
-            'line': {
-                'width': 1
-            },
+        mode='lines',
+        name=kwargs['name'],
+        fill='tonexty',
+        line={
             'color': GRAPH_COLORS[kwargs['row']-1]
         },
+
     )
 
     fig = kwargs.get('figure')
     if fig:
-        fig.append_trace(trace0, kwargs['row'], 1)
+        fig.append_trace(trace0, kwargs['row'], kwargs['col'])
         return fig
     else:
         return go.Figure(data=[trace0])
@@ -89,20 +88,27 @@ def attributes_by_repo(request):
     
     figure = tools.make_subplots(
         rows=len(repos),
-        cols=1
+        cols=1,
+        shared_xaxes=True,
+        shared_yaxes=True,
+        vertical_spacing=0.1,
+        subplot_titles=tuple([_.name for _ in repos]),
     )
     # Iterate over repo queryset, generating attribute graph for each
     for i in range(len(repos)):
         figure = generate_graph_data(
             figure=figure,
             repo=repos[i],
+            name=repos[i].name,
             start=start,
             end=end,
             attribute=attribute,
             row=i+1,
+            col=1
         )
-    
-    figure['layout'].update(title='test')
+
+
+    # figure['layout'].update(subplot_titles=tuple(subplot_titles))
 
     graph = opy.plot(figure, auto_open=False, output_type='div')
 
@@ -128,9 +134,9 @@ def attribute_graphs(request, slug):
     start, end = util.get_date_range(request)
 
     # Generate a graph for displayed repository based on selected attribute
-    figure = generate_graph_data(repo=repo, start=start, end=end, attribute=attribute, row=1)
+    figure = generate_graph_data(repo=repo, name=repo.name, start=start, end=end, attribute=attribute, row=1)
 
-    figure['layout'].update(title='test')
+    figure['layout'].update(title=slug)
 
     graph = opy.plot(figure, auto_open=False, output_type='div')
 
@@ -156,20 +162,27 @@ def attribute_author_graphs(request, slug):
 
     # Generate a graph for each author based on selected attribute for the displayed repo
     figure = tools.make_subplots(
-        rows=len(authors),
-        cols=1
+        rows=math.ceil(len(authors)/2),
+        cols=2,
+        shared_xaxes=True,
+        vertical_spacing=0.1,
+        shared_yaxes=True,
+        subplot_titles=tuple([_.email for _ in authors]),
     )
     for i in range(len(authors)):
         figure = generate_graph_data(
             figure=figure,
             repo=repo,
+            name=authors[i].email,
             start=start,
             end=end,
             author=authors[i],
             attribute=attribute,
-            row=i+1
+            row=math.floor(i/2) + 1,
+            col=( i % 2 )+1
+
         )
-    figure['layout'].update(height=600, title='Contributor Graphs')
+    figure['layout'].update(height=800,title='Contributor Graphs')
 
     graph = opy.plot(figure, auto_open=False, output_type='div')
 
