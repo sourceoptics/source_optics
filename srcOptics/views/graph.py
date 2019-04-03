@@ -86,7 +86,7 @@ def attributes_by_repo(request):
         attribute = Statistic.ATTRIBUTES[0][0]
     
     # Query for repos based on the request (filter)
-    repos = util.query(request)
+    repos = util.query(request.GET.get('filter'))
 
     # Get start and end date for date range
     start, end = util.get_date_range(request)
