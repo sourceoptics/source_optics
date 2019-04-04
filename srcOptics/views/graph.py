@@ -56,7 +56,7 @@ def generate_graph_data(**kwargs):
         name=kwargs['name'],
         fill='tonexty',
         line={
-            'color': GRAPH_COLORS[kwargs['row']-1]
+            'color': GRAPH_COLORS[hash(kwargs['name']) % len(GRAPH_COLORS)]
         },
 
     )
@@ -132,7 +132,7 @@ def attribute_graphs(request, slug):
     start, end = util.get_date_range(request)
 
     # Generate a graph for displayed repository based on selected attribute
-    figure = generate_graph_data(repo=repo, name=repo.name, start=start, end=end, attribute=attribute, row=1)
+    figure = generate_graph_data(repo=repo, name=repo.name, start=start, end=end, attribute=attribute, row=1, col=1)
 
     figure['layout'].update(title=slug)
 
