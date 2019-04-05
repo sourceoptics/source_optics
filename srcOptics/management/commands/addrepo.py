@@ -16,6 +16,7 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument('-r', '--repo_url', type=str, help='Scan a single repository')
+        parser.add_argument('-f', '--repo_file', type=str, help='Scan repositories from a newline delimited list in a file')
 
         parser.add_argument('-g',
                             '--github_api',
@@ -56,3 +57,10 @@ class Command(BaseCommand):
 
             for entry in data:
                 Scanner.scan_repo(entry['html_url'], entry['name'], cred)
+
+
+        # load repositories from a file and scan them
+        if kwargs['repo_file']:
+            with open(kwargs['repo_file']) as f:
+                for line in f:
+                    Scanner.scan_repo(line.strip(), None, cred)
