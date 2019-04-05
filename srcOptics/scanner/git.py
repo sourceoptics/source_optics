@@ -76,6 +76,8 @@ class Scanner:
     # Entrypoint method which calls the clone and scan methods
     @transaction.atomic
     def scan_repo(repo_url, name, cred):
+        # Calculate the work directory by translating up two directories from this file
+        #   eventually make this a settings variable so users can store it wherever
         work_dir = os.path.abspath(os.path.dirname(__file__).rsplit("/", 2)[0]) + '/work'
         os.system('mkdir -p ' + work_dir)
 

@@ -43,8 +43,9 @@ class Command(BaseCommand):
         # if we are regenerating the key
         if kwargs['secret']:
             # create the directory if it doesn't exist
-            if not os.path.exists(settings.SYMMETRIC_SECRET_KEY.rsplit('/',1)[0]):
-                os.makedirs(settings.SYMMETRIC_SECRET_KEY.rsplit('/',1)[0])
+            dirname = os.path.dirname(settings.SYMMETRIC_SECRET_KEY)
+            if not os.path.exists(dirname):
+                os.makedirs(dirname)
 
             if os.path.exists(settings.SYMMETRIC_SECRET_KEY):
                 print("WARNING: running this command again would render some secrets in the database unreadable")

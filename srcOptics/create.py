@@ -50,7 +50,7 @@ class Creator:
             ext = split[1]
 
         #get the file name
-        fArray = path.rsplit('/', 1)
+        fArray = os.path.basename(path)
 
         fName = ""
         if len(fArray) > 1:
@@ -74,7 +74,7 @@ class Creator:
     def create_file(path, commit, la, lr, binary):
         file_instance = {}
         #get the file name
-        fArray = path.rsplit('/', 1)
+        fArray = os.path.basename(path)
 
         fName = ""
         if len(fArray) > 1:
