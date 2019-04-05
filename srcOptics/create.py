@@ -15,7 +15,7 @@ class Creator:
     def create_repo(org_name, repo_url, repo_name, cred):
         org_parent = Organization.objects.get(name=org_name)
         #Removed name argument so that user can specify arbitrary repo name
-        repo_instance,created = Repository.objects.get_or_create(url=repo_url, name=repo_name, defaults={'cred':cred})
+        repo_instance,created = Repository.objects.get_or_create(organization=org_parent, url=repo_url, name=repo_name, defaults={'cred':cred})
         return repo_instance
 
     # ------------------------------------------------------------------

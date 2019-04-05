@@ -2,6 +2,7 @@ from django.contrib.postgres.fields import JSONField
 from django.db import models
 from django.contrib.postgres.indexes import BrinIndex
 from django.contrib.auth.models import Group, User
+from django import forms
 
 from cryptography import fernet
 import binascii
@@ -98,6 +99,7 @@ class Repository(models.Model):
 
     def __str__(self):
         return self.name
+
 
 class Author(models.Model):
     email = models.TextField(db_index=True, max_length=64, unique=True, blank=False, null=True)

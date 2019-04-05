@@ -6,8 +6,10 @@ from django.db.models import Sum
 from datetime import datetime, timedelta
 from . import graph, util
 
+from .forms import RepositoryForm
 from ..models import *
 from .tables import *
+from ..create import Creator
 
 from random import randint
 
@@ -56,3 +58,19 @@ def repo_details(request, slug):
         'attributes': attributes
     }
     return render(request, 'repo_details.html', context=context)
+
+# Renders the add repository page, must retrieve the organizations and credentials
+# in the database.
+def add_repo(request):
+    if request.method == 'POST':
+        form = RepositoryForm(request.POST)
+        if form.is_valid():
+            fields = form.cleaned_data
+            repo = Creator.create_repo(org_name=fields['organization'].name, cred=fields['credential'], repo_url=fields['url'], repo_name=fields['name'])
+            repo.save()
+            return HttpResponseRedirect('/complete/')
+
+    else:
+        form = RepositoryForm()
+
+    return render(request, 'add_repo.html', {'form': form})
