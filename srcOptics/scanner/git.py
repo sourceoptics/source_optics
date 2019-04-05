@@ -98,18 +98,27 @@ class Scanner:
             options += ' --config core.askpass=\'' + cred.expect_pass() + '\''
             repo_url = Scanner.fix_repo_url(repo_url, cred.username)
 
-        if os.path.isdir(work_dir + '/' + repo_name) and os.path.exists(work_dir + '/' + repo_name):
+        # exceptions at this point may print out sensitive information, such as
+        # the user's password. Anyone could just use the python shell to view the passwords,
+        # but we catch all exceptions and don't print their error messages. The django admin
+        # view is the main attack vector, as one admin could trick it to print the password
+        # of another admin's github account.
+        try:
+            if os.path.isdir(work_dir + '/' + repo_name) and os.path.exists(work_dir + '/' + repo_name):
 
-            print('git pull ' + repo_url + ' ' + work_dir)
-            if cred is not None:
-                cred.git_pull_with_expect_file(path=work_dir + '/' + repo_name)
+                print('git pull ' + repo_url + ' ' + work_dir)
+                if cred is not None:
+                    cred.git_pull_with_expect_file(path=work_dir + '/' + repo_name)
+                else:
+                    cmd = subprocess.Popen('git pull', shell=True, stdout=subprocess.PIPE, cwd=work_dir + '/' + repo_name)
+                    cmd.wait()
+
             else:
-                cmd = subprocess.Popen('git pull', shell=True, stdout=subprocess.PIPE, cwd=work_dir + '/' + repo_name)
-                cmd.wait()
+                print('git clone ' + repo_url + ' ' + work_dir + '/' + repo_name + options)
+                os.system('git clone ' + repo_url + ' ' + work_dir + '/' + repo_name + options)
 
-        else:
-            print('git clone ' + repo_url + ' ' + work_dir + '/' + repo_name + options)
-            os.system('git clone ' + repo_url + ' ' + work_dir + '/' + repo_name + options)
+        except:
+            print("ERROR: Failed to clone repository")
 
         return repo_instance
 
