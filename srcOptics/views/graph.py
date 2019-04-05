@@ -1,6 +1,8 @@
 from django.shortcuts import render
 from django.template import loader
 
+from django.db.models import Sum, Count
+
 from django.http import *
 from django_tables2 import RequestConfig
 
@@ -17,7 +19,7 @@ import plotly.offline as opy
 import math
 
 GRAPH_COLORS = (
-    '#e6194b', '#3cb44b', '#ffe119', '#4363d8', '#f58231', '#911eb4', '#46f0f0', '#f032e6', '#bcf60c', '#fabebe', '#008080', '#e6beff', '#9a6324', '#fffac8', '#800000', '#aaffc3', '#808000', '#ffd8b1', '#000075', '#808080', '#ffffff', '#000000'
+    '#e6194b', '#3cb44b', '#ffe119', '#4363d8', '#f58231', '#911eb4', '#46f0f0', '#f032e6', '#bcf60c', '#fabebe', '#008080', '#e6beff', '#9a6324', '#fffac8', '#800000', '#aaffc3', '#808000', '#ffd8b1', '#000075', '#808080', '#000000'
 )
 
 
@@ -32,14 +34,16 @@ def generate_graph_data(**kwargs):
 
     # Array for attribute values
     attribute_by_date = []
+    author = kwargs.get('author')
 
     # Filter Rollup table for daily interval statistics for the current repository over the specified time range
     stats_set = Statistic.objects.filter(
-        interval='DY', 
-        repo=kwargs['repo'], 
-        author=kwargs.get('author'), 
+        interval='DY',
+        repo=kwargs['repo'],
+        author=author,
         start_date__range=(kwargs['start'], kwargs['end'])
     )
+
 
     # Adds dates and attribute values to their appropriate arrays to render into graph data
     for stat in stats_set:
@@ -75,17 +79,17 @@ def attributes_by_repo(request):
 
     # Attribute query parameter
     attribute = request.GET.get('attr')
-    
+
     # Default attribute(total commits) if no query string is specified
     if not attribute:
         attribute = Statistic.ATTRIBUTES[0][0]
-    
+
     # Query for repos based on the request (filter)
     repos = util.query(request.GET.get('filter'))
 
     # Get start and end date for date range
     start, end = util.get_date_range(request)
-    
+
     figure = tools.make_subplots(
         rows=len(repos),
         cols=1,
@@ -156,7 +160,29 @@ def attribute_author_graphs(request, slug):
 
     # Get every author with displayed repo; limit 5
     # TODO: Limit by top contributors
-    authors = Author.objects.filter(repos__in=[repo])[:5]
+    #authors = Author.objects.filter(repos__in=[repo])[:5]
+    authors = []
+    #First get all daily interval author stats within the range
+    filter_set = Statistic.objects.filter(
+        interval='DY',
+        author__isnull=False,
+        repo=repo,
+        start_date__range=(start, end)
+    )
+
+    #Then aggregate the filter set based on the attribute, get top 5
+    top_set = filter_set.annotate(total_attr=Sum(attribute)).order_by('-total_attr')
+
+    #append top 5 authors to author set to display
+    i = 0
+    for t in top_set:
+        if t.author not in authors and i < 5:
+        #    print(getattr(t, attribute))
+            authors.append(t.author)
+            i += 1
+
+
+
 
     # Generate a graph for each author based on selected attribute for the displayed repo
     figure = tools.make_subplots(
