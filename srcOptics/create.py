@@ -44,10 +44,7 @@ class Creator:
     # ------------------------------------------------------------------
     def create_filechange(path, commit, la, lr, binary):
         # find the extension
-        split = path.rsplit('.', 1)
-        ext = ""
-        if len(split) > 1:
-            ext = split[1]
+        (root, ext) = os.path.splitext(path)
 
         #get the file name
         fArray = os.path.basename(path)
@@ -83,10 +80,7 @@ class Creator:
             fName = fArray[0]
 
         # find the extension
-        split = path.rsplit('.', 1)
-        ext = ""
-        if len(split) > 1:
-            ext = split[1]
+        (root, ext) = os.path.splitext(path)
 
         # update the global file object with the line counts
         file_instance,created = File.objects.get_or_create(path=path, defaults={
