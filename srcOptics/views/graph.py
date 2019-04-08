@@ -203,7 +203,7 @@ def attribute_author_graphs(request, slug):
             col=( i % 2 )+1
 
         )
-    figure['layout'].update(height=800,title='Contributor Graphs')
+    figure['layout'].update(height=800)
 
     graph = opy.plot(figure, auto_open=False, output_type='div')
 

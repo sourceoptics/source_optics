@@ -13,26 +13,31 @@
                   </label>
                   <label>Graph</label>
               </div> -->
+              <div class='float-left dropdown'>
+                  <select class='no-margin' name='attr' onchange='this.form.submit()'>
+                  {% for a in attributes %}
+                  <option value='{{a.0}}' {% if request.GET.attr == a.0 %}selected{% endif %}>{{a.1}}</option>
+                  {% endfor %}
+                  </select>
+              </div>
               <div class='float-right dropdown'>
-                  <label>From</label>
+                  <label>From:</label>
                   <input type='date' name='start' class='start' value='{{request.GET.start}}' max='{% now "Y\-m\-d" %}' onchange='this.form.submit()' required/>
-                  <label>To</label>
+                  <label>To:</label>
                   <input type='date' name='end' class='end' value='{% if request.GET.end %}{{request.GET.end}}{% else %}{% now "Y\-m\-d" %}{% endif %}' max='{% now "Y\-m\-d" %}' onchange='this.form.submit()'  required/>
                   <input type='hidden' id='filter' name='filter'/>
               </div>
-          </div>
-          <select class='no-margin' name='attr' onchange='this.form.submit()'>
-            {% for a in attributes %}
-            <option value='{{a.0}}' {% if request.GET.attr == a.0 %}selected{% endif %}>{{a.1}}</option>
-            {% endfor %}
-          </select>
+        </div>
         </form>
         <figure>
             {{ data| safe }}
         </figure>
         <figure>
-        {% render_table stats %}
+            {% render_table stats %}
         </figure>
+    </div>
+    <h1 align="center">Contributors</h1>
+    <div class='tabular-view'>
         <figure>
             {{ author_data| safe }}
         </figure>
