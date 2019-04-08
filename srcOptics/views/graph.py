@@ -177,11 +177,8 @@ def attribute_author_graphs(request, slug):
     i = 0
     for t in top_set:
         if t.author not in authors and i < 5:
-        #    print(getattr(t, attribute))
             authors.append(t.author)
             i += 1
-
-
 
 
     # Generate a graph for each author based on selected attribute for the displayed repo

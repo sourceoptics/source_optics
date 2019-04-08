@@ -1,5 +1,5 @@
 import django_tables2 as tables
-from ..models import Statistic
+from ..models import Statistic, Repository
 from django.contrib.humanize.templatetags.humanize import intcomma
 from django_tables2.utils import A
 
@@ -8,24 +8,25 @@ class ColumnNumber(tables.Column):
         return intcomma(value)
 
 class StatTable(tables.Table):
-    author_total = ColumnNumber(attrs={"th": {"class": "num"}})
-    commit_total = ColumnNumber(attrs={"th": {"class": "num"}})
+    author_total = ColumnNumber(verbose_name = 'Author Total', attrs={"th": {"class": "num"}})
+    commit_total = ColumnNumber(verbose_name = 'Commit Total', attrs={"th": {"class": "num"}})
     files_changed = ColumnNumber(verbose_name='Files Changed', attrs={"th": {"class": "num"}})
-    lines_changed = ColumnNumber(verbose_name='∆', attrs={"th": {"class": "lines"}})
-    lines_added = ColumnNumber(verbose_name='+', attrs={"th": {"class": "lines"}})
-    lines_removed = ColumnNumber(verbose_name='-', attrs={"th": {"class": "lines"}})
-    start_date = tables.Column()
-    # repo = tables.Column(attrs={"td": {"class": "repo"}}, linkify=('repo_details', {'slug': tables.A('repo')}))
+    repo_tags = tables.TemplateColumn('{%for tag in record.repo_tags%} <a href="?{{ request.GET.urlencode }}&filter={{tag}}">{{ tag }}</a> {%endfor%}', verbose_name='Tags')
+    repo_last_pulled = tables.DateTimeColumn(verbose_name='Last Pulled', format='m\/d\/y P')
+    repo_last_scanned = tables.DateTimeColumn(verbose_name='Last Scanned', format='m\/d\/y P')
+    lines_added = ColumnNumber(verbose_name='Lines Added', attrs={"th": {"class": "lines"}})
+    lines_removed = ColumnNumber(verbose_name='Lines Removed', attrs={"th": {"class": "lines"}})
     repo = tables.TemplateColumn('<a href="repos/{{ record.repo }}/?{{ request.GET.urlencode }}">{{ record.repo }}</a>', attrs={"td": {"class": "repo"}})
 
     class Meta:
         model = Statistic
         exclude = (
             'author',
+            'lines_changed',
             'id',
             'file',
             'interval',
             'start_date'
         )
-        sequence = ('repo','...')
+        sequence = ('repo', 'repo_tags', 'repo_last_scanned', 'repo_last_pulled', 'commit_total', 'author_total', '...' )
         template_name = 'table.html'
