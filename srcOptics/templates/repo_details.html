@@ -1,4 +1,5 @@
 {% include 'partials/header.html' %}
+{% load render_table from django_tables2 %}
 <section>
     <h1>{{title}}</h1>
     <div class='tabular-view'>
@@ -30,7 +31,10 @@
             {{ data| safe }}
         </figure>
         <figure>
-        {{ author_data| safe }}
+        {% render_table stats %}
+        </figure>
+        <figure>
+            {{ author_data| safe }}
         </figure>
     </div>
 
