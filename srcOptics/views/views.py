@@ -51,7 +51,7 @@ def repo_details(request, slug):
     attributes = Statistic.ATTRIBUTES
 
     context = {
-        'title': repo,
+        'title': "Repository Details: " + str(repo),
         'stats': stat_table,
         'data': line_elements,
         'author_data': author_elements,
