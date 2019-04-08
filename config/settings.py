@@ -155,4 +155,10 @@ MAX_THREAD_COUNT = None
 #   hopefully this will go away eventually
 MULTITHREAD_AGGREGATE = True
 
+# the threshold for number of commits at which to print
+# some dots as a status update. This is done in git.py
+DOTS_THRESHOLD = 1000
+# the number of columns before we line break
+DOTS_WIDTH = 10
+
 django.setup()

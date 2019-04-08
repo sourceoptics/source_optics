@@ -127,6 +127,8 @@ class Scanner:
     # ------------------------------------------------------------------
     # Uses git log to gather the commit data for a repository
     def log_repo(repo_url, work_dir, repo_name, repo_instance):
+        status_count = 0
+        width_count = 0
         
         # python subprocess iteration doesn't have an EOF indicator that I can find.
         # We echo "EOF" to the end of the log output so we can tell when we are done
@@ -220,3 +222,14 @@ class Scanner:
                 re_flag = False
                 last_commit = commit_instance
                 files_flag = True
+
+                # "print cute dots"
+                status_count += 1
+                if status_count > settings.DOTS_THRESHOLD:
+                    print('.', end=' ')
+                    status_count = 0
+                    width_count += 1
+                    # line wrap
+                    if width_count > settings.DOTS_WIDTH:
+                        width_count = 0
+                        print('\n')
