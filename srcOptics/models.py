@@ -170,9 +170,9 @@ class File(models.Model):
 # if author = X && file = null, entry represent X's author stats for the given interval
 class Statistic(models.Model):
     INTERVALS = (
-        ('DY', 'day'),
-        ('WK', 'week'),
-        ('MN', 'month')
+        ('DY', 'Day'),
+        ('WK', 'Week'),
+        ('MN', 'Month')
     )
     ATTRIBUTES = (
         ('commit_total', "Total Commits"),

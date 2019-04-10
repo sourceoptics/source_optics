@@ -35,10 +35,11 @@ def generate_graph_data(**kwargs):
     # Array for attribute values
     attribute_by_date = []
     author = kwargs.get('author')
+    interval = kwargs.get('interval')
 
     # Filter Rollup table for daily interval statistics for the current repository over the specified time range
     stats_set = Statistic.objects.filter(
-        interval='DY',
+        interval=interval,
         repo=kwargs['repo'],
         author=author,
         start_date__range=(kwargs['start'], kwargs['end'])
@@ -76,13 +77,21 @@ def attributes_by_repo(request):
 
     # List of possible attribute values to filter by. Defined in models.py for Statistic object
     attributes = Statistic.ATTRIBUTES
+    intervals = Statistic.INTERVALS
+
 
     # Attribute query parameter
     attribute = request.GET.get('attr')
 
+    #interval query parameters
+    interval = request.GET.get('intr')
+
     # Default attribute(total commits) if no query string is specified
     if not attribute:
-        attribute = Statistic.ATTRIBUTES[0][0]
+        attribute = attributes[0][0]
+
+    if not interval:
+        interval = intervals[0][0]
 
     # Query for repos based on the request (filter)
     repos = util.query(request.GET.get('filter'))
@@ -107,6 +116,7 @@ def attributes_by_repo(request):
             start=start,
             end=end,
             attribute=attribute,
+            interval=interval,
             row=i+1,
             col=1
         )
@@ -117,7 +127,8 @@ def attributes_by_repo(request):
     context = {
         'title': "Repo Statistics Over Time",
         'data' : graph,
-        'attributes': attributes
+        'attributes': attributes,
+        'intervals': intervals
     }
     return render(request, 'repo_view.html', context=context)
 
