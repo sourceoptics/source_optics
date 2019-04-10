@@ -4,6 +4,8 @@ from django.http import *
 from django_tables2 import RequestConfig
 from django.db.models import Sum
 from datetime import datetime, timedelta
+from django.utils import timezone
+
 from . import graph, util
 
 from .forms import RepositoryForm
@@ -64,10 +66,24 @@ def repo_details(request, slug):
     #possible interval values to filter by
     intervals = Statistic.INTERVALS
 
+    #Summary Statistics
+
+    lifetime = Statistic.objects.filter(interval='MN', repo=repo,
+                                        author=None, file=None,
+                                        start_date__range=(repo.earliest_commit, datetime.now(tz=timezone.utc)))
+
+
+    summary_stats = lifetime.aggregate(commits=Sum("commit_total"), authors=Sum("author_total"),
+                                       lines_added=Sum("lines_added"), lines_removed=Sum("lines_removed"),
+                                       lines_changed=Sum("lines_changed"))
+
+
+
     #Context variable being passed to template
     context = {
         'title': "Repository Details: " + str(repo),
         'stats': stat_table,
+        'summary_stats': summary_stats,
         'data': line_elements,
         'author_data': author_elements,
         'attributes': attributes,
