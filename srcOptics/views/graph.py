@@ -140,9 +140,14 @@ and start and end date
 def attribute_graphs(request, slug):
     # Attribute query parameter
     attribute = request.GET.get('attr')
+    interval = request.GET.get('intr')
+
     # Default attribute(total commits) if no query string is specified
     if not attribute:
         attribute = Statistic.ATTRIBUTES[0][0]
+
+    if not interval:
+        interval = Statistic.INTERVALS[0][0]
 
     # Get the repo object for the selected repository
     repo = Repository.objects.get(name=slug)
@@ -151,7 +156,7 @@ def attribute_graphs(request, slug):
     start, end = util.get_date_range(request)
 
     # Generate a graph for displayed repository based on selected attribute
-    figure = generate_graph_data(repo=repo, name=repo.name, start=start, end=end, attribute=attribute, row=1, col=1)
+    figure = generate_graph_data(repo=repo, interval=interval, name=repo.name, start=start, end=end, attribute=attribute, row=1, col=1)
 
     figure['layout'].update(title=slug)
 
@@ -162,10 +167,14 @@ def attribute_graphs(request, slug):
 def attribute_author_graphs(request, slug):
     # Attribute query parameter
     attribute = request.GET.get('attr')
+    interval = request.GET.get('intr')
 
     # Default attribute(total commits) if no query string is specified
     if not attribute:
         attribute = Statistic.ATTRIBUTES[0][0]
+
+    if not interval:
+        interval = Statistic.INTERVALS[0][0]
 
     # Get the repo object for the selected repository
     repo = Repository.objects.get(name=slug)
@@ -179,7 +188,7 @@ def attribute_author_graphs(request, slug):
     authors = []
     #First get all daily interval author stats within the range
     filter_set = Statistic.objects.filter(
-        interval='DY',
+        interval=interval,
         author__isnull=False,
         repo=repo,
         start_date__range=(start, end)
@@ -209,6 +218,7 @@ def attribute_author_graphs(request, slug):
         figure = generate_graph_data(
             figure=figure,
             repo=repo,
+            interval=interval,
             name=authors[i].email,
             start=start,
             end=end,

@@ -3,7 +3,7 @@
 <section>
     <h1>{{title}}</h1>
     <div class='tabular-view'>
-        <form id='range' method='GET'> 
+        <form id='range' method='GET'>
           <div class='flex-row'>
               <!-- <div class='sw-container'>
                   <label>Tabular</label>
@@ -19,6 +19,11 @@
                   <option value='{{a.0}}' {% if request.GET.attr == a.0 %}selected{% endif %}>{{a.1}}</option>
                   {% endfor %}
                   </select>
+                <select class='no-margin' name='intr' onchange='this.form.submit()'>
+                  {% for i in intervals %}
+                  <option value='{{i.0}}' {% if request.GET.intr == i.0 %}selected{% endif %}>{{i.1}}</option>
+                  {% endfor %}
+                </select>
               </div>
               <div class='float-right dropdown'>
                   <label>From:</label>

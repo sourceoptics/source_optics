@@ -61,13 +61,16 @@ def repo_details(request, slug):
     #possible attribute values to filter by
     attributes = Statistic.ATTRIBUTES
 
-    #Context variable being passed to template 
+    intervals = Statistic.INTERVALS
+
+    #Context variable being passed to template
     context = {
         'title': "Repository Details: " + str(repo),
         'stats': stat_table,
         'data': line_elements,
         'author_data': author_elements,
-        'attributes': attributes
+        'attributes': attributes,
+        'intervals':intervals
     }
     return render(request, 'repo_details.html', context=context)
 
