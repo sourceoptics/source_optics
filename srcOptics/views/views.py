@@ -61,6 +61,7 @@ def repo_details(request, slug):
     #possible attribute values to filter by
     attributes = Statistic.ATTRIBUTES
 
+    #possible interval values to filter by
     intervals = Statistic.INTERVALS
 
     #Context variable being passed to template

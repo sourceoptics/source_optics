@@ -188,7 +188,7 @@ def attribute_author_graphs(request, slug):
     authors = []
     #First get all daily interval author stats within the range
     filter_set = Statistic.objects.filter(
-        interval=interval,
+        interval='DY',
         author__isnull=False,
         repo=repo,
         start_date__range=(start, end)
