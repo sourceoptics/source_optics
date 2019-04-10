@@ -17,12 +17,15 @@ from random import randint
 View function for home page of site
 """
 def index(request):
+    #Passes the filter to util query to get a list of repos
     repos = util.query(request.GET.get('filter'))
+    #Returns a start and end date from query strings
     start, end = util.get_date_range(request)
+    #Aggregates statistics for a repository based on start and end date
     stats = util.get_stats(repos, start, end)
-    
+    #Returns statistic table data
     stat_table = StatTable(stats)
-    
+
     RequestConfig(request, paginate={'per_page': 10}).configure(stat_table)
 
     context = {
@@ -34,9 +37,13 @@ def index(request):
     return render(request, 'dashboard.html', context=context)
 
 
+"""
+Data to be displayed for the repo details view
+"""
 def repo_details(request, slug):
+    #Gets repo name from url slug
     repo = Repository.objects.get(name=slug)
-    
+
     start, end = util.get_date_range(request)
 
     stats = util.get_stats([repo], start, end)
@@ -44,12 +51,17 @@ def repo_details(request, slug):
     stat_table = StatTable(stats)
     RequestConfig(request, paginate={'per_page': 10}).configure(stat_table)
 
+    #Generates line graphs based on attribute query param
     line_elements = graph.attribute_graphs(request, slug)
 
+    #Generates line graph of an attribute for the top 5 Contributors
+    # to that attribute within the specified time period
     author_elements = graph.attribute_author_graphs(request, slug)
 
+    #possible attribute values to filter by
     attributes = Statistic.ATTRIBUTES
 
+    #Context variable being passed to template 
     context = {
         'title': "Repository Details: " + str(repo),
         'stats': stat_table,

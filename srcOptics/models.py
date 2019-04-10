@@ -91,6 +91,7 @@ class Repository(models.Model):
     organization = models.ForeignKey(Organization, on_delete=models.SET_NULL, null=True)
     enabled = models.BooleanField(default=True)
     last_scanned = models.DateTimeField(blank=True, null=True)
+    earliest_commit = models.DateTimeField(blank=True, null=True)
     tags = models.ManyToManyField('Tag', related_name='tags', blank=True)
     last_pulled = models.DateTimeField(blank = True, null = True)
     cred = models.ForeignKey(LoginCredential, on_delete=models.CASCADE, null=True, blank = True)

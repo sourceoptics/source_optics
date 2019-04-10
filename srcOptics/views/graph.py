@@ -122,6 +122,10 @@ def attributes_by_repo(request):
     return render(request, 'repo_view.html', context=context)
 
 
+"""
+Generates an attribute line graph based on attribute query parameters
+and start and end date
+"""
 def attribute_graphs(request, slug):
     # Attribute query parameter
     attribute = request.GET.get('attr')

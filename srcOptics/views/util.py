@@ -48,12 +48,8 @@ def get_stats(repos, start, end):
         totals['repo_last_scanned'] = repo.last_scanned
         totals['repo_last_pulled'] = repo.last_pulled
 
-        tag_array = []
-        for tag in repo.tags.all():
-            tag_array.append(tag)
-
-        totals['repo_tags'] = tag_array
-        print("TAGS " , totals['repo_tags'])
+        totals['repo_tags'] = repo.tags.all()
+        #print("TAGS " , totals['repo_tags'])
         stats.append(totals)
     return stats
 
