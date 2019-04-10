@@ -23,6 +23,7 @@ class StatTable(tables.Table):
         exclude = (
             'author',
             'lines_changed',
+            'repo_last_pulled',
             'id',
             'file',
             'interval',
