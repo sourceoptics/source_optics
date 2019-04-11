@@ -67,10 +67,28 @@ Defaults to port `8000`. Django admin can be found at `localhost:8000/admin`.
 python manage.py scan
 ```
 
-SrcOptics provides a daemon job for automatically keeping repositories and their statistics up to date. This daemon will continue to pull new remote data and scan new unprocessed commits. It is recommended to add 
+SrcOptics provides a daemon job for automatically keeping repositories and their statistics up to date. This daemon will continue to pull new remote data and scan new unprocessed commits. It is recommended to add
+
+### Postgresql Setup
+
+For a complete setup guide to postgresql setup please refer to an operating system specific guide. Usually you have  to enable postgres and initialize the database directory before it can be used.
+
+The default name of the database used is called `srcopt`. For things to run smoothly you must first create a role for the unix user you wish to run srcOptics as. The role needs to have createdb permissions along with ownership of the `srcopt` database.
+
+```
+srcopt=CREATE ROLE <username> [ [ WITH ] option [ ... ] ]
+
+-- may also need --
+srcopt=# alter user <username> createdb;
+ALTER ROLE
+srcopt=# ALTER DATABASE srcopt OWNER TO <username>;
+ALTER DATABASE
+```
 
 ### Dev info / Random tips
 
 * Run `sass --watch --no-source-map --style compressed srcOptics/static/_scss:srcOptics/static` during development to build css files
 
 * Like most Django projects, the `settings.py` file contains many useful variables for configuring srcOptics. These should all be heavily commented
+
+* Django 1.11 has a different include path for `urls`, which will cause an exception when trying to load `urls.py`. Use Django 2.0 or higher to avoid differences such as this.
