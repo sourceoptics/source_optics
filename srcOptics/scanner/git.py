@@ -129,6 +129,7 @@ class Scanner:
     def log_repo(repo_url, work_dir, repo_name, repo_instance):
         status_count = 0
         width_count = 0
+        line_count = 0
         
         # python subprocess iteration doesn't have an EOF indicator that I can find.
         # We echo "EOF" to the end of the log output so we can tell when we are done
@@ -231,5 +232,6 @@ class Scanner:
                     width_count += 1
                     # line wrap
                     if width_count > settings.DOTS_WIDTH:
+                        line_count += 1
                         width_count = 0
-                        print('\n')
+                        print(line_count * settings.DOTS_THRESHOLD * settings.DOTS_WIDTH + '\n')
