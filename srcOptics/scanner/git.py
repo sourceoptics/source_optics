@@ -234,4 +234,4 @@ class Scanner:
                     if width_count > settings.DOTS_WIDTH:
                         line_count += 1
                         width_count = 0
-                        print(line_count * settings.DOTS_THRESHOLD * settings.DOTS_WIDTH + '\n')
+                        print(str(line_count * settings.DOTS_THRESHOLD * settings.DOTS_WIDTH) + '\n')
