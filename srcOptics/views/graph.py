@@ -11,6 +11,9 @@ from .tables import *
 
 from . import util
 
+from .graphs.authors import AuthorGraph
+from .graphs.repositories import RepositoryGraph
+
 from random import randint
 
 from plotly import tools
@@ -74,11 +77,9 @@ def generate_graph_data(**kwargs):
         return go.Figure(data=[trace0])
 
 def attributes_by_repo(request):
-
     # List of possible attribute values to filter by. Defined in models.py for Statistic object
     attributes = Statistic.ATTRIBUTES
     intervals = Statistic.INTERVALS
-
 
     # Attribute query parameter
     attribute = request.GET.get('attr')
@@ -99,38 +100,9 @@ def attributes_by_repo(request):
     # Get start and end date for date range
     start, end = util.get_date_range(request)
 
-    figure = tools.make_subplots(
-        rows=len(repos),
-        cols=1,
-        shared_xaxes=True,
-        shared_yaxes=True,
-        vertical_spacing=0.1,
-        subplot_titles=tuple([_.name for _ in repos]),
-    )
-    # Iterate over repo queryset, generating attribute graph for each
-    for i in range(len(repos)):
-        figure = generate_graph_data(
-            figure=figure,
-            repo=repos[i],
-            name=repos[i].name,
-            start=start,
-            end=end,
-            attribute=attribute,
-            interval=interval,
-            row=i+1,
-            col=1
-        )
-    figure['layout'].update(height=800)
+    graph = RepositoryGraph(attribute=attribute, interval=interval, start=start, end=end, repos=repos).attributes_by_repo()
 
-    graph = opy.plot(figure, auto_open=False, output_type='div')
-
-    context = {
-        'title': "Repo Statistics Over Time",
-        'data' : graph,
-        'attributes': attributes,
-        'intervals': intervals
-    }
-    return render(request, 'repo_view.html', context=context)
+    return graph
 
 
 """
@@ -182,59 +154,5 @@ def attribute_author_graphs(request, slug):
     # Get start and end date of date range
     start, end = util.get_date_range(request)
 
-    # Get every author with displayed repo; limit 5
-    # TODO: Limit by top contributors
-    #authors = Author.objects.filter(repos__in=[repo])[:5]
-    authors = []
-    #First get all daily interval author stats within the range
-    filter_set = Statistic.objects.filter(
-        interval='DY',
-        author__isnull=False,
-        repo=repo,
-        start_date__range=(start, end)
-    )
-
-    #Then aggregate the filter set based on the attribute, get top 5
-    top_set = filter_set.annotate(total_attr=Sum(attribute)).order_by('-total_attr')
-
-    #append top 5 authors to author set to display
-    i = 0
-    for t in top_set:
-        if t.author not in authors and i < 6:
-            authors.append(t.author)
-            i += 1
-
-
-    figure = []
-    # Generate a graph for each author based on selected attribute for the displayed repo
-    if len(authors) != 0:
-        figure = tools.make_subplots(
-            rows=math.ceil(len(authors)/2),
-            cols=2,
-            shared_xaxes=True,
-            vertical_spacing=0.1,
-            shared_yaxes=True,
-            subplot_titles=tuple([_.email for _ in authors]),
-        )
-        figure['layout'].update(height=800)
-    for i in range(len(authors)):
-        figure = generate_graph_data(
-            figure=figure,
-            repo=repo,
-            interval=interval,
-            name=authors[i].email,
-            start=start,
-            end=end,
-            author=authors[i],
-            attribute=attribute,
-            row=math.floor(i/2) + 1,
-            col=( i % 2 )+1
-
-        )
-    
-    if figure != []:
-        graph = opy.plot(figure, auto_open=False, output_type='div')
-
-        return graph
-
-    return None
+    graph = AuthorGraph(attribute=attribute, interval=interval, start=start, end=end, repo=repo).top_graphs()
+    return graph

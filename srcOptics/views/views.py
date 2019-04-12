@@ -106,3 +106,13 @@ def add_repo(request):
         form = RepositoryForm()
 
     return render(request, 'add_repo.html', {'form': form})
+
+def attributes_by_repo(request):
+    data = graph.attributes_by_repo(request)
+    context = {
+        'title': 'Repo Statistics Over Time',
+        'data' : data,
+        'attributes': Statistic.ATTRIBUTES,
+        'intervals': Statistic.INTERVALS
+    }
+    return render(request, 'repo_view.html', context=context)
