@@ -22,9 +22,9 @@ def index(request):
     #Passes the filter to util query to get a list of repos
     repos = util.query(request.GET.get('filter'))
     #Returns a start and end date from query strings
-    start, end = util.get_date_range(request)
+    queries = util.get_query_strings(request)
     #Aggregates statistics for a repository based on start and end date
-    stats = util.get_stats(repos, start, end)
+    stats = util.get_stats(repos, queries['start'], queries['end'])
     #Returns statistic table data
     stat_table = StatTable(stats)
 
@@ -46,9 +46,9 @@ def repo_details(request, slug):
     #Gets repo name from url slug
     repo = Repository.objects.get(name=slug)
 
-    start, end = util.get_date_range(request)
+    queries = util.get_query_strings(request)
 
-    stats = util.get_stats([repo], start, end)
+    stats = util.get_stats([repo], queries['start'], queries['end'])
 
     stat_table = StatTable(stats)
     RequestConfig(request, paginate={'per_page': 10}).configure(stat_table)

@@ -53,19 +53,32 @@ def get_stats(repos, start, end):
         stats.append(totals)
     return stats
 
-"""
-Returns a start and end date from query strings or defaults to one week
-"""
-def get_date_range(request):
-    # Get query strings
+
+def get_query_strings(request):
+    queries = {}
+
     start = request.GET.get('start')
     end = request.GET.get('end')
 
     # Sets default date range to a week if no query string is specified
     if not start or not end:
-        end = datetime.now()
-        start = end - timedelta(days=7)
+        queries['end'] = datetime.now()
+        queries['start'] = queries['end'] - timedelta(days=7)
     else:
-        start = datetime.strptime(start, '%Y-%m-%d')
-        end = datetime.strptime(end, '%Y-%m-%d')
-    return start, end
+        queries['start'] = datetime.strptime(start, '%Y-%m-%d')
+        queries['end'] = datetime.strptime(end, '%Y-%m-%d')
+
+    attribute = request.GET.get('attr')
+    if not attribute:
+        queries['attribute'] = Statistic.ATTRIBUTES[0][0]
+    else:
+        queries['attribute'] = request.GET.get('attr')
+
+    interval = request.GET.get('intr')
+    if not interval:
+        queries['interval'] = Statistic.INTERVALS[0][0]
+    else:
+        queries['interval'] = request.GET.get('intr')
+    
+
+    return queries

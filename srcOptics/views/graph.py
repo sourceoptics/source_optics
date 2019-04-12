@@ -7,14 +7,11 @@ from django.http import *
 from django_tables2 import RequestConfig
 
 from ..models import Repository, Commit, Statistic, Tag, Author
-from .tables import *
 
 from . import util
 
 from .graphs.authors import AuthorGraph
 from .graphs.repositories import RepositoryGraph
-
-from random import randint
 
 from plotly import tools
 import plotly.graph_objs as go
@@ -77,30 +74,14 @@ def generate_graph_data(**kwargs):
         return go.Figure(data=[trace0])
 
 def attributes_by_repo(request):
-    # List of possible attribute values to filter by. Defined in models.py for Statistic object
-    attributes = Statistic.ATTRIBUTES
-    intervals = Statistic.INTERVALS
-
-    # Attribute query parameter
-    attribute = request.GET.get('attr')
-
-    #interval query parameters
-    interval = request.GET.get('intr')
-
-    # Default attribute(total commits) if no query string is specified
-    if not attribute:
-        attribute = attributes[0][0]
-
-    if not interval:
-        interval = intervals[0][0]
 
     # Query for repos based on the request (filter)
     repos = util.query(request.GET.get('filter'))
 
     # Get start and end date for date range
-    start, end = util.get_date_range(request)
+    queries = util.get_query_strings(request)
 
-    graph = RepositoryGraph(attribute=attribute, interval=interval, start=start, end=end, repos=repos).attributes_by_repo()
+    graph = RepositoryGraph(attribute=queries['attribute'], interval=queries['interval'], start=queries['start'], end=queries['end'], repos=repos).attributes_by_repo()
 
     return graph
 
@@ -110,25 +91,15 @@ Generates an attribute line graph based on attribute query parameters
 and start and end date
 """
 def attribute_graphs(request, slug):
-    # Attribute query parameter
-    attribute = request.GET.get('attr')
-    interval = request.GET.get('intr')
-
-    # Default attribute(total commits) if no query string is specified
-    if not attribute:
-        attribute = Statistic.ATTRIBUTES[0][0]
-
-    if not interval:
-        interval = Statistic.INTERVALS[0][0]
 
     # Get the repo object for the selected repository
     repo = Repository.objects.get(name=slug)
 
     # Get start and end date of date range
-    start, end = util.get_date_range(request)
+    queries = util.get_query_strings(request)
 
     # Generate a graph for displayed repository based on selected attribute
-    figure = generate_graph_data(repo=repo, interval=interval, name=repo.name, start=start, end=end, attribute=attribute, row=1, col=1)
+    figure = generate_graph_data(repo=repo, interval=queries['interval'], name=repo.name, start=queries['start'], end=queries['end'], attribute=queries['attribute'], row=1, col=1)
 
     figure['layout'].update(title=slug)
 
@@ -137,22 +108,11 @@ def attribute_graphs(request, slug):
     return graph
 
 def attribute_author_graphs(request, slug):
-    # Attribute query parameter
-    attribute = request.GET.get('attr')
-    interval = request.GET.get('intr')
-
-    # Default attribute(total commits) if no query string is specified
-    if not attribute:
-        attribute = Statistic.ATTRIBUTES[0][0]
-
-    if not interval:
-        interval = Statistic.INTERVALS[0][0]
-
     # Get the repo object for the selected repository
     repo = Repository.objects.get(name=slug)
 
     # Get start and end date of date range
-    start, end = util.get_date_range(request)
+    queries = util.get_query_strings(request)
 
-    graph = AuthorGraph(attribute=attribute, interval=interval, start=start, end=end, repo=repo).top_graphs()
+    graph = AuthorGraph(attribute=queries['attribute'], interval=queries['interval'], start=queries['start'], end=queries['end'], repo=repo).top_graphs()
     return graph
