@@ -177,3 +177,25 @@ def get_top_authors(**kwargs):
             i += 1
 
     return authors
+
+#Gets the first day of the week or the month depending on intervals
+#Sets the time to 12:00 AM or 00:00 for that day
+def get_first_day(date_index, interval):
+    if interval[0] is 'WK':
+        date_index -= datetime.timedelta(days=date_index.isoweekday() % 7)
+    elif interval[0] is 'MN':
+        date_index = date_index.replace(day = 1)
+    date_index = date_index.replace(hour=0, minute=0, second=0, microsecond=0)
+    return date_index
+
+#Gets the last day of the week or month depending on INTERVALS
+#Sets the time to 11:59 PM or 23:59 for the day
+def get_end_day(date_index, interval):
+    if interval[0] is 'WK':
+        date_index = date_index + datetime.timedelta(days=6)
+    elif interval[0] is 'MN':
+        date_delta = date_index.replace(day = 28) + datetime.timedelta(days = 4)
+        date_index = date_delta - datetime.timedelta(days=date_delta.day)
+
+    date_index = date_index.replace(hour=23, minute=59, second=59, microsecond=99)
+    return date_index

@@ -3,6 +3,7 @@ from django.db.models import Sum, Count
 from ...models import Repository, Commit, Statistic, Tag, Author
 
 from plotly import tools
+from .. import util
 
 from .. import graph
 
@@ -20,28 +21,9 @@ class AuthorGraph:
 
 
     def top_graphs(self):    
-        # Get every author with displayed repo; limit 5
-        # TODO: Limit by top contributors
-        #authors = Author.objects.filter(repos__in=[repo])[:5]
-        authors = []
-        #First get all daily interval author stats within the range
-        filter_set = Statistic.objects.filter(
-            interval=self.interval,
-            author__isnull=False,
-            repo=self.repo,
-            start_date__range=(self.start, self.end)
-        )
-
-        #Then aggregate the filter set based on the attribute, get top 5
-        top_set = filter_set.annotate(total_attr=Sum(self.attribute)).order_by('-total_attr')
-
-        #append top 5 authors to author set to display
-        i = 0
-        for t in top_set:
-            if t.author not in authors and i < 6:
-                authors.append(t.author)
-                i += 1
-
+        
+        # Get the top contributors to be graphed
+        authors = util.get_top_authors(repo=self.repo, start=self.start, end=self.end, attribute=self.attribute)
 
         figure = []
         # Generate a graph for each author based on selected attribute for the displayed repo

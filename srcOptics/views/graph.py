@@ -42,7 +42,7 @@ def generate_graph_data(**kwargs):
         interval=interval,
         repo=kwargs['repo'],
         author=author,
-        start_date__range=(kwargs['start'], kwargs['end'])
+        start_date__range=(util.get_first_day(kwargs['start'], interval), kwargs['end'])
     )
 
 

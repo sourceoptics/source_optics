@@ -5,6 +5,7 @@ from django.conf import settings
 from django.utils import timezone
 from srcOptics.models import *
 from srcOptics.create import Creator
+from srcOptics.views.util import *
 import concurrent.futures
 import datetime
 import json
@@ -51,7 +52,6 @@ class Rollup:
         date_index = date_index.replace(hour=23, minute=59, second=59, microsecond=99)
         return date_index
 
-
     # Aggregates the total rollup for the daily interval
     @classmethod
     def aggregate_day_rollup(cls,repo):
@@ -91,6 +91,7 @@ class Rollup:
             date_index += datetime.timedelta(days=1)
         return date_index
 
+    # Compile each statistic for each author over every day in the date range
     @classmethod
     def aggregate_author_rollup_day(cls, repo, author):
 
@@ -126,6 +127,7 @@ class Rollup:
             #Increment date_index to the next day
             date_index += datetime.timedelta(days=1)
 
+    # Compile each statistic for the author based on the interval over the date range
     @classmethod
     def aggregate_author_rollup(cls, repo, author, interval):
         date_index = cls.get_first_day(repo.last_scanned, interval)
@@ -159,7 +161,6 @@ class Rollup:
 
         #Gets the first day depending on the interval
         date_index = cls.get_first_day(repo.last_scanned, interval)
-
 
         while date_index < cls.today:
             end_date = cls.get_end_day(date_index, interval)
