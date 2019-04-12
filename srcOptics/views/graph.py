@@ -210,7 +210,7 @@ def attribute_author_graphs(request, slug):
             col=( i % 2 )+1
 
         )
-    
+
     if figure != []:
         graph = opy.plot(figure, auto_open=False, output_type='div')
 

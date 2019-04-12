@@ -3,6 +3,28 @@
 <section>
     <h1>{{title}}</h1>
     <div class='tabular-view'>
+	<!-- Summary Statistics -->
+	<div class='summary_stats'>
+	  <div class='flex-row'>
+	    <h2>Lifetime Summary:</h2>
+	  </div>
+	  <div class='flex-row'>
+	    <div class=''>
+	      <h3 >Total Commits: {{summary_stats.commits}}</h3>
+	      <h3 >Total Number Of Files: {{summary_stats.file_count}}</h3>
+	      <h3 >Total Number of Authors: {{summary_stats.authors}}</h3>
+	    </div>
+	    <div class=''>
+	      <h3 class='float-right'>Total Lines Added: {{summary_stats.lines_added}}</h3>
+	      <h3 class='float-right'>Total Lines Removed: {{summary_stats.lines_removed}}</h3>
+	    </div>
+	    <div class=''>
+	      <h3 class='float-right'>Age: {{summary_stats.age}} days</h3>
+	      <h3 class='float-left'>Average Commits Per Day: {{summary_stats.avg_commits_day}}</h3>
+	    </div>
+	  </div>
+	</div>
+
         <form id='range' method='GET'>
           <div class='flex-row'>
               <!-- <div class='sw-container'>
@@ -34,6 +56,8 @@
               </div>
         </div>
         </form>
+
+	<!-- Main Graph -->
         <figure>
             {{ data| safe }}
         </figure>

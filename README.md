@@ -88,6 +88,11 @@ ALTER DATABASE
 ### Dev info / Random tips
 
 * Run `sass --watch --no-source-map --style compressed srcOptics/static/_scss:srcOptics/static` during development to build css files
+  * If you use macports, the `sass` utility is not installed, only the raw compiler `sassc`. Here is a hacky one liner you can use to create main.css with only `sassc`:
+
+```
+cat srcOptics/static/_scss/main.scss srcOptics/static/_scss/*.scss | sassc -I srcOptics/static/_scss --style compressed -s > srcOptics/static/main.css
+```
 
 * Like most Django projects, the `settings.py` file contains many useful variables for configuring srcOptics. These should all be heavily commented
 
