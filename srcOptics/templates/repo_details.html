@@ -43,9 +43,12 @@
     </div>
     <h1 align="center">Contributors</h1>
     <div class='tabular-view'>
-        {% if author_data %}
+        {% if author_graphs %}
         <figure>
-            {{ author_data| safe }}
+            {{ author_graphs| safe }}
+        </figure>
+        <figure>
+            {% render_table author_table %}
         </figure>
         {% else %}
         <p>

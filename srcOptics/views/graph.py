@@ -182,28 +182,7 @@ def attribute_author_graphs(request, slug):
     # Get start and end date of date range
     start, end = util.get_date_range(request)
 
-    # Get every author with displayed repo; limit 5
-    # TODO: Limit by top contributors
-    #authors = Author.objects.filter(repos__in=[repo])[:5]
-    authors = []
-    #First get all daily interval author stats within the range
-    filter_set = Statistic.objects.filter(
-        interval='DY',
-        author__isnull=False,
-        repo=repo,
-        start_date__range=(start, end)
-    )
-
-    #Then aggregate the filter set based on the attribute, get top 5
-    top_set = filter_set.annotate(total_attr=Sum(attribute)).order_by('-total_attr')
-
-    #append top 5 authors to author set to display
-    i = 0
-    for t in top_set:
-        if t.author not in authors and i < 6:
-            authors.append(t.author)
-            i += 1
-
+    authors = util.get_top_authors(repo, start, end, attribute)
 
     figure = []
     # Generate a graph for each author based on selected attribute for the displayed repo
