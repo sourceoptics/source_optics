@@ -14,6 +14,7 @@ from .forms import RepositoryForm
 from ..models import *
 from .tables import *
 from ..create import Creator
+from django.contrib.humanize.templatetags.humanize import intcomma
 
 from random import randint
 
@@ -93,11 +94,12 @@ def repo_details(request, slug):
     avg_commits_day = "%0.2f" % (summary_stats['commits']/age)
     summary_stats['avg_commits_day'] = avg_commits_day
 
-    #print("avg: ", avg_commits_day)
-
-   #summary_stats['avg_stats_week'] = abs(today - earliest_commit)
-
-
+    summary_stats['commits'] = intcomma(summary_stats['commits'])
+    summary_stats['authors'] = intcomma(summary_stats['authors'])
+    summary_stats['lines_added'] = intcomma(summary_stats['lines_added'])
+    summary_stats['lines_removed'] = intcomma(summary_stats['lines_removed'])
+    summary_stats['file_count'] = intcomma(summary_stats['file_count'])
+    summary_stats['avg_commits_day'] = intcomma(summary_stats['avg_commits_day'])
 
     #Context variable being passed to template
     context = {
