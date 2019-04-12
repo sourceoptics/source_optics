@@ -91,9 +91,9 @@ def repo_details(request, slug):
 
     #Average commits per day
     avg_commits_day = "%0.2f" % (summary_stats['commits']/age)
+    summary_stats['avg_commits_day'] = avg_commits_day
 
-
-    print("avg: ", avg_commits_day)
+    #print("avg: ", avg_commits_day)
 
    #summary_stats['avg_stats_week'] = abs(today - earliest_commit)
 
