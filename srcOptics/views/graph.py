@@ -63,7 +63,7 @@ def generate_graph_data(**kwargs):
         line={
             'color': GRAPH_COLORS[hash(kwargs['name']) % len(GRAPH_COLORS)]
         },
-
+        showlegend=False
     )
 
     fig = kwargs.get('figure')
@@ -200,7 +200,7 @@ def attribute_author_graphs(request, slug):
     #append top 5 authors to author set to display
     i = 0
     for t in top_set:
-        if t.author not in authors and i < 5:
+        if t.author not in authors and i < 6:
             authors.append(t.author)
             i += 1
 
