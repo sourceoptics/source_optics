@@ -53,11 +53,11 @@ def aggregate_stats(repo, author, start, end):
 Returns a list of Statistic objects from start / end date in
 a given list of repositories
 """
-def get_all_repo_stats(repos, author, start, end):
+def get_all_repo_stats(**kwargs):
     # Loop through repos and add appropriate statistics to table
     stats = []
-    for repo in repos:
-        totals = aggregate_stats(repo, author, start, end)
+    for repo in kwargs['repos']:
+        totals = aggregate_stats(repo, kwargs.get('author'), kwargs['start'], kwargs['end'])
         # Add repository name to totals object to display
         totals['repo'] = repo
         stats.append(totals)
@@ -67,48 +67,61 @@ def get_all_repo_stats(repos, author, start, end):
 Returns a list of Statistic objects for a list of authors in a
 given time interval
 """
-def get_all_author_stats(authors, repo, start, end):
+def get_all_author_stats(**kwargs):
     stats = []
-    for author in authors:
-        totals = aggregate_stats(repo, author, start, end)
+    for author in kwargs['authors']:
+        totals = aggregate_stats(kwargs['repo'], author, kwargs['start'], kwargs['end'])
         # Add repository name to totals object to display
         totals['author'] = author
         stats.append(totals)
     return stats
 
-"""
-Returns a start and end date from query strings or defaults to one week
-"""
-def get_date_range(request):
-    # Get query strings
+
+def get_query_strings(request):
+    queries = {}
+
     start = request.GET.get('start')
     end = request.GET.get('end')
 
     # Sets default date range to a week if no query string is specified
     if not start or not end:
-        end = datetime.now()
-        start = end - timedelta(days=7)
+        queries['end'] = datetime.now()
+        queries['start'] = queries['end'] - timedelta(days=7)
     else:
-        start = datetime.strptime(start, '%Y-%m-%d')
-        end = datetime.strptime(end, '%Y-%m-%d')
-    return start, end
+        queries['start'] = datetime.strptime(start, '%Y-%m-%d')
+        queries['end'] = datetime.strptime(end, '%Y-%m-%d')
+
+    attribute = request.GET.get('attr')
+    if not attribute:
+        queries['attribute'] = Statistic.ATTRIBUTES[0][0]
+    else:
+        queries['attribute'] = request.GET.get('attr')
+
+    interval = request.GET.get('intr')
+    if not interval:
+        queries['interval'] = Statistic.INTERVALS[0][0]
+    else:
+        queries['interval'] = request.GET.get('intr')
+    
+
+    return queries
 
 """
 Returns an array of the top 6 contributing authors
 """
-def get_top_authors(repo, start, end, attribute):
+def get_top_authors(**kwargs):
     # Get every author with displayed repo; limit 5
     authors = []
     #First get all daily interval author stats within the range
     filter_set = Statistic.objects.filter(
         interval='DY',
         author__isnull=False,
-        repo=repo,
-        start_date__range=(start, end)
+        repo=kwargs['repo'],
+        start_date__range=(kwargs['start'], kwargs['end'])
     )
 
     #Then aggregate the filter set based on the attribute, get top 5
-    top_set = filter_set.annotate(total_attr=Sum(attribute)).order_by('-total_attr')
+    top_set = filter_set.annotate(total_attr=Sum(kwargs['attribute'])).order_by('-total_attr')
 
     #append top 5 authors to author set to display
     i = 0

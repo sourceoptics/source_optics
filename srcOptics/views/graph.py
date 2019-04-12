@@ -7,11 +7,11 @@ from django.http import *
 from django_tables2 import RequestConfig
 
 from ..models import Repository, Commit, Statistic, Tag, Author
-from .tables import *
 
 from . import util
 
-from random import randint
+from .graphs.authors import AuthorGraph
+from .graphs.repositories import RepositoryGraph
 
 from plotly import tools
 import plotly.graph_objs as go
@@ -75,62 +75,15 @@ def generate_graph_data(**kwargs):
 
 def attributes_by_repo(request):
 
-    # List of possible attribute values to filter by. Defined in models.py for Statistic object
-    attributes = Statistic.ATTRIBUTES
-    intervals = Statistic.INTERVALS
-
-
-    # Attribute query parameter
-    attribute = request.GET.get('attr')
-
-    #interval query parameters
-    interval = request.GET.get('intr')
-
-    # Default attribute(total commits) if no query string is specified
-    if not attribute:
-        attribute = attributes[0][0]
-
-    if not interval:
-        interval = intervals[0][0]
-
     # Query for repos based on the request (filter)
     repos = util.query(request.GET.get('filter'))
 
     # Get start and end date for date range
-    start, end = util.get_date_range(request)
+    queries = util.get_query_strings(request)
 
-    figure = tools.make_subplots(
-        rows=len(repos),
-        cols=1,
-        shared_xaxes=True,
-        shared_yaxes=True,
-        vertical_spacing=0.1,
-        subplot_titles=tuple([_.name for _ in repos]),
-    )
-    # Iterate over repo queryset, generating attribute graph for each
-    for i in range(len(repos)):
-        figure = generate_graph_data(
-            figure=figure,
-            repo=repos[i],
-            name=repos[i].name,
-            start=start,
-            end=end,
-            attribute=attribute,
-            interval=interval,
-            row=i+1,
-            col=1
-        )
-    figure['layout'].update(height=800)
+    graph = RepositoryGraph(attribute=queries['attribute'], interval=queries['interval'], start=queries['start'], end=queries['end'], repos=repos).attributes_by_repo()
 
-    graph = opy.plot(figure, auto_open=False, output_type='div')
-
-    context = {
-        'title': "Repo Statistics Over Time",
-        'data' : graph,
-        'attributes': attributes,
-        'intervals': intervals
-    }
-    return render(request, 'repo_view.html', context=context)
+    return graph
 
 
 """
@@ -138,25 +91,15 @@ Generates an attribute line graph based on attribute query parameters
 and start and end date
 """
 def attribute_graphs(request, slug):
-    # Attribute query parameter
-    attribute = request.GET.get('attr')
-    interval = request.GET.get('intr')
-
-    # Default attribute(total commits) if no query string is specified
-    if not attribute:
-        attribute = Statistic.ATTRIBUTES[0][0]
-
-    if not interval:
-        interval = Statistic.INTERVALS[0][0]
 
     # Get the repo object for the selected repository
     repo = Repository.objects.get(name=slug)
 
     # Get start and end date of date range
-    start, end = util.get_date_range(request)
+    queries = util.get_query_strings(request)
 
     # Generate a graph for displayed repository based on selected attribute
-    figure = generate_graph_data(repo=repo, interval=interval, name=repo.name, start=start, end=end, attribute=attribute, row=1, col=1)
+    figure = generate_graph_data(repo=repo, interval=queries['interval'], name=repo.name, start=queries['start'], end=queries['end'], attribute=queries['attribute'], row=1, col=1)
 
     figure['layout'].update(title=slug)
 
@@ -165,55 +108,11 @@ def attribute_graphs(request, slug):
     return graph
 
 def attribute_author_graphs(request, slug):
-    # Attribute query parameter
-    attribute = request.GET.get('attr')
-    interval = request.GET.get('intr')
-
-    # Default attribute(total commits) if no query string is specified
-    if not attribute:
-        attribute = Statistic.ATTRIBUTES[0][0]
-
-    if not interval:
-        interval = Statistic.INTERVALS[0][0]
-
     # Get the repo object for the selected repository
     repo = Repository.objects.get(name=slug)
 
     # Get start and end date of date range
-    start, end = util.get_date_range(request)
+    queries = util.get_query_strings(request)
 
-    authors = util.get_top_authors(repo, start, end, attribute)
-
-    figure = []
-    # Generate a graph for each author based on selected attribute for the displayed repo
-    if len(authors) != 0:
-        figure = tools.make_subplots(
-            rows=math.ceil(len(authors)/2),
-            cols=2,
-            shared_xaxes=True,
-            vertical_spacing=0.1,
-            shared_yaxes=True,
-            subplot_titles=tuple([_.email for _ in authors]),
-        )
-        figure['layout'].update(height=800)
-    for i in range(len(authors)):
-        figure = generate_graph_data(
-            figure=figure,
-            repo=repo,
-            interval=interval,
-            name=authors[i].email,
-            start=start,
-            end=end,
-            author=authors[i],
-            attribute=attribute,
-            row=math.floor(i/2) + 1,
-            col=( i % 2 )+1
-
-        )
-
-    if figure != []:
-        graph = opy.plot(figure, auto_open=False, output_type='div')
-
-        return graph
-
-    return None
+    graph = AuthorGraph(attribute=queries['attribute'], interval=queries['interval'], start=queries['start'], end=queries['end'], repo=repo).top_graphs()
+    return graph

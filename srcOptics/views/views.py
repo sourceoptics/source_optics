@@ -25,9 +25,9 @@ def index(request):
     #Passes the filter to util query to get a list of repos
     repos = util.query(request.GET.get('filter'))
     #Returns a start and end date from query strings
-    start, end = util.get_date_range(request)
+    queries = util.get_query_strings(request)
     #Aggregates statistics for a repository based on start and end date
-    stats = util.get_all_repo_stats(repos, None, start, end)
+    stats = util.get_all_repo_stats(repos=repos, start=queries['start'], end=queries['end'])
     #Returns statistic table data
     stat_table = StatTable(stats)
 
@@ -49,10 +49,10 @@ def repo_details(request, slug):
     #Gets repo name from url slug
     repo = Repository.objects.get(name=slug)
 
-    start, end = util.get_date_range(request)
-
-    stats = util.get_all_repo_stats([repo], None, start, end)
-
+    queries = util.get_query_strings(request)
+    
+    stats = util.get_all_repo_stats(repos=[repo], start=queries['start'], end=queries['end'])
+    
     stat_table = StatTable(stats)
     RequestConfig(request, paginate={'per_page': 10}).configure(stat_table)
 
@@ -76,8 +76,8 @@ def repo_details(request, slug):
         attribute = attributes[0][0]
 
     # Generate a table of the top contributors statistics
-    authors = util.get_top_authors(repo, start, end, attribute)
-    author_stats = util.get_all_author_stats(authors, repo, start, end)
+    authors = util.get_top_authors(repo=repo, start=queries['start'], end=queries['end'], attribute=queries['attribute'])
+    author_stats = util.get_all_author_stats(authors=authors, repo=repo, start=queries['start'], end=queries['end'])
     author_table = AuthorStatTable(author_stats)
     RequestConfig(request, paginate={'per_page': 10}).configure(author_table)
 
@@ -141,3 +141,13 @@ def add_repo(request):
         form = RepositoryForm()
 
     return render(request, 'add_repo.html', {'form': form})
+
+def attributes_by_repo(request):
+    data = graph.attributes_by_repo(request)
+    context = {
+        'title': 'Repo Statistics Over Time',
+        'data' : data,
+        'attributes': Statistic.ATTRIBUTES,
+        'intervals': Statistic.INTERVALS
+    }
+    return render(request, 'repo_view.html', context=context)

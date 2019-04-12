@@ -1,0 +1,78 @@
+from django.db.models import Sum, Count
+
+from ...models import Repository, Commit, Statistic, Tag, Author
+
+from plotly import tools
+
+from .. import graph
+
+import plotly.graph_objs as go
+import plotly.offline as opy
+import math
+
+class AuthorGraph:
+    def __init__(self, **kwargs):
+        self.interval = kwargs.get('interval') if kwargs.get('interval') else 'DY'
+        self.repo = kwargs['repo']
+        self.start = kwargs['start']
+        self.end = kwargs['end']
+        self.attribute = kwargs['attribute']
+
+
+    def top_graphs(self):    
+        # Get every author with displayed repo; limit 5
+        # TODO: Limit by top contributors
+        #authors = Author.objects.filter(repos__in=[repo])[:5]
+        authors = []
+        #First get all daily interval author stats within the range
+        filter_set = Statistic.objects.filter(
+            interval=self.interval,
+            author__isnull=False,
+            repo=self.repo,
+            start_date__range=(self.start, self.end)
+        )
+
+        #Then aggregate the filter set based on the attribute, get top 5
+        top_set = filter_set.annotate(total_attr=Sum(self.attribute)).order_by('-total_attr')
+
+        #append top 5 authors to author set to display
+        i = 0
+        for t in top_set:
+            if t.author not in authors and i < 6:
+                authors.append(t.author)
+                i += 1
+
+
+        figure = []
+        # Generate a graph for each author based on selected attribute for the displayed repo
+        if len(authors) != 0:
+            figure = tools.make_subplots(
+                rows=math.ceil(len(authors)/2),
+                cols=2,
+                shared_xaxes=True,
+                vertical_spacing=0.1,
+                shared_yaxes=True,
+                subplot_titles=tuple([_.email for _ in authors]),
+            )
+            figure['layout'].update(height=800)
+        for i in range(len(authors)):
+            figure = graph.generate_graph_data(
+                figure=figure,
+                repo=self.repo,
+                interval=self.interval,
+                name=authors[i].email,
+                start=self.start,
+                end=self.end,
+                author=authors[i],
+                attribute=self.attribute,
+                row=math.floor(i/2) + 1,
+                col=( i % 2 )+1
+
+            )
+        
+        if figure != []:
+            graph_obj = opy.plot(figure, auto_open=False, output_type='div')
+
+            return graph_obj
+
+        return None
