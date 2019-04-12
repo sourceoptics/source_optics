@@ -19,7 +19,7 @@
 	      <h3 class='float-right'>Total Lines Removed: {{summary_stats.lines_removed}}</h3>
 	    </div>
 	    <div class=''>
-	      <h3 class='float-right'>Age: {{summary_stats.age}}</h3>
+	      <h3 class='float-right'>Age: {{summary_stats.age}} days</h3>
 	      <h3 class='float-left'>Average Commits Per Day: {{summary_stats.avg_commits_day}}</h3>
 	    </div>
 	  </div>
@@ -67,9 +67,12 @@
     </div>
     <h1 align="center">Contributors</h1>
     <div class='tabular-view'>
-        {% if author_data %}
+        {% if author_graphs %}
         <figure>
-            {{ author_data| safe }}
+            {{ author_graphs| safe }}
+        </figure>
+        <figure>
+            {% render_table author_table %}
         </figure>
         {% else %}
         <p>

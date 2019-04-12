@@ -31,3 +31,26 @@ class StatTable(tables.Table):
         )
         sequence = ('repo', 'repo_tags', 'repo_last_scanned', 'repo_last_pulled', 'commit_total', 'author_total', '...' )
         template_name = 'table.html'
+
+class AuthorStatTable(tables.Table):
+    author_total = ColumnNumber(verbose_name = 'Author Total', attrs={"th": {"class": "num"}})
+    commit_total = ColumnNumber(verbose_name = 'Commit Total', attrs={"th": {"class": "num"}})
+    files_changed = ColumnNumber(verbose_name='Files Changed', attrs={"th": {"class": "num"}})
+    lines_added = ColumnNumber(verbose_name='Lines Added', attrs={"th": {"class": "lines"}})
+    lines_removed = ColumnNumber(verbose_name='Lines Removed', attrs={"th": {"class": "lines"}})
+    
+    class Meta:
+        model = Statistic
+        exclude = (
+            'lines_changed',
+            'repo_last_pulled',
+            'repo',
+            'repo_last_scanned',
+            'id',
+            'file',
+            'author_total',
+            'interval',
+            'start_date'
+        )
+        sequence = ('author', 'commit_total', 'author_total', '...' )
+        template_name = 'table.html'

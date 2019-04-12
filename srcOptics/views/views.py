@@ -27,7 +27,7 @@ def index(request):
     #Returns a start and end date from query strings
     queries = util.get_query_strings(request)
     #Aggregates statistics for a repository based on start and end date
-    stats = util.get_stats(repos, queries['start'], queries['end'])
+    stats = util.get_all_repo_stats(repos, None, start, end)
     #Returns statistic table data
     stat_table = StatTable(stats)
 
@@ -50,16 +50,16 @@ def repo_details(request, slug):
     repo = Repository.objects.get(name=slug)
 
     queries = util.get_query_strings(request)
-
-    stats = util.get_stats([repo], queries['start'], queries['end'])
-
+    
+    stats = util.get_all_repo_stats([repo], None, start, end)
+    
     stat_table = StatTable(stats)
     RequestConfig(request, paginate={'per_page': 10}).configure(stat_table)
 
     #Generates line graphs based on attribute query param
     line_elements = graph.attribute_graphs(request, slug)
 
-    #Generates line graph of an attribute for the top 5 Contributors
+    #Generates line graph of an attribute for the top contributors
     # to that attribute within the specified time period
     author_elements = graph.attribute_author_graphs(request, slug)
 
@@ -68,6 +68,18 @@ def repo_details(request, slug):
 
     #possible interval values to filter by
     intervals = Statistic.INTERVALS
+
+    # Get the attribute to get the top authors for from the query parameter
+    attribute = request.GET.get('attr')
+
+    if not attribute:
+        attribute = attributes[0][0]
+
+    # Generate a table of the top contributors statistics
+    authors = util.get_top_authors(repo, start, end, attribute)
+    author_stats = util.get_all_author_stats(authors, repo, start, end)
+    author_table = AuthorStatTable(author_stats)
+    RequestConfig(request, paginate={'per_page': 10}).configure(author_table)
 
     #Summary Statistics
     earliest_commit = repo.earliest_commit
@@ -107,7 +119,8 @@ def repo_details(request, slug):
         'stats': stat_table,
         'summary_stats': summary_stats,
         'data': line_elements,
-        'author_data': author_elements,
+        'author_graphs': author_elements,
+        'author_table': author_table,
         'attributes': attributes,
         'intervals':intervals
     }
