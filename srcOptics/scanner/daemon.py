@@ -46,7 +46,7 @@ class Daemon:
                     print("last_pulled: "  + str(repo.last_pulled))
                     repo.save()
 
-                    # Generate the statistics for the repository 
+                    # Generate the statistics for the repository
                     print ("Aggregating stats for " + str(repo))
                     stat_time_start = time.clock()
                     Rollup.rollup_repo(repo)

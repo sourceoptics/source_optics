@@ -48,7 +48,7 @@ class Rollup:
             date_delta = date_index.replace(day = 28) + datetime.timedelta(days = 4)
             date_index = date_delta - datetime.timedelta(days=date_delta.day)
 
-        date_index = date_index.replace(hour=11, minute=59, second=59, microsecond=99)
+        date_index = date_index.replace(hour=23, minute=59, second=59, microsecond=99)
         return date_index
 
 
@@ -57,8 +57,6 @@ class Rollup:
     def aggregate_day_rollup(cls,repo):
 
         date_index = repo.last_scanned
-        #print("Aggregating daily stats from " + str(date_index.date()) + " to " + str(cls.today))
-
         # Daily rollups aren't dependent on the time
         # This allows us to scan the current day
         while date_index.date() != cls.today.date():
@@ -89,7 +87,6 @@ class Rollup:
             # Create total rollup row for the day
             stat = Statistic.create_total_rollup(date_index, intervals[0][0], repo, data['lines_added'], data['lines_removed'],
             data['lines_changed'], data['commit_total'], data['files_changed'], data['author_total'])
-        #    print(stat)
             #Increment date_index to the next day
             date_index += datetime.timedelta(days=1)
         return date_index
@@ -125,7 +122,6 @@ class Rollup:
             # Create author rollup row for the day
             stat = Statistic.create_author_rollup(date_index, intervals[0][0], repo, author, data['lines_added'], data['lines_removed'],
             data['lines_changed'], data['commit_total'], data['files_changed'])
-            #print(stat)
 
             #Increment date_index to the next day
             date_index += datetime.timedelta(days=1)
@@ -136,7 +132,9 @@ class Rollup:
 
         while date_index < cls.today:
             end_date = cls.get_end_day(date_index, interval)
-            #print("AUHTOR RANGE: (" + str(interval[0]) + ") " + str(date_index) + " TO " + str(end_date))
+            """Need to add another day to the end date because start_date__range
+            is not inclusive with the end of the range."""
+            end_date = end_date + datetime.timedelta(days=1)
 
             #Gets the total stats for each day in the given interval
             #If author and file = none, we are getting total stats
@@ -152,10 +150,7 @@ class Rollup:
             stat = Statistic.create_author_rollup(date_index, interval[0], repo, author, data['lines_added'], data['lines_removed'],
             data['lines_changed'], data['commit_total'], data['files_changed'])
 
-            #print(stat)
-
             #Increment to next week or month
-            end_date = end_date + datetime.timedelta(days=1)
             date_index = end_date.replace(hour=0, minute=0, second=0, microsecond=0)
 
     #Compile rollup for interval by aggregating daily stats
@@ -168,7 +163,9 @@ class Rollup:
 
         while date_index < cls.today:
             end_date = cls.get_end_day(date_index, interval)
-            #print("TOTAL RANGE: (" + str(interval[0]) + ") " + str(date_index) + " TO " + str(end_date))
+            """Need to add another day to the end date because start_date__range
+            is not inclusive with the end of the range."""
+            end_date = end_date + datetime.timedelta(days=1)
 
             #Gets the total stats for each day in the given interval
             #If author and file = none, we are getting total stats
@@ -183,10 +180,7 @@ class Rollup:
             stat = Statistic.create_total_rollup(date_index, interval[0], repo, data['lines_added'], data['lines_removed'],
             data['lines_changed'], data['commit_total'], data['files_changed'], data['author_total'])
 
-            #print(stat)
-
             #Increment to next week or month
-            end_date = end_date + datetime.timedelta(days=1)
             date_index = end_date.replace(hour=0, minute=0, second=0, microsecond=0)
 
 

@@ -1,9 +1,14 @@
 from django.http import *
 from django.core import serializers
 from datetime import datetime, timedelta
+from django.utils import timezone
+
 from django.db.models import Sum
 
 from ..models import *
+from srcOptics.stats.rollup import Rollup
+from django.contrib.humanize.templatetags.humanize import intcomma
+
 
 """
 Returns a JSON list of repositories by search query
@@ -102,9 +107,50 @@ def get_query_strings(request):
         queries['interval'] = Statistic.INTERVALS[0][0]
     else:
         queries['interval'] = request.GET.get('intr')
-    
+
 
     return queries
+
+
+#Calculate the lifetime statistics of a repository
+def get_lifetime_stats(repo):
+    #Summary Statistics
+    earliest_commit = repo.earliest_commit
+    today = datetime.now(tz=timezone.utc)
+
+    start_range = Rollup.get_first_day(earliest_commit, ('MN', "Month"))
+    print(start_range)
+
+    lifetime = Statistic.objects.filter(interval='MN', repo=repo,
+                                        author=None, file=None,
+                                        start_date__range=(start_range, today))
+
+
+    summary_stats = lifetime.aggregate(commits=Sum("commit_total"), authors=Sum("author_total"),
+                                       lines_added=Sum("lines_added"), lines_removed=Sum("lines_removed"),
+                                       lines_changed=Sum("lines_changed"))
+
+    #number of files
+    file_count = File.objects.filter(repo=repo).count()
+    summary_stats['file_count'] = file_count
+
+    #Age of repository
+    age = abs(today - earliest_commit).days
+    summary_stats['age'] = age
+
+    #Average commits per day
+    avg_commits_day = "%0.2f" % (summary_stats['commits']/age)
+    summary_stats['avg_commits_day'] = avg_commits_day
+
+    summary_stats['commits'] = intcomma(summary_stats['commits'])
+    summary_stats['authors'] = intcomma(summary_stats['authors'])
+    summary_stats['lines_added'] = intcomma(summary_stats['lines_added'])
+    summary_stats['lines_removed'] = intcomma(summary_stats['lines_removed'])
+    summary_stats['file_count'] = intcomma(summary_stats['file_count'])
+    summary_stats['avg_commits_day'] = intcomma(summary_stats['avg_commits_day'])
+
+    return summary_stats
+
 
 """
 Returns an array of the top 6 contributing authors
