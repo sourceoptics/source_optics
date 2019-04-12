@@ -43,9 +43,15 @@
     </div>
     <h1 align="center">Contributors</h1>
     <div class='tabular-view'>
+        {% if author_data %}
         <figure>
             {{ author_data| safe }}
         </figure>
+        {% else %}
+        <p>
+            No contributors found for this interval!
+        </p>
+        {% endif %}
     </div>
 
 </section>

@@ -205,15 +205,18 @@ def attribute_author_graphs(request, slug):
             i += 1
 
 
+    figure = []
     # Generate a graph for each author based on selected attribute for the displayed repo
-    figure = tools.make_subplots(
-        rows=math.ceil(len(authors)/2),
-        cols=2,
-        shared_xaxes=True,
-        vertical_spacing=0.1,
-        shared_yaxes=True,
-        subplot_titles=tuple([_.email for _ in authors]),
-    )
+    if len(authors) != 0:
+        figure = tools.make_subplots(
+            rows=math.ceil(len(authors)/2),
+            cols=2,
+            shared_xaxes=True,
+            vertical_spacing=0.1,
+            shared_yaxes=True,
+            subplot_titles=tuple([_.email for _ in authors]),
+        )
+        figure['layout'].update(height=800)
     for i in range(len(authors)):
         figure = generate_graph_data(
             figure=figure,
@@ -228,8 +231,10 @@ def attribute_author_graphs(request, slug):
             col=( i % 2 )+1
 
         )
-    figure['layout'].update(height=800)
+    
+    if figure != []:
+        graph = opy.plot(figure, auto_open=False, output_type='div')
 
-    graph = opy.plot(figure, auto_open=False, output_type='div')
+        return graph
 
-    return graph
+    return None
