@@ -22,19 +22,28 @@ from random import randint
 View function for home page of site
 """
 def index(request):
+    #list of all organizations
+
+    #organization parameter
+    org = request.GET.get('org')
+
     #Passes the filter to util query to get a list of repos
-    repos = util.query(request.GET.get('filter'))
+    repos = util.query(request.GET.get('filter'), org)
+
     #Returns a start and end date from query strings
     queries = util.get_query_strings(request)
+
     #Aggregates statistics for a repository based on start and end date
     stats = util.get_all_repo_stats(repos=repos, start=queries['start'], end=queries['end'])
     #Returns statistic table data
     stat_table = StatTable(stats)
 
+
     RequestConfig(request, paginate={'per_page': 10}).configure(stat_table)
 
     context = {
         'title': 'SrcOptics',
+        'organizations':Organization.objects.all(),
         'repositories': repos,
         'stats': stat_table
     }
@@ -113,9 +122,11 @@ def add_repo(request):
     return render(request, 'add_repo.html', {'form': form})
 
 def attributes_by_repo(request):
+
     data = graph.attributes_by_repo(request)
     context = {
         'title': 'Repo Statistics Over Time',
+        'organizations': Organization.objects.all(),
         'data' : data,
         'attributes': Statistic.ATTRIBUTES,
         'intervals': Statistic.INTERVALS

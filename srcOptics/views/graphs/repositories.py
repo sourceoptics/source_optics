@@ -18,7 +18,14 @@ class RepositoryGraph:
         self.attribute = kwargs['attribute']
         self.interval = kwargs['interval']
 
+
+
     def attributes_by_repo(self):
+
+        if len(self.repos) == 0:
+            print("ASODksOKD")
+            return None
+            
         figure = tools.make_subplots(
             rows=len(self.repos),
             cols=1,

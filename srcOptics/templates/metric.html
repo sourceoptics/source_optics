@@ -10,7 +10,15 @@
             <label>Graph</label>
         </div>
         <div class='float-right dropdown'>
-            <form id='range'>
+            <form id='range' method='GET'>
+              <label>Organization</label>
+                <select class='no-margin' name='org' onchange='this.form.submit()'>
+                  <option value='all'> All </option>
+                  {% for org in organizations %}
+                  <option value='{{org.name}}' {% if request.GET.org == org.name %}selected{% endif %}> {{org.name}} </option>
+                  {% endfor %}
+                </select>
+
                 <label>From</label>
                 <input type='date' name='start' class='start' value='{{request.GET.start}}' max='{% now "Y\-m\-d" %}' onchange='this.form.submit()' required/>
                 <label>To</label>
@@ -20,6 +28,6 @@
         </div>
     </div>
 
-    
+
     {% render_table stats %}
 </div>

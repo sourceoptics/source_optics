@@ -14,19 +14,27 @@ from django.contrib.humanize.templatetags.humanize import intcomma
 Returns a JSON list of repositories by search query
 """
 def search(request, q):
-    repos = query(q)
+    org = request.GET.get('org')
+
+    repos = query(q, org)
     data = serializers.serialize('json',repos)
     return HttpResponse(data, content_type='application/json')
 
 """
 Returns a list of Repository objects from filter query
 """
-def query(q):
+def query(q, org):
     repos = None
+
+
     if not q:
-        repos = Repository.objects.all()
+        if not org or org == "all":
+            repos = Repository.objects.all()
+        else:
+            repos = Repository.objects.filter(organization__name=org)
     else:
-        repos = Repository.objects.filter(name__icontains=q)
+        repos = Repository.objects.filter(organization__name=org, name__icontains=q)
+        #TODO: fix tag query search to filter by org as well
         tag_query = Tag.objects.filter(name__icontains=q)
         for tag in tag_query:
             repos |= tag.repos.all()

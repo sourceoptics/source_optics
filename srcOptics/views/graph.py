@@ -75,8 +75,9 @@ def generate_graph_data(**kwargs):
 
 def attributes_by_repo(request):
 
+    org = request.GET.get('org')
     # Query for repos based on the request (filter)
-    repos = util.query(request.GET.get('filter'))
+    repos = util.query(request.GET.get('filter'), org)
 
     # Get start and end date for date range
     queries = util.get_query_strings(request)

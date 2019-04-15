@@ -5,7 +5,6 @@ from django.conf import settings
 from django.utils import timezone
 from srcOptics.models import *
 from srcOptics.create import Creator
-from srcOptics.views.util import *
 import concurrent.futures
 import datetime
 import json
