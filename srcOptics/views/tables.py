@@ -19,6 +19,7 @@ class StatTable(tables.Table):
     repo = tables.TemplateColumn('<a href="repos/{{ record.repo }}/?{{ request.GET.urlencode }}">{{ record.repo }}</a>', attrs={"td": {"class": "repo"}})
 
     class Meta:
+        attrs = {'class': 'metrics'}
         model = Statistic
         exclude = (
             'author',
@@ -40,6 +41,7 @@ class AuthorStatTable(tables.Table):
     lines_removed = ColumnNumber(verbose_name='Lines Removed', attrs={"th": {"class": "lines"}})
     
     class Meta:
+        attrs = {'class': 'metrics'}
         model = Statistic
         exclude = (
             'lines_changed',
