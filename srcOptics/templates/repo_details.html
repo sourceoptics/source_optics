@@ -1,85 +1,95 @@
 {% include 'partials/header.html' %}
 {% load render_table from django_tables2 %}
+<main>
+  <h1>{{title}}</h1>
+  <div class='card-layout'>
+    <figure>
+      <figcaption>Files</figcaption>
+      <table>
+        <tr>
+          <td>Total Commits</td>
+          <td>{{summary_stats.commits}}</td>
+        </tr>
+        <tr>
+          <td>Total Number Of Files</td>
+          <td>{{summary_stats.file_count}}</td>
+        </tr>
+        <tr>
+          <td>Total Number of Authors</td>
+          <td>{{summary_stats.authors}}</td>
+        </tr>
+      </table>
+    </figure>
+    <figure>
+      <figcaption>Lines</figcaption>
+      <table>
+        <tr>
+          <td>Total Lines Added</td>
+          <td>{{summary_stats.lines_added}}</td>
+        </tr>
+        <tr>
+          <td>Total Lines Removed</td>
+          <td>{{summary_stats.lines_removed}}</td>
+        </tr>
+      </table>
+    </figure>
+    <figure>
+      <figcaption>Miscellaneous</figcaption>
+      <table>
+        <tr>
+          <td>Age</td>
+          <td>{{summary_stats.age}}</td>
+        </tr>
+        <tr>
+          <td>Average Commits per Day</td>
+          <td>{{summary_stats.avg_commits_day}}</td>
+        </tr>
+      </table>
+    </figure>
+  </div>
+</main>
 <section>
-    <h1>{{title}}</h1>
-    <div class='tabular-view'>
-	<!-- Summary Statistics -->
-	<div class='summary_stats'>
-	  <div class='flex-row'>
-	    <h2>Lifetime Summary:</h2>
-	  </div>
-	  <div class='flex-row'>
-	    <div class=''>
-	      <h3 >Total Commits: {{summary_stats.commits}}</h3>
-	      <h3 >Total Number Of Files: {{summary_stats.file_count}}</h3>
-	      <h3 >Total Number of Authors: {{summary_stats.authors}}</h3>
-	    </div>
-	    <div class=''>
-	      <h3 class='float-right'>Total Lines Added: {{summary_stats.lines_added}}</h3>
-	      <h3 class='float-right'>Total Lines Removed: {{summary_stats.lines_removed}}</h3>
-	    </div>
-	    <div class=''>
-	      <h3 class='float-right'>Age: {{summary_stats.age}} days</h3>
-	      <h3 class='float-left'>Average Commits Per Day: {{summary_stats.avg_commits_day}}</h3>
-	    </div>
-	  </div>
-	</div>
-
-        <form id='range' method='GET'>
-          <div class='flex-row'>
-              <!-- <div class='sw-container'>
-                  <label>Tabular</label>
-                  <label class='switch'>
-                    <input type='checkbox' data-off='/' data-on='/repos' checked/>
-                    <span class='slider sp round'></span>
-                  </label>
-                  <label>Graph</label>
-              </div> -->
-              <div class='float-left dropdown'>
-                  <select class='no-margin' name='attr' onchange='this.form.submit()'>
-                  {% for a in attributes %}
-                  <option value='{{a.0}}' {% if request.GET.attr == a.0 %}selected{% endif %}>{{a.1}}</option>
-                  {% endfor %}
-                  </select>
-                  by
-                <select class='no-margin' name='intr' onchange='this.form.submit()'>
-                  {% for i in intervals %}
-                  <option value='{{i.0}}' {% if request.GET.intr == i.0 %}selected{% endif %}>{{i.1}}</option>
-                  {% endfor %}
-                </select>
-              </div>
-              <div class='float-right dropdown'>
-                  <label>From:</label>
-                  <input type='date' name='start' class='start' value='{{request.GET.start}}' max='{% now "Y\-m\-d" %}' onchange='this.form.submit()' required/>
-                  <label>To:</label>
-                  <input type='date' name='end' class='end' value='{% if request.GET.end %}{{request.GET.end}}{% else %}{% now "Y\-m\-d" %}{% endif %}' max='{% now "Y\-m\-d" %}' onchange='this.form.submit()'  required/>
-              </div>
-        </div>
-        </form>
-
-	<!-- Main Graph -->
-        <figure>
-            {{ data| safe }}
-        </figure>
-        <figure>
-            {% render_table stats %}
-        </figure>
+  <form id='range' method='GET'>
+    <div class='flex-row'>
+      <div class='float-left dropdown'>
+        <select class='no-margin' name='attr' onchange='this.form.submit()'>
+        {% for a in attributes %}
+        <option value='{{a.0}}' {% if request.GET.attr == a.0 %}selected{% endif %}>{{a.1}}</option>
+        {% endfor %}
+        </select>
+        by
+        <select class='no-margin' name='intr' onchange='this.form.submit()'>
+        {% for i in intervals %}
+        <option value='{{i.0}}' {% if request.GET.intr == i.0 %}selected{% endif %}>{{i.1}}</option>
+        {% endfor %}
+        </select>
+      </div>
+      <div class='float-right dropdown'>
+        <label>From:</label>
+        <input type='date' name='start' class='start' value='{{request.GET.start}}' max='{% now "Y\-m\-d" %}' onchange='this.form.submit()' required/>
+        <label>To:</label>
+        <input type='date' name='end' class='end' value='{% if request.GET.end %}{{request.GET.end}}{% else %}{% now "Y\-m\-d" %}{% endif %}' max='{% now "Y\-m\-d" %}' onchange='this.form.submit()'  required/>
+      </div>
     </div>
-    <h1 align="center">Contributors</h1>
-    <div class='tabular-view'>
-        {% if author_graphs %}
-        <figure>
-            {{ author_graphs| safe }}
-        </figure>
-        <figure>
-            {% render_table author_table %}
-        </figure>
-        {% else %}
-        <p>
-            No contributors found for this interval!
-        </p>
-        {% endif %}
-    </div>
-
+  </form>
+  {{ data| safe }}
+  {% render_table stats %}
+</section>
+<section>
+  <h1 align="center">Contributors</h1>
+  <div class='tabular-view'>
+    {% if author_graphs %}
+    <figure>
+      {{ author_graphs| safe }}
+    </figure>
+    <figure>
+      {% render_table author_table %}
+    </figure>
+    {% else %}
+    <p>
+      No contributors found for this interval!
+    </p>
+    {% endif %}
+  </div>
 </section>
 {% include 'partials/footer.html' %}

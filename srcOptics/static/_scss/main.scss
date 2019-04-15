@@ -35,6 +35,10 @@ a {
     text-decoration: inherit;
 }
 
+main {
+    padding: 1rem 4rem;
+}
+
 section {
     background-color: $secondary;
     padding: 1rem 4rem;
@@ -109,13 +113,45 @@ figure {
     .spacer {
         padding-right: 1rem;
     }
+    &.align-top {
+        align-items: flex-start;
+    }
 }
 
 .no-margin {
     margin: 0;
 }
 
-.summary_stats {
-    background: $gray;
+.card-layout {
+    display: flex;
+    justify-content: space-between;
+    //flex-wrap: wrap;
     color: $text;
+    
+    figure {
+        width: 300px;
+        //height: 200px;
+        background: $gray;
+        padding: 2rem 2rem;
+
+        figcaption {
+            font-size: 1.25rem;
+            text-transform: uppercase;
+            margin-bottom: 1rem;
+        }
+
+        table {
+            width: 100%;
+            padding: 0;
+            list-style-type: none;
+            
+            li {
+                padding: 1rem;
+            }
+
+            tr td:nth-of-type(2) {
+                font-size: 18pt;
+            }
+        }
+    }
 }
