@@ -105,6 +105,60 @@ def repo_details(request, slug):
     }
     return render(request, 'repo_details.html', context=context)
 
+
+"""
+Data to be displayed for the author details view
+"""
+def author_details(request, slug):
+    #Gets repo name from url slug
+    auth = Author.objects.get(email=slug)
+
+    queries = util.get_query_strings(request)
+
+    stats = util.get_total_author_stats(author=auth, start=queries['start'], end=queries['end'])
+
+    stat_table = StatTable(stats)
+    RequestConfig(request, paginate={'per_page': 5}).configure(stat_table)
+
+    #Generates line graphs based on attribute query param
+    line_elements = graph.attribute_summary_graph_author(request, auth)
+
+    # get the top repositories the author commits to
+    author_elements = graph.attribute_author_contributions(request, auth)
+
+    #possible attribute values to filter by
+    attributes = Statistic.ATTRIBUTES
+
+    #possible interval values to filter by
+    intervals = Statistic.INTERVALS
+
+    # Get the attribute to get the top authors for from the query parameter
+    attribute = request.GET.get('attr')
+
+    if not attribute:
+        attribute = attributes[0][0]
+
+    # Generate a table of the top contributors statistics
+    #authors = util.get_top_authors(repo=repo, start=queries['start'], end=queries['end'], attribute=queries['attribute'])
+    #author_stats = util.get_all_author_stats(authors=authors, repo=repo, start=queries['start'], end=queries['end'])
+    #author_table = AuthorStatTable(author_stats)
+    #RequestConfig(request, paginate={'per_page': 10}).configure(author_table)
+
+    summary_stats = util.get_lifetime_stats_author(auth)
+
+    #Context variable being passed to template
+    context = {
+        'title': "Author Details: " + str(auth),
+        'stats': stat_table,
+        'summary_stats': summary_stats,
+        'data': line_elements,
+        'author_graphs': author_elements,
+        'attributes': attributes,
+        'intervals':intervals
+    }
+    return render(request, 'author_details.html', context=context)
+
+
 # Renders the add repository page, must retrieve the organizations and credentials
 # in the database.
 def add_repo(request):

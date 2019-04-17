@@ -10,7 +10,7 @@ from ..models import Repository, Commit, Statistic, Tag, Author
 
 from . import util
 
-from .graphs.authors import AuthorGraph
+from .graphs.authors import *
 from .graphs.repositories import RepositoryGraph
 
 from plotly import tools
@@ -38,14 +38,23 @@ def generate_graph_data(**kwargs):
     interval = kwargs.get('interval')
 
     # Filter Rollup table for daily interval statistics for the current repository over the specified time range
-    stats_set = Statistic.objects.filter(
-        interval=interval,
-        repo=kwargs['repo'],
-        author=author,
-        start_date__range=(util.get_first_day(kwargs['start'], interval), kwargs['end'])
-    )
+    #
+    # In the authors page, we leave out the repo argument
+    if 'repo' in kwargs.keys():
+        stats_set = Statistic.objects.filter(
+            interval=interval,
+            repo=kwargs['repo'],
+            author=author,
+            start_date__range=(util.get_first_day(kwargs['start'], interval), kwargs['end'])
+        ).order_by('start_date')
+    else:
+        stats_set = Statistic.objects.filter(
+            interval=interval,
+            author=author,
+            start_date__range=(util.get_first_day(kwargs['start'], interval), kwargs['end'])
+        ).order_by('start_date')
 
-
+    # sort the dates first so we don't add artifacts to the graph
     # Adds dates and attribute values to their appropriate arrays to render into graph data
     for stat in stats_set:
         dates.append(stat.start_date)
@@ -116,4 +125,34 @@ def attribute_author_graphs(request, slug):
     queries = util.get_query_strings(request)
 
     graph = AuthorGraph(attribute=queries['attribute'], interval=queries['interval'], start=queries['start'], end=queries['end'], repo=repo).top_graphs()
+    return graph
+
+def attribute_author_contributions(request, author):
+
+    # Get start and end date of date range
+    queries = util.get_query_strings(request)
+
+    graph = AuthorContributeGraph(author=author, attribute=queries['attribute'],
+                                  interval=queries['interval'], start=queries['start'],
+                                  end=queries['end']).top_graphs()
+
+    return graph
+
+"""
+Generates a line graph for an author details page
+"""
+def attribute_summary_graph_author(request, author):
+
+    # Get start and end date of date range
+    queries = util.get_query_strings(request)
+
+    # Generate a graph for displayed repository based on selected attribute
+    figure = generate_graph_data(author=author, interval=queries['interval'], name=author.email,
+                                 start=queries['start'], end=queries['end'], attribute=queries['attribute'],
+                                 row=1, col=1)
+
+    figure['layout'].update(title=author.email)
+
+    graph = opy.plot(figure, auto_open=False, output_type='div')
+
     return graph

@@ -90,6 +90,22 @@ def get_all_author_stats(**kwargs):
     return stats
 
 
+"""
+Returns a list of author contributions for ALL repositories in the
+given time interval
+"""
+def get_total_author_stats(**kwargs):
+    author = kwargs['author']
+    stats = []
+    for repo in author.repos.all():
+        totals = aggregate_stats(repo, author, kwargs['start'], kwargs['end'])
+        # Add repository name to totals object to display
+        totals['author'] = author
+        totals['repo'] = repo
+        stats.append(totals)
+    return stats
+
+
 def get_query_strings(request):
     queries = {}
 
@@ -119,6 +135,26 @@ def get_query_strings(request):
 
     return queries
 
+# author summary statistics
+def get_lifetime_stats_author(author):
+    commits = Commit.objects.filter(author=author).order_by('commit_date')
+    earliest = commits[0].commit_date
+    today = datetime.now(tz=timezone.utc)
+    age = abs(today - earliest).days
+
+    lifetime = Statistic.objects.filter(interval='MN', author=author)
+
+    ret = lifetime.aggregate(lines_added=Sum("lines_added"), lines_removed=Sum("lines_removed"))
+
+    ret['commits'] = intcomma(commits.count())
+    ret['lines_added'] = intcomma(ret['lines_added'])
+    ret['lines_removed'] = intcomma(ret['lines_removed'])
+    ret['age'] = intcomma(age)
+    ret['repo_count'] = author.repos.count()
+    ret['avg_commits_day'] = intcomma(round(commits.count() / age, 4))
+
+    return ret
+
 
 #Calculate the lifetime statistics of a repository
 def get_lifetime_stats(repo):
@@ -127,7 +163,6 @@ def get_lifetime_stats(repo):
     today = datetime.now(tz=timezone.utc)
 
     start_range = Rollup.get_first_day(earliest_commit, ('MN', "Month"))
-    print(start_range)
 
     lifetime = Statistic.objects.filter(interval='MN', repo=repo,
                                         author=None, file=None,
