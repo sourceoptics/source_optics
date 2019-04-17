@@ -16,7 +16,7 @@ class StatTable(tables.Table):
     repo_last_scanned = tables.DateTimeColumn(verbose_name='Last Scanned', format='m\/d\/y P')
     lines_added = ColumnNumber(verbose_name='Lines Added', attrs={"th": {"class": "lines"}})
     lines_removed = ColumnNumber(verbose_name='Lines Removed', attrs={"th": {"class": "lines"}})
-    repo = tables.TemplateColumn('<a href="repos/{{ record.repo }}/?{{ request.GET.urlencode }}">{{ record.repo }}</a>', attrs={"td": {"class": "repo"}})
+    repo = tables.TemplateColumn('<a href="/repos/{{ record.repo }}/?{{ request.GET.urlencode }}">{{ record.repo }}</a>', attrs={"td": {"class": "repo"}})
 
     class Meta:
         attrs = {'class': 'metrics'}
@@ -39,6 +39,7 @@ class AuthorStatTable(tables.Table):
     files_changed = ColumnNumber(verbose_name='Files Changed', attrs={"th": {"class": "num"}})
     lines_added = ColumnNumber(verbose_name='Lines Added', attrs={"th": {"class": "lines"}})
     lines_removed = ColumnNumber(verbose_name='Lines Removed', attrs={"th": {"class": "lines"}})
+    author = tables.TemplateColumn('<a href="/author/{{ record.author }}/?{{ request.GET.urlencode }}">{{ record.author }}</a>', attrs={"td": {"class": "repo"}})
     
     class Meta:
         attrs = {'class': 'metrics'}
