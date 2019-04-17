@@ -5,6 +5,7 @@
 from srcOptics.models import *
 
 class Creator:
+
     # ------------------------------------------------------------------
     # DB helper functions
     #
@@ -104,3 +105,34 @@ class Creator:
         commit.files.add(file_instance)
         commit.save()
         return file_instance
+    
+    def create_total_rollup(start_date, interval, repo, lines_added, lines_removed,
+                            lines_changed, commit_total, files_changed, author_total, flush, total_instances):
+        if len(total_instances) < 100 and flush == False:
+            total_instances.append(Statistic(start_date = start_date, interval = interval, repo = repo, lines_added = lines_added,
+            lines_removed = lines_removed, lines_changed = lines_changed, commit_total = commit_total, files_changed = files_changed,
+            author_total = author_total))
+            return total_instances
+        Statistic.objects.bulk_create(total_instances)
+        return []
+        #instance.save()
+        #return instance
+
+    def flush_total_rollups(total_instances):
+        Statistic.objects.bulk_create(total_instances, len(total_instances))
+        return []
+
+    def create_author_rollup(start_date, interval, repo, author, lines_added, lines_removed,
+                            lines_changed, commit_total, files_changed, flush, author_instances):
+        if len(author_instances) < 100 and flush == False:
+            author_instances.append(Statistic(start_date = start_date, interval = interval, repo = repo, author = author, lines_added = lines_added,
+            lines_removed = lines_removed, lines_changed = lines_changed, commit_total = commit_total,
+            files_changed = files_changed, author_total = 1))
+            #count += 1
+            return author_instances
+        Statistic.objects.bulk_create(author_instances, len(author_instances))
+        return []
+
+    def flush_author_rollups(author_instances):
+        Statistic.objects.bulk_create(author_instances, len(author_instances))
+        return []

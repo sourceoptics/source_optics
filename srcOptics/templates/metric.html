@@ -12,8 +12,8 @@
         <div class='float-right dropdown'>
             <form id='range' method='GET'>
               <label>Organization</label>
-                <select class='no-margin' name='org' onchange='this.form.submit()'>
-                  <option value='all'> All </option>
+                <select name='org' onchange='this.form.submit()'>
+                  <option value='all'>All</option>
                   {% for org in organizations %}
                   <option value='{{org.name}}' {% if request.GET.org == org.name %}selected{% endif %}> {{org.name}} </option>
                   {% endfor %}

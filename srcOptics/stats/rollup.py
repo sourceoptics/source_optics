@@ -55,6 +55,7 @@ class Rollup:
     @classmethod
     def aggregate_day_rollup(cls,repo):
 
+        total_instances = []
         date_index = repo.last_scanned
         # Daily rollups aren't dependent on the time
         # This allows us to scan the current day
@@ -63,8 +64,17 @@ class Rollup:
             #Filters commits by date_index's day value as well as the repo
             commits = Commit.objects.filter(commit_date__contains=date_index.date(), repo=repo)
 
+            flush = False
+            # Create total rollup row for the day
+            if date_index.date() == (cls.today.date() - datetime.timedelta(days=1)):
+                flush = True
+
             # If there are no commits for the day, continue
-            if len(commits) == 0:
+            if len(commits) == 0 and flush == False:
+                date_index += datetime.timedelta(days=1)
+                continue
+            elif len(commits) == 0 and flush == True: 
+                total_instances = Creator.flush_total_rollups(total_instances)
                 date_index += datetime.timedelta(days=1)
                 continue
 
@@ -84,8 +94,8 @@ class Rollup:
             data['lines_changed'] = int(data['lines_added']) + int(data['lines_removed'])
 
             # Create total rollup row for the day
-            stat = Statistic.create_total_rollup(date_index, intervals[0][0], repo, data['lines_added'], data['lines_removed'],
-            data['lines_changed'], data['commit_total'], data['files_changed'], data['author_total'])
+            total_instances = Creator.create_total_rollup(date_index, intervals[0][0], repo, data['lines_added'], data['lines_removed'],
+            data['lines_changed'], data['commit_total'], data['files_changed'], data['author_total'], flush, total_instances)
             #Increment date_index to the next day
             date_index += datetime.timedelta(days=1)
         return date_index
@@ -95,6 +105,7 @@ class Rollup:
     def aggregate_author_rollup_day(cls, repo, author):
 
         date_index = repo.last_scanned
+        author_instances = []
 
         # Daily rollups aren't dependent on the time
         # This allows us to scan the current day
@@ -103,8 +114,16 @@ class Rollup:
             #Filters commits by author,  date_index's day value, and repo
             commits = Commit.objects.filter(author=author, commit_date__contains=date_index.date(), repo=repo)
 
+            flush = False
+            if date_index.date() == (cls.today.date() - datetime.timedelta(days=1)):
+                flush = True
+
             # If there are no commits for the day, continue
-            if len(commits) == 0:
+            if len(commits) == 0 and flush == False:
+                date_index += datetime.timedelta(days=1)
+                continue
+            elif len(commits) == 0 and flush == True:
+                author_instances = Creator.flush_author_rollups(author_instances)
                 date_index += datetime.timedelta(days=1)
                 continue
 
@@ -120,8 +139,8 @@ class Rollup:
             data['lines_changed'] = int(data['lines_added']) + int(data['lines_removed'])
 
             # Create author rollup row for the day
-            stat = Statistic.create_author_rollup(date_index, intervals[0][0], repo, author, data['lines_added'], data['lines_removed'],
-            data['lines_changed'], data['commit_total'], data['files_changed'])
+            author_instances = Creator.create_author_rollup(date_index, intervals[0][0], repo, author, data['lines_added'], data['lines_removed'],
+            data['lines_changed'], data['commit_total'], data['files_changed'], flush, author_instances)
 
             #Increment date_index to the next day
             date_index += datetime.timedelta(days=1)
@@ -130,6 +149,7 @@ class Rollup:
     @classmethod
     def aggregate_author_rollup(cls, repo, author, interval):
         date_index = cls.get_first_day(repo.last_scanned, interval)
+        author_instances = []
 
         while date_index < cls.today:
             end_date = cls.get_end_day(date_index, interval)
@@ -148,8 +168,11 @@ class Rollup:
                                 files_changed = Sum("files_changed"), author_total = Sum("author_total"))
 
             #Creates row for given interval
-            stat = Statistic.create_author_rollup(date_index, interval[0], repo, author, data['lines_added'], data['lines_removed'],
-            data['lines_changed'], data['commit_total'], data['files_changed'])
+            flush = False
+            if end_date >= cls.today:
+                flush = True
+            author_instances = Creator.create_author_rollup(date_index, interval[0], repo, author, data['lines_added'], data['lines_removed'],
+            data['lines_changed'], data['commit_total'], data['files_changed'], flush, author_instances)
 
             #Increment to next week or month
             date_index = end_date.replace(hour=0, minute=0, second=0, microsecond=0)
@@ -160,6 +183,7 @@ class Rollup:
 
         #Gets the first day depending on the interval
         date_index = cls.get_first_day(repo.last_scanned, interval)
+        total_instances = []
 
         while date_index < cls.today:
             end_date = cls.get_end_day(date_index, interval)
@@ -167,8 +191,6 @@ class Rollup:
             is not inclusive with the end of the range."""
             end_date = end_date + datetime.timedelta(days=1)
 
-            #Gets the total stats for each day in the given interval
-            #If author and file = none, we are getting total stats
             days = Statistic.objects.filter(interval = 'DY', author = None, repo = repo, file = None, start_date__range=(date_index, end_date))
 
             #Aggregates total stats for the interval
@@ -177,8 +199,11 @@ class Rollup:
                                 files_changed = Sum("files_changed"), author_total = Sum("author_total"))
 
             #Creates row for given interval
-            stat = Statistic.create_total_rollup(date_index, interval[0], repo, data['lines_added'], data['lines_removed'],
-            data['lines_changed'], data['commit_total'], data['files_changed'], data['author_total'])
+            flush = False
+            if end_date >= cls.today:
+                flush = True
+            total_instances = Creator.create_total_rollup(date_index, interval[0], repo, data['lines_added'], data['lines_removed'],
+            data['lines_changed'], data['commit_total'], data['files_changed'], data['author_total'], flush, total_instances)
 
             #Increment to next week or month
             date_index = end_date.replace(hour=0, minute=0, second=0, microsecond=0)
