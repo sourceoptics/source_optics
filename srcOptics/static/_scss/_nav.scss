@@ -71,6 +71,7 @@ nav {
         .results {
             display: none;
             position: absolute;
+            z-index: 10;
             list-style-type: none;
             background: $white;
             padding: 0;
