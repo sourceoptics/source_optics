@@ -211,24 +211,6 @@ class Statistic(models.Model):
         ]
 
     @classmethod
-    def create_total_rollup(cls, start_date, interval, repo, lines_added, lines_removed,
-                            lines_changed, commit_total, files_changed, author_total):
-        instance = cls(start_date = start_date, interval = interval, repo = repo, lines_added = lines_added,
-        lines_removed = lines_removed, lines_changed = lines_changed, commit_total = commit_total, files_changed = files_changed,
-        author_total = author_total)
-        instance.save()
-        return instance
-
-    @classmethod
-    def create_author_rollup(cls, start_date, interval, repo, author, lines_added, lines_removed,
-                            lines_changed, commit_total, files_changed):
-        instance = cls(start_date = start_date, interval = interval, repo = repo, author = author, lines_added = lines_added,
-        lines_removed = lines_removed, lines_changed = lines_changed, commit_total = commit_total,
-        files_changed = files_changed, author_total = 1)
-        instance.save()
-        return instance
-
-    @classmethod
     def create_file_rollup(cls, start_date, interval, repo, file, data):
         instance = cls(start_date = start_date, interval = interval, repo = repo, file = file, data = data)
         return instance
