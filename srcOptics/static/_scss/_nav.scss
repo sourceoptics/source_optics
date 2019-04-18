@@ -1,11 +1,16 @@
 
 nav {
-    position: relative;
+    position: fixed;
     display: flex;
     align-items: center;
+    top: 0;
     //justify-content: center;
     background-color: $purple;
     padding: 1rem 0;
+    box-shadow: 0px 1px 10px #000;
+    width: 100%;
+    z-index: 9999;
+
 
     header {
         color: $white;

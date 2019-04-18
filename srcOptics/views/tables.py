@@ -8,10 +8,17 @@ class ColumnNumber(tables.Column):
         return intcomma(value)
 
 class StatTable(tables.Table):
-    author_total = ColumnNumber(verbose_name = 'Author Total', attrs={"th": {"class": "num"}})
-    commit_total = ColumnNumber(verbose_name = 'Commit Total', attrs={"th": {"class": "num"}})
+    author_total = ColumnNumber(verbose_name='Author Total', attrs={"th": {"class": "num"}})
+    commit_total = ColumnNumber(verbose_name='Commit Total', attrs={"th": {"class": "num"}})
     files_changed = ColumnNumber(verbose_name='Files Changed', attrs={"th": {"class": "num"}})
-    repo_tags = tables.TemplateColumn('{%for tag in record.repo_tags%} <a href="?{{ request.GET.urlencode }}&filter={{tag}}">{{ tag }}</a> {%endfor%}', verbose_name='Tags')
+    repo_tags = tables.TemplateColumn(
+        """
+        <ul class='tags'>
+            {%for tag in record.repo_tags%}
+            <li><a href="?{{ request.GET.urlencode }}&filter={{tag}}"  {%ifequal request.GET.filter tag|stringformat:"s"%}class='active'{%endifequal%}>{{ tag }}</a></li>
+            {%endfor%}
+        </ul>
+        """, verbose_name='Tags', attrs={"td": {"class": "no-padding"}})
     repo_last_pulled = tables.DateTimeColumn(verbose_name='Last Pulled', format='m\/d\/y P')
     repo_last_scanned = tables.DateTimeColumn(verbose_name='Last Scanned', format='m\/d\/y P')
     lines_added = ColumnNumber(verbose_name='Lines Added', attrs={"th": {"class": "lines"}})
@@ -34,8 +41,8 @@ class StatTable(tables.Table):
         template_name = 'table.html'
 
 class AuthorStatTable(tables.Table):
-    author_total = ColumnNumber(verbose_name = 'Author Total', attrs={"th": {"class": "num"}})
-    commit_total = ColumnNumber(verbose_name = 'Commit Total', attrs={"th": {"class": "num"}})
+    author_total = ColumnNumber(verbose_name='Author Total', attrs={"th": {"class": "num"}})
+    commit_total = ColumnNumber(verbose_name='Commit Total', attrs={"th": {"class": "num"}})
     files_changed = ColumnNumber(verbose_name='Files Changed', attrs={"th": {"class": "num"}})
     lines_added = ColumnNumber(verbose_name='Lines Added', attrs={"th": {"class": "lines"}})
     lines_removed = ColumnNumber(verbose_name='Lines Removed', attrs={"th": {"class": "lines"}})

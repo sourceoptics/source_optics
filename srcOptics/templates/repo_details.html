@@ -1,7 +1,8 @@
 {% include 'partials/header.html' %}
 {% load render_table from django_tables2 %}
 <main>
-  <h1>{{title}}</h1>
+  <h1>Repository Details</h1>
+  <h2>{{title}}</h2>
   <div class='card-layout'>
     <figure>
       <figcaption>Files</figcaption>
@@ -71,6 +72,7 @@
         <input type='date' name='end' class='end' value='{% if request.GET.end %}{{request.GET.end}}{% else %}{% now "Y\-m\-d" %}{% endif %}' max='{% now "Y\-m\-d" %}' onchange='this.form.submit()'  required/>
       </div>
     </div>
+    <input type='hidden' id='home' name='filter' value='{% if request.GET.filter %}{{request.GET.filter}}{% endif %}'/>
   </form>
   {{ data| safe }}
   {% render_table stats %}
@@ -86,9 +88,7 @@
       {% render_table author_table %}
     </figure>
     {% else %}
-    <p>
-      No contributors found for this interval!
-    </p>
+    <p>No contributors found for this interval!</p>
     {% endif %}
   </div>
 </section>

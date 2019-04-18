@@ -7,6 +7,7 @@
                 <input type='date' name='start' class='start' value='{{request.GET.start}}' max='{% now "Y\-m\-d" %}' onchange='this.form.submit()' required/>
                 <label>To</label>
                 <input type='date' name='end' class='end' value='{% if request.GET.end %}{{request.GET.end}}{% else %}{% now "Y\-m\-d" %}{% endif %}' max='{% now "Y\-m\-d" %}' onchange='this.form.submit()'  required/>
+                <input type='hidden' id='home' name='filter' value='{% if request.GET.filter %}{{request.GET.filter}}{% endif %}'/>
             </form>
         </div>
     </div>

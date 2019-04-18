@@ -46,8 +46,15 @@ if(switches.length) {
  */
 var submitQuery = function(obj, e) {
     e.preventDefault();
-    document.getElementById('filter').value = obj.value;
+    var filter = document.getElementById('filter');
+    if(filter) {
+        document.getElementById('filter').value = obj.value;
+    } else {
+        document.getElementById('home').value = obj.value;
+        form.action = '/';
+    }
     form.submit();
+
 };
 
 // Search elements

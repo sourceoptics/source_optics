@@ -14,6 +14,7 @@ $colors: #333D5C, #5C3353, #AD3838, #57958B, #AD5838, #B55D7F;
 @import '_switch';
 @import '_table';
 @import '_nav';
+@import '_cards';
 
 * {
     font-family: 'Lato', sans-serif;
@@ -24,7 +25,7 @@ body {
 }
 h1, h2, h3, h4, h5, h6 {
     font-weight: normal;
-    color: $text;
+    //color: $text;
 }
 h1 {
     font-size: 2rem;
@@ -36,13 +37,19 @@ a {
 }
 
 main {
-    padding: 1rem 4rem;
+    background-color: $purple;
+    padding: 1rem 4rem 3rem 4rem;
+    color: $white;
 }
 
 section {
     background-color: $secondary;
     padding: 1rem 4rem;
     min-height: 90vh;
+    color: $text;
+}
+main:nth-child(2), section:nth-child(2) {
+    margin-top: 70px;
 }
 
 input[type='month'], 
@@ -118,40 +125,39 @@ figure {
     }
 }
 
-.no-margin {
-    margin: 0;
-}
+.tags {
+    list-style-type: none;
+    padding: 0;
 
-.card-layout {
-    display: flex;
-    justify-content: space-between;
-    //flex-wrap: wrap;
-    color: $text;
-    
-    figure {
-        width: 300px;
-        //height: 200px;
-        background: $gray;
-        padding: 2rem 2rem;
+    li {
+        display: inline-block;
+        margin-right: 5px;
 
-        figcaption {
-            font-size: 1.25rem;
-            text-transform: uppercase;
-            margin-bottom: 1rem;
-        }
+        a {
+            background: lighten($purple, 30%);
+            color: $white;
+            padding: 4px 15px;
+            border-radius: 15px;
+            display: block;
 
-        table {
-            width: 100%;
-            padding: 0;
-            list-style-type: none;
-            
-            li {
-                padding: 1rem;
+            &:hover {
+                background: lighten($purple, 45%);
             }
-
-            tr td:nth-of-type(2) {
-                font-size: 18pt;
+            &.active {
+                background: lighten($purple, 10%);
             }
         }
     }
 }
+
+.no-margin {
+    margin: 0;
+}
+.inline {
+    display: inline;
+}
+.no-padding {
+    padding: 0 !important;
+}
+
+

@@ -94,7 +94,7 @@ def repo_details(request, slug):
 
     #Context variable being passed to template
     context = {
-        'title': "Repository Details: " + str(repo),
+        'title': repo,
         'stats': stat_table,
         'summary_stats': summary_stats,
         'data': line_elements,
