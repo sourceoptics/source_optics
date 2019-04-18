@@ -53,13 +53,13 @@
   <form id='range' method='GET'>
     <div class='flex-row'>
       <div class='float-left dropdown'>
-        <select class='no-margin' name='attr' onchange='this.form.submit()'>
+        <select name='attr' onchange='this.form.submit()'>
         {% for a in attributes %}
         <option value='{{a.0}}' {% if request.GET.attr == a.0 %}selected{% endif %}>{{a.1}}</option>
         {% endfor %}
         </select>
         by
-        <select class='no-margin' name='intr' onchange='this.form.submit()'>
+        <select name='intr' onchange='this.form.submit()'>
         {% for i in intervals %}
         <option value='{{i.0}}' {% if request.GET.intr == i.0 %}selected{% endif %}>{{i.1}}</option>
         {% endfor %}

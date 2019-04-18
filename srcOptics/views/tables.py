@@ -14,10 +14,12 @@ class StatTable(tables.Table):
     repo_tags = tables.TemplateColumn(
         """
         <ul class='tags'>
+            {% load query_tags %}
             {%for tag in record.repo_tags%}
-            <li><a href="?{{ request.GET.urlencode }}&filter={{tag}}"  {%ifequal request.GET.filter tag|stringformat:"s"%}class='active'{%endifequal%}>{{ tag }}</a></li>
+            <li><a href="{% query_url request.GET.items 'filter' tag %}" {%ifequal request.GET.filter tag|stringformat:'s'%}class='active'{%endifequal%}>{{ tag }}</a></li>
             {%endfor%}
         </ul>
+
         """, verbose_name='Tags', attrs={"td": {"class": "no-padding"}})
     repo_last_pulled = tables.DateTimeColumn(verbose_name='Last Pulled', format='m\/d\/y P')
     repo_last_scanned = tables.DateTimeColumn(verbose_name='Last Scanned', format='m\/d\/y P')
