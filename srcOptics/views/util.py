@@ -6,7 +6,6 @@ from django.utils import timezone
 from django.db.models import Sum
 
 from ..models import *
-from srcOptics.stats.rollup import Rollup
 from django.contrib.humanize.templatetags.humanize import intcomma
 
 
@@ -164,7 +163,7 @@ def get_lifetime_stats(repo):
     earliest_commit = repo.earliest_commit
     today = datetime.now(tz=timezone.utc)
 
-    start_range = Rollup.get_first_day(earliest_commit, ('MN', "Month"))
+    start_range = get_first_day(earliest_commit, ('MN', "Month"))
 
     lifetime = Statistic.objects.filter(interval='MN', repo=repo,
                                         author=None, file=None,

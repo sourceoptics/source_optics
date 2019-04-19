@@ -73,7 +73,7 @@ class Rollup:
             if len(commits) == 0 and flush == False:
                 date_index += datetime.timedelta(days=1)
                 continue
-            elif len(commits) == 0 and flush == True: 
+            elif len(commits) == 0 and flush == True:
                 total_instances = Creator.flush_total_rollups(total_instances)
                 date_index += datetime.timedelta(days=1)
                 continue
@@ -155,7 +155,6 @@ class Rollup:
             end_date = cls.get_end_day(date_index, interval)
             """Need to add another day to the end date because start_date__range
             is not inclusive with the end of the range."""
-            end_date = end_date + datetime.timedelta(days=1)
 
             #Gets the total stats for each day in the given interval
             #If author and file = none, we are getting total stats
@@ -175,6 +174,7 @@ class Rollup:
             data['lines_changed'], data['commit_total'], data['files_changed'], flush, author_instances)
 
             #Increment to next week or month
+            end_date = end_date + datetime.timedelta(days=1)
             date_index = end_date.replace(hour=0, minute=0, second=0, microsecond=0)
 
     #Compile rollup for interval by aggregating daily stats
@@ -189,7 +189,6 @@ class Rollup:
             end_date = cls.get_end_day(date_index, interval)
             """Need to add another day to the end date because start_date__range
             is not inclusive with the end of the range."""
-            end_date = end_date + datetime.timedelta(days=1)
 
             days = Statistic.objects.filter(interval = 'DY', author = None, repo = repo, file = None, start_date__range=(date_index, end_date))
 
@@ -206,6 +205,7 @@ class Rollup:
             data['lines_changed'], data['commit_total'], data['files_changed'], data['author_total'], flush, total_instances)
 
             #Increment to next week or month
+            end_date = end_date + datetime.timedelta(days=1)
             date_index = end_date.replace(hour=0, minute=0, second=0, microsecond=0)
 
 
