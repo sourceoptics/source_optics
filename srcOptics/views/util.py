@@ -203,21 +203,28 @@ def get_top_authors(**kwargs):
     # Get every author with displayed repo; limit 5
     authors = []
     #First get all daily interval author stats within the range
+    print (kwargs['start'], kwargs['end'])
+
     filter_set = Statistic.objects.filter(
         interval='DY',
         author__isnull=False,
         repo=kwargs['repo'],
         start_date__range=(kwargs['start'], kwargs['end'])
-    )
+    ).values('author_id').annotate(total=Sum(kwargs['attribute'])).order_by('-total')
 
     #Then aggregate the filter set based on the attribute, get top 5
-    top_set = filter_set.annotate(total_attr=Sum(kwargs['attribute'])).order_by('-total_attr')
+    #distinct_set = filter_set.distinct('author')#.values_list('author',flat=True)
+#    top_set
+#    top_set = filter_set.values('author').annotate(total=Sum(kwargs['attribute']))
+#    top_set = filter_set.aggregate(total_attr=Sum(kwargs['attribute'])).order_by('-total_attr')
 
     #append top 5 authors to author set to display
     i = 0
-    for t in top_set:
-        if t.author not in authors and i < 6:
-            authors.append(t.author)
+    for t in filter_set:
+        if i < 6:
+            top_auth = Author.objects.get(pk=t['author_id'])
+            print (top_auth, t['total'])
+            authors.append(top_auth)
             i += 1
 
     return authors

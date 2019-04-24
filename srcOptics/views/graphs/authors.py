@@ -20,8 +20,8 @@ class AuthorGraph:
         self.attribute = kwargs['attribute']
 
 
-    def top_graphs(self):    
-        
+    def top_graphs(self):
+
         # Get the top contributors to be graphed
         authors = util.get_top_authors(repo=self.repo, start=self.start, end=self.end, attribute=self.attribute)
 
@@ -32,9 +32,9 @@ class AuthorGraph:
                 rows=math.ceil(len(authors)/2),
                 cols=2,
                 shared_xaxes=True,
-                vertical_spacing=0.1,
                 shared_yaxes=True,
-                subplot_titles=tuple([_.email for _ in authors]),
+                vertical_spacing=0.1,
+                subplot_titles=tuple([_.email for _ in authors])
             )
             figure['layout'].update(height=800)
         for i in range(len(authors)):
@@ -51,7 +51,7 @@ class AuthorGraph:
                 col=( i % 2 )+1
 
             )
-        
+
         if figure != []:
             graph_obj = opy.plot(figure, auto_open=False, output_type='div')
 
@@ -79,7 +79,7 @@ class AuthorContributeGraph:
                 cols=2,
                 shared_xaxes=True,
                 vertical_spacing=0.1,
-                shared_yaxes=True,
+                shared_yaxes=False,
                 subplot_titles=tuple([_.name for _ in repos]),
             )
             figure['layout'].update(height=800)
