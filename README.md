@@ -23,6 +23,10 @@ This will create the default database (default name is 'srcopt'), perform migrat
 
 The `-s` argument creates a key for symmetric encryption of login credential passwords. The key location can be configured in the Django settings. This only needs to be used the first time. It will not delete any existing keys it finds. The default location is `/etc/srcoptics/*`, the user running srcoptics needs to have write permissions to this directory.
 
+```
+mkdir /etc/srcoptics
+```
+
 
 ### Management Commands
 
@@ -92,7 +96,7 @@ The default name of the database used is called `srcopt`. It is created using th
 CREATE ROLE <username> WITH CREATEDB SUPERUSER;
 ALTER DATABASE srcopt OWNER TO <username>;
 ```
-For more roles, refer to the [documentation](https://www.w3resource.com/PostgreSQL/postgresql-database-roles.php)
+For more roles, please refer to the [documentation](https://www.w3resource.com/PostgreSQL/postgresql-database-roles.php)
 
 ### Dev info / Random tips
 
