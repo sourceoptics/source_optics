@@ -2,7 +2,7 @@
 ## Developer's guide
 This guide will instruct you on how to have a working Django app on your system
 
-### Prerequisites
+### Dependencies
 - Git
 - Pip
 - Python 3.6+
@@ -16,14 +16,25 @@ Run `pip install -r requirements.txt` to install required modules.
 SrcOptics requires some basic structure to be initialized before it can run properly. This can be set up using the `init` management command.
 
 ```
-python manage.py init -es
+python manage.py init -s
 ```
 
-The `-e` argument automatically creates an admin user and a root organization, along with dropping and recreating the database. This is probably not what you want in a real world application, so omit if if you would like to set things up manually.
+This will create the default database (default name is 'srcopt'), perform migrations, and initialize a root organization. Both of these steps are required for srcoptics to run. `init` will also prompt the user for a username and password for a new superuser. 
 
-* The default Django admin login is `admin`/`password`.
+The `-s` argument creates a key for symmetric encryption of login credential passwords. The key location can be configured in the Django settings. This only needs to be used the first time. It will not delete any existing keys it finds. The default location is `/etc/srcoptics/*`, the user running srcoptics needs to have write permissions to this directory.
 
-The `-s` argument creates a key for symmetric encryption of login credential passwords. The key location can be configured in the Django settings.
+
+### Management Commands
+
+Management commands can be run with `python manage.py <command_name>`
+
+| Command       | Summary           | 
+| ------------- |:-------------:|
+| init		| set up database resources and perform migrations |
+| runserver	| run the webserver |
+| addrepo	| pull remote repositories and scan them into the database |
+| stat		| aggregate statistics for a _single_ repository |
+| scan		| run the scanning and aggregation daemon  |
 
 ### Adding a repository
 Before we can generate statistics we first need to scan the remote repository into our local database. This is done with the `addrepo` management command:
@@ -71,29 +82,28 @@ SrcOptics provides a daemon job for automatically keeping repositories and their
 
 ### Postgresql Setup
 
-For a complete setup guide to postgresql setup please refer to an operating system specific guide. Usually you have  to enable postgres and initialize the database directory before it can be used.
+Before any databases can be created, postgresql must be initialized:
+* rc.d style: `service postgresql initdb`.
+* systemd: `postgresql-setup initdb`
 
-The default name of the database used is called `srcopt`. For things to run smoothly you must first create a role for the unix user you wish to run srcOptics as. The role needs to have createdb permissions along with ownership of the `srcopt` database.
+The default name of the database used is called `srcopt`. It is created using the `init` command. For things to run smoothly you must first create a role for the unix user you wish to run srcoptics as. The role needs to have createdb permissions along with ownership of the `srcopt` database.
 
 ```
-srcopt=CREATE ROLE <username> [ [ WITH ] option [ ... ] ]
-
--- may also need --
-srcopt=# alter user <username> createdb;
-ALTER ROLE
-srcopt=# ALTER DATABASE srcopt OWNER TO <username>;
-ALTER DATABASE
+CREATE ROLE <username> WITH CREATEDB SUPERUSER;
+ALTER DATABASE srcopt OWNER TO <username>;
 ```
+For more roles, refer to the [documentation](https://www.w3resource.com/PostgreSQL/postgresql-database-roles.php)
 
 ### Dev info / Random tips
 
-* Run `sass --watch --no-source-map --style compressed srcOptics/static/_scss:srcOptics/static` during development to build css files
+* SCSS file must be compiled into CSS for changes to take effect.
+  * Run `sass --watch --no-source-map --style compressed srcoptics/static/_scss:srcoptics/static` during development to build css files
   * If you use macports, the `sass` utility is not installed, only the raw compiler `sassc`. Here is a hacky one liner you can use to create main.css with only `sassc`:
 
 ```
-cat srcOptics/static/_scss/main.scss srcOptics/static/_scss/*.scss | sassc -I srcOptics/static/_scss --style compressed -s > srcOptics/static/main.css
+cat srcoptics/static/_scss/main.scss srcoptics/static/_scss/*.scss | sassc -I srcoptics/static/_scss --style compressed -s > srcoptics/static/main.css
 ```
 
-* Like most Django projects, the `settings.py` file contains many useful variables for configuring srcOptics. These should all be heavily commented
+* Like most Django projects, the `settings.py` file contains many useful variables for configuring srcoptics. These should all be heavily commented
 
 * Django 1.11 has a different include path for `urls`, which will cause an exception when trying to load `urls.py`. Use Django 2.0 or higher to avoid differences such as this.
