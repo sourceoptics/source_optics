@@ -147,34 +147,46 @@ class Rollup:
 
     # Compile each statistic for the author based on the interval over the date range
     @classmethod
-    def aggregate_author_rollup(cls, repo, author, interval):
+    def aggregate_author_rollup(cls, repo, interval):
         date_index = cls.get_first_day(repo.last_scanned, interval)
         author_instances = []
-
+        print(interval)
         while date_index < cls.today:
             end_date = cls.get_end_day(date_index, interval)
-            """Need to add another day to the end date because start_date__range
-            is not inclusive with the end of the range."""
 
-            #Gets the total stats for each day in the given interval
-            #If author and file = none, we are getting total stats
-            days = Statistic.objects.filter(interval = 'DY', author = author, repo = repo,
-                                            file = None, start_date__range=(date_index, end_date))
 
-            #Aggregates total stats for the interval
-            data = days.aggregate(lines_added=Sum("lines_added"), lines_removed = Sum("lines_removed"),
-                                lines_changed = Sum("lines_changed"), commit_total = Sum("commit_total"),
-                                files_changed = Sum("files_changed"), author_total = Sum("author_total"))
+            #Gets all the daily author statistic objects
+            #.values parameter groups author objects by author id
+            #.annotate sums the relevant statisic and adds a new field to the queryset
+            days = Statistic.objects.filter(
+                interval='DY',
+                author__isnull=False,
+                file=None,
+                repo=repo,
+                start_date__range=(date_index, end_date)
+            ).values('author_id').annotate(lines_added_total=Sum("lines_added"), lines_removed_total = Sum("lines_removed"),
+                                lines_changed_total = Sum("lines_changed"), commit_total_total = Sum("commit_total"),
+                                files_changed_total = Sum("files_changed"), author_total_total = Sum("author_total"))
 
-            #Creates row for given interval
+
             flush = False
             if end_date >= cls.today:
                 flush = True
-            author_instances = Creator.create_author_rollup(date_index, interval[0], repo, author, data['lines_added'], data['lines_removed'],
-            data['lines_changed'], data['commit_total'], data['files_changed'], flush, author_instances)
+            #iterate through the query set and create author objects
+            for d in days:
+                auth = Author.objects.get(pk=d['author_id'])
+                author_instances = Creator.create_author_rollup(date_index, interval[0], repo, auth, d['lines_added_total'], d['lines_removed_total'],
+                d['lines_changed_total'], d['commit_total_total'], d['files_changed_total'], flush, author_instances)
+                print('create', end_date)
 
+            # if there aren't any stats for the given time range, just create dummy empty data
+            # This is necessary to flush data for the bulk create. 
+            if len(days) == 0:
+                author_instances = Creator.create_author_rollup(date_index, interval[0], repo, auth, 0, 0,
+                0, 0, 0, flush, author_instances)
             #Increment to next week or month
             end_date = end_date + datetime.timedelta(days=1)
+            print("update", end_date)
             date_index = end_date.replace(hour=0, minute=0, second=0, microsecond=0)
 
     #Compile rollup for interval by aggregating daily stats
@@ -187,8 +199,6 @@ class Rollup:
 
         while date_index < cls.today:
             end_date = cls.get_end_day(date_index, interval)
-            """Need to add another day to the end date because start_date__range
-            is not inclusive with the end of the range."""
 
             days = Statistic.objects.filter(interval = 'DY', author = None, repo = repo, file = None, start_date__range=(date_index, end_date))
 
@@ -248,8 +258,8 @@ class Rollup:
         else:
             for author in authors:
                 cls.aggregate_author_rollup_day(repo, author)
-                cls.aggregate_author_rollup(repo, author, intervals[1])
-                cls.aggregate_author_rollup(repo, author, intervals[2])
+            cls.aggregate_author_rollup(repo, intervals[1])
+            cls.aggregate_author_rollup(repo, intervals[2])
 
     #Compute rollups for specified repo passed in by daemon
     #TODO: Index commit_date and repo together

@@ -207,6 +207,8 @@ class Statistic(models.Model):
         indexes = [
         models.Index(fields=['start_date', 'interval', 'repo'], name='total_rollup'),
         models.Index(fields=['start_date', 'interval', 'repo', 'author'], name='author_rollup'),
+        BrinIndex(fields=['start_date', 'interval', 'repo'], name='total_rollup_brin'),
+        BrinIndex(fields=['start_date', 'interval', 'repo', 'author'], name='author_rollup_brin'),
         #models.Index(fields=['author', 'interval']),
         #BrinIndex(fields=['interval', 'lines_added', 'lines_removed', 'lines_changed', 'commit_total', 'files_changed', 'author_total'])
         ]

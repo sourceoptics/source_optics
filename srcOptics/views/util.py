@@ -205,6 +205,8 @@ def get_top_authors(**kwargs):
     #First get all daily interval author stats within the range
     print (kwargs['start'], kwargs['end'])
 
+
+    #Filter by top attributes 
     filter_set = Statistic.objects.filter(
         interval='DY',
         author__isnull=False,
@@ -212,11 +214,6 @@ def get_top_authors(**kwargs):
         start_date__range=(kwargs['start'], kwargs['end'])
     ).values('author_id').annotate(total=Sum(kwargs['attribute'])).order_by('-total')
 
-    #Then aggregate the filter set based on the attribute, get top 5
-    #distinct_set = filter_set.distinct('author')#.values_list('author',flat=True)
-#    top_set
-#    top_set = filter_set.values('author').annotate(total=Sum(kwargs['attribute']))
-#    top_set = filter_set.aggregate(total_attr=Sum(kwargs['attribute'])).order_by('-total_attr')
 
     #append top 5 authors to author set to display
     i = 0
