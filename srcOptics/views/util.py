@@ -178,12 +178,15 @@ def get_lifetime_stats(repo):
     file_count = File.objects.filter(repo=repo).count()
     summary_stats['file_count'] = file_count
 
-    #Age of repository
-    age = abs(today - earliest_commit).days
-    summary_stats['age'] = age
+    #Age of repository & avg of commits per day
+    if start_range is not None:
+        age = abs(today - earliest_commit).days
+        avg_commits_day = "%0.2f" % (summary_stats['commits']/age)
+    else:
+        avg_commits_day = 0
+        age = 0
 
-    #Average commits per day
-    avg_commits_day = "%0.2f" % (summary_stats['commits']/age)
+    summary_stats['age'] = age
     summary_stats['avg_commits_day'] = avg_commits_day
 
     summary_stats['commits'] = intcomma(summary_stats['commits'])
@@ -205,6 +208,8 @@ def get_top_authors(**kwargs):
     #First get all daily interval author stats within the range
     print (kwargs['start'], kwargs['end'])
 
+
+    #Filter by top attributes 
     filter_set = Statistic.objects.filter(
         interval='DY',
         author__isnull=False,
@@ -212,11 +217,6 @@ def get_top_authors(**kwargs):
         start_date__range=(kwargs['start'], kwargs['end'])
     ).values('author_id').annotate(total=Sum(kwargs['attribute'])).order_by('-total')
 
-    #Then aggregate the filter set based on the attribute, get top 5
-    #distinct_set = filter_set.distinct('author')#.values_list('author',flat=True)
-#    top_set
-#    top_set = filter_set.values('author').annotate(total=Sum(kwargs['attribute']))
-#    top_set = filter_set.aggregate(total_attr=Sum(kwargs['attribute'])).order_by('-total_attr')
 
     #append top 5 authors to author set to display
     i = 0
@@ -232,6 +232,9 @@ def get_top_authors(**kwargs):
 #Gets the first day of the week or the month depending on intervals
 #Sets the time to 12:00 AM or 00:00 for that day
 def get_first_day(date_index, interval):
+    if date_index is None:
+        return None
+
     if interval[0] is 'WK':
         date_index -= datetime.timedelta(days=date_index.isoweekday() % 7)
     elif interval[0] is 'MN':
