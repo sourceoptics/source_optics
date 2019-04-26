@@ -135,6 +135,11 @@ def get_query_strings(request):
     else:
         queries['interval'] = request.GET.get('intr')
 
+    page = request.GET.get('page')
+    if not page:
+        queries['page'] = 1
+    else:
+        queries['page'] = page
 
     return queries
 
@@ -218,13 +223,12 @@ def get_top_authors(**kwargs):
     ).values('author_id').annotate(total=Sum(kwargs['attribute'])).order_by('-total')
 
 
-    #append top 5 authors to author set to display
-    i = 0
+    # Append top 5 authors to author set to display
     for t in filter_set:
-        if i < 6:
-            top_auth = Author.objects.get(pk=t['author_id'])
-            authors.append(top_auth)
-            i += 1
+        top_auth = Author.objects.get(pk=t['author_id'])
+        print (top_auth, t['total'])
+        authors.append(top_auth)
+
 
     return authors
 

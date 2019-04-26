@@ -41,7 +41,7 @@ class Daemon:
                     scan_time_start = time.clock()
                     Scanner.scan_repo(repo.url, repo.name, repo.cred)
                     scan_time_total = time.clock() - scan_time_start
-                    print ("Scaning complete. Operation time for " + str(repo) + ": " + str(scan_time_total) + "s")
+                    print ("Scanning complete. Operation time for " + str(repo) + ": " + str(scan_time_total) + "s")
                     repo.last_pulled = datetime.datetime.now(tz=timezone.utc)
                     print("last_pulled: "  + str(repo.last_pulled))
                     repo.save()

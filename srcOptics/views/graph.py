@@ -124,7 +124,7 @@ def attribute_author_graphs(request, slug):
     # Get start and end date of date range
     queries = util.get_query_strings(request)
 
-    graph = AuthorGraph(attribute=queries['attribute'], interval=queries['interval'], start=queries['start'], end=queries['end'], repo=repo).top_graphs()
+    graph = AuthorGraph(q=queries, repo=repo).top_graphs()
     return graph
 
 def attribute_author_contributions(request, author):

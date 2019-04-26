@@ -13,11 +13,13 @@ import math
 
 class AuthorGraph:
     def __init__(self, **kwargs):
-        self.interval = kwargs.get('interval') if kwargs.get('interval') else 'DY'
+        self.interval = kwargs['q']['interval']
         self.repo = kwargs['repo']
-        self.start = kwargs['start']
-        self.end = kwargs['end']
-        self.attribute = kwargs['attribute']
+        self.start = kwargs['q']['start']
+        self.end = kwargs['q']['end']
+        self.attribute = kwargs['q']['attribute']
+        self.page = int(kwargs['q']['page']) - 1
+        self.range = 6
 
 
     def top_graphs(self):
@@ -25,19 +27,24 @@ class AuthorGraph:
         # Get the top contributors to be graphed
         authors = util.get_top_authors(repo=self.repo, start=self.start, end=self.end, attribute=self.attribute)
 
+        author_range = len(authors) if len(authors) < self.range else self.range
+
+
         figure = []
+        p_start = self.page * author_range
+        p_end = p_start + author_range
         # Generate a graph for each author based on selected attribute for the displayed repo
-        if len(authors) != 0:
+        if author_range != 0:
             figure = tools.make_subplots(
-                rows=math.ceil(len(authors)/2),
+                rows=math.ceil(author_range/2),
                 cols=2,
                 shared_xaxes=True,
                 shared_yaxes=True,
                 vertical_spacing=0.1,
-                subplot_titles=tuple([_.email for _ in authors])
+                subplot_titles=tuple([_.email for _ in authors[p_start:p_end]])
             )
             figure['layout'].update(height=800)
-        for i in range(len(authors)):
+        for i in range(p_start, p_end):
             figure = graph.generate_graph_data(
                 figure=figure,
                 repo=self.repo,
@@ -47,12 +54,12 @@ class AuthorGraph:
                 end=self.end,
                 author=authors[i],
                 attribute=self.attribute,
-                row=math.floor(i/2) + 1,
-                col=( i % 2 )+1
+                row=math.floor((i-p_start)/2) + 1,
+                col=(( (i-p_start) % 2 )+1)
 
             )
 
-        if figure != []:
+        if figure:
             graph_obj = opy.plot(figure, auto_open=False, output_type='div')
 
             return graph_obj

@@ -88,7 +88,7 @@ def repo_details(request, slug):
     authors = util.get_top_authors(repo=repo, start=queries['start'], end=queries['end'], attribute=queries['attribute'])
     author_stats = util.get_all_author_stats(authors=authors, repo=repo, start=queries['start'], end=queries['end'])
     author_table = AuthorStatTable(author_stats)
-    RequestConfig(request, paginate={'per_page': 10}).configure(author_table)
+    RequestConfig(request, paginate={'per_page': 6}).configure(author_table)
 
     summary_stats = util.get_lifetime_stats(repo)
 
