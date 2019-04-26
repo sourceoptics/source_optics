@@ -119,7 +119,8 @@ class Creator:
         #return instance
 
     def flush_total_rollups(total_instances):
-        Statistic.objects.bulk_create(total_instances, len(total_instances))
+        if len(total_instances) > 0:
+            Statistic.objects.bulk_create(total_instances, len(total_instances))
         return []
 
     def create_author_rollup(start_date, interval, repo, author, lines_added, lines_removed,
