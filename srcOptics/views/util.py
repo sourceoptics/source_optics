@@ -127,9 +127,16 @@ def get_query_strings(request):
     else:
         queries['attribute'] = request.GET.get('attr')
 
+
+    time_between = abs((queries['end'] - queries['start']).days)
     interval = request.GET.get('intr')
-    if not interval:
-        queries['interval'] = Statistic.INTERVALS[0][0]
+    if not interval or interval == Statistic.INTERVALS[0][0]:
+        if time_between >= 730:
+            queries['interval'] = Statistic.INTERVALS[2][0]
+        elif time_between >= 365:
+            queries['interval'] = Statistic.INTERVALS[1][0]
+        else:
+            queries['interval'] = Statistic.INTERVALS[0][0]
     else:
         queries['interval'] = request.GET.get('intr')
 
@@ -206,8 +213,6 @@ def get_top_authors(**kwargs):
     # Get every author with displayed repo; limit 5
     authors = []
     #First get all daily interval author stats within the range
-    print (kwargs['start'], kwargs['end'])
-
 
     #Filter by top attributes 
     filter_set = Statistic.objects.filter(
@@ -223,7 +228,6 @@ def get_top_authors(**kwargs):
     for t in filter_set:
         if i < 6:
             top_auth = Author.objects.get(pk=t['author_id'])
-            print (top_auth, t['total'])
             authors.append(top_auth)
             i += 1
 

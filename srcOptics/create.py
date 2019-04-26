@@ -113,10 +113,11 @@ class Creator:
             lines_removed = lines_removed, lines_changed = lines_changed, commit_total = commit_total, files_changed = files_changed,
             author_total = author_total))
             return total_instances
-        Statistic.objects.bulk_create(total_instances)
+        total_instances.append(Statistic(start_date = start_date, interval = interval, repo = repo, lines_added = lines_added,
+        lines_removed = lines_removed, lines_changed = lines_changed, commit_total = commit_total, files_changed = files_changed,
+        author_total = author_total))
+        Statistic.objects.bulk_create(total_instances, len(total_instances))
         return []
-        #instance.save()
-        #return instance
 
     def flush_total_rollups(total_instances):
         if len(total_instances) > 0:
@@ -129,8 +130,10 @@ class Creator:
             author_instances.append(Statistic(start_date = start_date, interval = interval, repo = repo, author = author, lines_added = lines_added,
             lines_removed = lines_removed, lines_changed = lines_changed, commit_total = commit_total,
             files_changed = files_changed, author_total = 1))
-            #count += 1
             return author_instances
+        author_instances.append(Statistic(start_date = start_date, interval = interval, repo = repo, lines_added = lines_added,
+        lines_removed = lines_removed, lines_changed = lines_changed, commit_total = commit_total, files_changed = files_changed,
+        author_total = author_total))
         Statistic.objects.bulk_create(author_instances, len(author_instances))
         return []
 
