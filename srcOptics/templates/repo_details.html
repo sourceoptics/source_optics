@@ -74,18 +74,18 @@
     </div>
     <input type='hidden' id='home' name='filter' value='{% if request.GET.filter %}{{request.GET.filter}}{% endif %}'/>
   </form>
-  {{ data| safe }}
   {% render_table stats %}
+  {{ data| safe }}
 </section>
 <section>
   <h1 align="center">Contributors</h1>
   <div class='tabular-view'>
     {% if author_graphs %}
     <figure>
-      {% render_table author_table %}
+      {{ author_graphs| safe }}
     </figure>
     <figure>
-      {{ author_graphs| safe }}
+      {% render_table author_table %}
     </figure>
     {% else %}
     <p>No contributors found for this interval!</p>
