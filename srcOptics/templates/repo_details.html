@@ -82,10 +82,10 @@
   <div class='tabular-view'>
     {% if author_graphs %}
     <figure>
-      {{ author_graphs| safe }}
+      {% render_table author_table %}
     </figure>
     <figure>
-      {% render_table author_table %}
+      {{ author_graphs| safe }}
     </figure>
     {% else %}
     <p>No contributors found for this interval!</p>
