@@ -93,7 +93,13 @@ class Scanner:
     def clone_repo(repo_url, work_dir, repo_name, cred):
 
         options = ""
-        repo_instance = Creator.create_repo('root', repo_url, repo_name, cred)
+        # we need to get the org name here to give to create_repo. This could be
+        # more efficient
+        try:
+            org_name = Repository.objects.get(url=repo_url).organization
+        except Repository.DoesNotExist:
+            org_name = 'root'
+        repo_instance = Creator.create_repo(org_name, repo_url, repo_name, cred)
 
         # If a credential was provided, add the password in an expect file to the git config
         if cred is not None:

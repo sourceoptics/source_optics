@@ -2,7 +2,7 @@ from django.core.management.base import BaseCommand, CommandError
 
 from srcOptics.scanner.git import Scanner
 
-from srcOptics.models import LoginCredential
+from srcOptics.models import *
 import getpass
 import requests
 import json
@@ -37,8 +37,14 @@ class Command(BaseCommand):
         cred = LoginCredential.objects.create(username=username, password=password)
 
         if kwargs['repo_url']:
+            # if the repo exists, grab its name in case it is not standard
+            try:
+                repo_name = Repository.objects.get(url=kwargs['repo_url']).name
+            except Repository.DoesNotExist:
+                repo_name = None
+
             # Scan the repository, passing in the URL and LoginCredential
-            Scanner.scan_repo(kwargs['repo_url'], None, cred)
+            Scanner.scan_repo(kwargs['repo_url'], repo_name, cred)
 
 
         # Grab a list of repository urls (html_url) from a github
