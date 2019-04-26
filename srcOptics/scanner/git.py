@@ -91,7 +91,7 @@ class Scanner:
     # ------------------------------------------------------------------
     # Clones the repo if it doesn't exist in the work folder and pulls if it does
     def clone_repo(repo_url, work_dir, repo_name, cred):
-
+        expect_file = ""
         options = ""
         # we need to get the org name here to give to create_repo. This could be
         # more efficient
@@ -103,7 +103,8 @@ class Scanner:
 
         # If a credential was provided, add the password in an expect file to the git config
         if cred is not None:
-            options += ' --config core.askpass=\'' + cred.expect_pass() + '\''
+            expect_file = cred.expect_pass()
+            options += ' --config core.askpass=\'' + expect_file + '\''
             repo_url = Scanner.fix_repo_url(repo_url, cred.username)
 
         # exceptions at this point may print out sensitive information, such as
@@ -127,6 +128,10 @@ class Scanner:
 
         except:
             print("ERROR: Failed to clone repository")
+
+        # clean up the expect files so we don't accidentally leak passwords
+        if cred is not None:
+            os.remove(expect_file)
 
         return repo_instance
 

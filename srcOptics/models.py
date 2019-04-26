@@ -57,7 +57,7 @@ class LoginCredential(models.Model):
         pw = self.unencrypt_password()
         (fd, fname) = tempfile.mkstemp()
         fh = open(fname, "w")
-        fh.write("#!/bin/bash\n")
+        fh.write("#!/bin/sh\n")
         fh.write("echo %s" % pw)
         fh.close()
         os.close(fd)
