@@ -130,13 +130,8 @@ def get_query_strings(request):
 
     time_between = abs((queries['end'] - queries['start']).days)
     interval = request.GET.get('intr')
-    if not interval or interval == Statistic.INTERVALS[0][0]:
-        if time_between >= 730:
-            queries['interval'] = Statistic.INTERVALS[2][0]
-        elif time_between >= 365:
-            queries['interval'] = Statistic.INTERVALS[1][0]
-        else:
-            queries['interval'] = Statistic.INTERVALS[0][0]
+    if not interval:
+        queries['interval'] = Statistic.INTERVALS[0][0]
     else:
         queries['interval'] = request.GET.get('intr')
 
