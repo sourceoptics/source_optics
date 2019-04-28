@@ -18,7 +18,7 @@ class RepositoryGraph:
         self.attribute = kwargs['q']['attribute']
         self.interval = kwargs['q']['interval']
         self.page = int(kwargs['q']['page'])
-        self.range = 5
+        self.range = 3
 
 
 
@@ -26,8 +26,10 @@ class RepositoryGraph:
         
         p_start = (self.page-1) * self.range
         if len(self.repos) < self.range * self.page:
+            p_start = (self.page-1) * self.range
             p_end = p_start + (self.range * self.page) - len(self.repos)
         else:
+            p_start = (self.page-1) * self.range
             p_end = p_start + self.range
 
         if len(self.repos) == 0:
