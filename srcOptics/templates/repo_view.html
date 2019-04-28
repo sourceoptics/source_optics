@@ -42,7 +42,16 @@
     </form>
   </div>
   <figure>
+    {% load query_tags %}
+    {% if request.GET.page|add:'0' > 1%}
+
+    <a href='{% query_url request.GET.items 'page' request.GET.page|add:'-1' %}'>Back</a>
+    {% endif %}
+    {% if request.GET.page|add:'0' < repos|length|add:'-1' %}
+    <a href='{% query_url request.GET.items 'page' request.GET.page|add:'1' %}'>Next</a>
+    {% endif %}
   {{ data| safe }}
+    
   </figure>
 </section>
 {% include 'partials/footer.html' %}

@@ -13,17 +13,24 @@ import math
 class RepositoryGraph:
     def __init__(self, **kwargs):
         self.repos = kwargs['repos']
-        self.start = kwargs['start']
-        self.end = kwargs['end']
-        self.attribute = kwargs['attribute']
-        self.interval = kwargs['interval']
+        self.start = kwargs['q']['start']
+        self.end = kwargs['q']['end']
+        self.attribute = kwargs['q']['attribute']
+        self.interval = kwargs['q']['interval']
+        self.page = int(kwargs['q']['page'])
+        self.range = 5
 
 
 
     def attributes_by_repo(self):
+        
+        p_start = (self.page-1) * self.range
+        if len(self.repos) < self.range * self.page:
+            p_end = p_start + (self.range * self.page) - len(self.repos)
+        else:
+            p_end = p_start + self.range
 
         if len(self.repos) == 0:
-            print("ASODksOKD")
             return None
             
         figure = tools.make_subplots(
@@ -32,10 +39,12 @@ class RepositoryGraph:
             shared_xaxes=True,
             shared_yaxes=True,
             vertical_spacing=0.1,
-            subplot_titles=tuple([_.name for _ in self.repos]),
+            subplot_titles=tuple([_.name for _ in self.repos[p_start:p_end]]),
         )
+        
+
         # Iterate over repo queryset, generating attribute graph for each
-        for i in range(len(self.repos)):
+        for i in range(p_start, p_end):
             figure = graph.generate_graph_data(
                 figure=figure,
                 repo=self.repos[i],
@@ -44,10 +53,10 @@ class RepositoryGraph:
                 end=self.end,
                 attribute=self.attribute,
                 interval=self.interval,
-                row=i+1,
+                row=i-p_start+1,
                 col=1
             )
-        figure['layout'].update(height=800)
+        figure['layout'].update(height=1000)
 
         data = opy.plot(figure, auto_open=False, output_type='div')
 

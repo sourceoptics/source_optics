@@ -183,6 +183,7 @@ def attributes_by_repo(request):
         'organizations': Organization.objects.all(),
         'data' : data,
         'attributes': Statistic.ATTRIBUTES,
-        'intervals': Statistic.INTERVALS
+        'intervals': Statistic.INTERVALS,
+        'repos': Repository.objects.all()
     }
     return render(request, 'repo_view.html', context=context)

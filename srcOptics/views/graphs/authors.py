@@ -18,7 +18,7 @@ class AuthorGraph:
         self.start = kwargs['q']['start']
         self.end = kwargs['q']['end']
         self.attribute = kwargs['q']['attribute']
-        self.page = int(kwargs['q']['page']) - 1
+        self.page = int(kwargs['q']['page'])
         self.range = 6
 
 
@@ -26,24 +26,24 @@ class AuthorGraph:
 
         # Get the top contributors to be graphed
         authors = util.get_top_authors(repo=self.repo, start=self.start, end=self.end, attribute=self.attribute)
-
-        author_range = len(authors) if len(authors) < self.range else self.range
-
+        
+        p_start = (self.page-1) * self.range
+        if len(authors) < self.range * self.page:
+            p_end = p_start + (self.range * self.page) - len(authors)
+        else:
+            p_end = p_start + self.range
 
         figure = []
-        p_start = self.page * author_range
-        p_end = p_start + author_range
         # Generate a graph for each author based on selected attribute for the displayed repo
-        if author_range != 0:
-            figure = tools.make_subplots(
-                rows=math.ceil(author_range/2),
-                cols=2,
-                shared_xaxes=True,
-                shared_yaxes=True,
-                vertical_spacing=0.1,
-                subplot_titles=tuple([_.email for _ in authors[p_start:p_end]])
-            )
-            figure['layout'].update(height=800)
+        figure = tools.make_subplots(
+            rows=math.ceil(self.range/2),
+            cols=2,
+            shared_xaxes=True,
+            shared_yaxes=True,
+            vertical_spacing=0.1,
+            subplot_titles=tuple([_.email for _ in authors[p_start:p_end]])
+        )
+        figure['layout'].update(height=800)
         for i in range(p_start, p_end):
             figure = graph.generate_graph_data(
                 figure=figure,
