@@ -42,17 +42,23 @@
     </form>
   </div>
   <figure>
-    {% load query_tags %}
-    {% if request.GET.page|add:'0' > 1%}
-    <a href='{% query_url request.GET.items 'page' request.GET.page|add:'-1' %}'>Back</a>
-    {% endif %}
-    {% if request.GET.page|add:'0' < repos|length|add:'-1' %}
-    <a href='{% query_url request.GET.items 'page' request.GET.page|add:'1' %}'>Next</a>
-    {% elif not request.GET.page and repos|length|add:'0' > 5 %}
-    <a href='{% query_url request.GET.items 'page' 2 %}'>Next</a>
-    {% endif %}
   {{ data| safe }}
-
+    
+    <div class='flex-row'>
+        {% load query_tags %}
+        <div class='float-left button'>
+            {% if request.GET.page|add:'0' > 1%}
+            <a href='{% query_url request.GET.items 'page' request.GET.page|add:'-1' %}'>Back</a>
+            {% endif %}
+        </div>
+        <div class='float-right button'>
+            {% if request.GET.page|add:'0' < repos|length|add:'-1' %}
+            <a href='{% query_url request.GET.items 'page' request.GET.page|add:'1' %}'>Next</a>
+            {% elif not request.GET.page and repos|length|add:'0' > 5 %}
+            <a href='{% query_url request.GET.items 'page' 2 %}'>Next</a>
+            {% endif %}
+        </div>
+    </div>
   </figure>
 </section>
 {% include 'partials/footer.html' %}
