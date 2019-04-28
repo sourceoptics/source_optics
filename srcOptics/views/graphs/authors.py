@@ -19,7 +19,7 @@ class AuthorGraph:
         self.end = kwargs['q']['end']
         self.attribute = kwargs['q']['attribute']
         self.page = int(kwargs['q']['page'])
-        self.range = 6
+        self.range = 5
 
 
     def top_graphs(self):
@@ -29,9 +29,9 @@ class AuthorGraph:
         
         p_start = (self.page-1) * self.range
         if len(authors) < self.range * self.page:
-            p_end = p_start + (self.range * self.page) - len(authors)
+            p_end = p_start + (self.range * self.page) - len(authors) + 1
         else:
-            p_end = p_start + self.range
+            p_end = p_start + self.range + 1
 
         figure = []
         # Generate a graph for each author based on selected attribute for the displayed repo
