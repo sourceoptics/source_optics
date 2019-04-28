@@ -226,7 +226,6 @@ def get_top_authors(**kwargs):
     # Append top 5 authors to author set to display
     for t in filter_set:
         top_auth = Author.objects.get(pk=t['author_id'])
-        print (top_auth, t['total'])
         authors.append(top_auth)
 
 
