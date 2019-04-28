@@ -42,16 +42,14 @@
     </form>
   </div>
   <figure>
-  {{ data| safe }}
-    
     <div class='flex-row'>
         {% load query_tags %}
-        <div class='float-left button'>
+        <div class='float-left'>
             {% if request.GET.page|add:'0' > 1%}
             <a href='{% query_url request.GET.items 'page' request.GET.page|add:'-1' %}'>Back</a>
             {% endif %}
         </div>
-        <div class='float-right button'>
+        <div class='float-right'>
             {% if request.GET.page|add:'0' < repos|length|add:'-1' %}
             <a href='{% query_url request.GET.items 'page' request.GET.page|add:'1' %}'>Next</a>
             {% elif not request.GET.page and repos|length|add:'0' > 5 %}
@@ -59,6 +57,9 @@
             {% endif %}
         </div>
     </div>
+  {{ data| safe }}
+    
+    
   </figure>
 </section>
 {% include 'partials/footer.html' %}
