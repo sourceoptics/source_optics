@@ -99,14 +99,14 @@ select {
     background-image: url(img/down.svg);
 }
 
-button {
-    padding: 8px 20px;
-    border-radius: 20px;
-    background-color: lighten($blue, 50%);
+.button {
+    // padding: 8px 20px;
+    // border-radius: 20px;
+    // background-color: lighten($blue, 50%);
     font-size: 20px;
-    &:hover {
-        background-color: lighten($blue, 65%);
-    }
+    // &:hover {
+    //     background-color: lighten($blue, 65%);
+    // }
 }
 
 figure {
