@@ -23,29 +23,32 @@ class RepositoryGraph:
 
 
     def attributes_by_repo(self):
-        
+
         p_start = (self.page-1) * self.range
         if len(self.repos) < self.range * self.page:
             p_start = (self.page-1) * self.range
-            p_end = p_start + (self.range * self.page) - len(self.repos)
+            p_end = p_start + (self.range * self.page) - len(self.repos) - 1
         else:
             p_start = (self.page-1) * self.range
             p_end = p_start + self.range
 
         if len(self.repos) == 0:
             return None
-            
+
+        print(self.repos)
+
         figure = tools.make_subplots(
-            rows=len(self.repos),
+            rows=self.range,
             cols=1,
             shared_xaxes=True,
             shared_yaxes=True,
             vertical_spacing=0.1,
             subplot_titles=tuple([_.name for _ in self.repos[p_start:p_end]]),
         )
-        
+
 
         # Iterate over repo queryset, generating attribute graph for each
+        print(p_start, p_end)
         for i in range(p_start, p_end):
             figure = graph.generate_graph_data(
                 figure=figure,

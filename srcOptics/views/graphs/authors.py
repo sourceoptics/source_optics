@@ -26,12 +26,12 @@ class AuthorGraph:
 
         # Get the top contributors to be graphed
         authors = util.get_top_authors(repo=self.repo, start=self.start, end=self.end, attribute=self.attribute)
-        
+
         p_start = (self.page-1) * self.range
         if len(authors) < self.range * self.page:
-            p_end = p_start + (self.range * self.page) - len(authors) + 1
+            p_end = p_start + (self.range * self.page) - len(authors) -1
         else:
-            p_end = p_start + self.range + 1
+            p_end = p_start + self.range
 
         figure = []
         # Generate a graph for each author based on selected attribute for the displayed repo

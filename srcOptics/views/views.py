@@ -177,6 +177,7 @@ def add_repo(request):
 
 def attributes_by_repo(request):
 
+    
     data = graph.attributes_by_repo(request)
     context = {
         'title': 'Repo Statistics Over Time',
