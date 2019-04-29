@@ -29,7 +29,8 @@ class AuthorGraph:
 
         p_start = (self.page-1) * self.range
         if len(authors) < self.range * self.page:
-            p_end = p_start + (self.range * self.page) - len(authors) -1
+            diff = len(authors) - p_start
+            p_end = p_start + diff
         else:
             p_end = p_start + self.range
 
