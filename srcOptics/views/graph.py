@@ -91,7 +91,7 @@ def attributes_by_repo(request):
     # Get start and end date for date range
     queries = util.get_query_strings(request)
 
-    graph = RepositoryGraph(attribute=queries['attribute'], interval=queries['interval'], start=queries['start'], end=queries['end'], repos=repos).attributes_by_repo()
+    graph = RepositoryGraph(q=queries, repos=repos).attributes_by_repo()
 
     return graph
 

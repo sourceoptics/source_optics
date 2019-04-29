@@ -177,12 +177,14 @@ def add_repo(request):
 
 def attributes_by_repo(request):
 
+    
     data = graph.attributes_by_repo(request)
     context = {
         'title': 'Repo Statistics Over Time',
         'organizations': Organization.objects.all(),
         'data' : data,
         'attributes': Statistic.ATTRIBUTES,
-        'intervals': Statistic.INTERVALS
+        'intervals': Statistic.INTERVALS,
+        'repos': Repository.objects.all()
     }
     return render(request, 'repo_view.html', context=context)
