@@ -105,7 +105,7 @@ class Creator:
         commit.files.add(file_instance)
         commit.save()
         return file_instance
-    
+
     def create_total_rollup(start_date, interval, repo, lines_added, lines_removed,
                             lines_changed, commit_total, files_changed, author_total, flush, total_instances):
         if len(total_instances) < 100 and flush == False:
@@ -131,9 +131,8 @@ class Creator:
             lines_removed = lines_removed, lines_changed = lines_changed, commit_total = commit_total,
             files_changed = files_changed, author_total = 1))
             return author_instances
-        author_instances.append(Statistic(start_date = start_date, interval = interval, repo = repo, lines_added = lines_added,
-        lines_removed = lines_removed, lines_changed = lines_changed, commit_total = commit_total, files_changed = files_changed,
-        author_total = author_total))
+        author_instances.append(Statistic(start_date = start_date, interval = interval, repo = repo, author=author, lines_added = lines_added,
+        lines_removed = lines_removed, lines_changed = lines_changed, commit_total = commit_total, files_changed = files_changed))
         Statistic.objects.bulk_create(author_instances, len(author_instances))
         return []
 

@@ -150,7 +150,6 @@ class Rollup:
     def aggregate_author_rollup(cls, repo, interval):
         date_index = cls.get_first_day(repo.last_scanned, interval)
         author_instances = []
-        print(interval)
         while date_index < cls.today:
             end_date = cls.get_end_day(date_index, interval)
 
@@ -177,16 +176,14 @@ class Rollup:
                 auth = Author.objects.get(pk=d['author_id'])
                 author_instances = Creator.create_author_rollup(date_index, interval[0], repo, auth, d['lines_added_total'], d['lines_removed_total'],
                 d['lines_changed_total'], d['commit_total_total'], d['files_changed_total'], flush, author_instances)
-                print('create', end_date)
 
             # if there aren't any stats for the given time range, just create dummy empty data
-            # This is necessary to flush data for the bulk create. 
+            # This is necessary to flush data for the bulk create.
             if len(days) == 0:
                 author_instances = Creator.create_author_rollup(date_index, interval[0], repo, auth, 0, 0,
                 0, 0, 0, flush, author_instances)
             #Increment to next week or month
             end_date = end_date + datetime.timedelta(days=1)
-            print("update", end_date)
             date_index = end_date.replace(hour=0, minute=0, second=0, microsecond=0)
 
     #Compile rollup for interval by aggregating daily stats
@@ -232,9 +229,6 @@ class Rollup:
     @classmethod
     def compile_author_rollups_thread (cls, repo, author):
         cls.aggregate_author_rollup_day(repo, author)
-        cls.aggregate_author_rollup(repo, author, intervals[1])
-        cls.aggregate_author_rollup(repo, author, intervals[2])
-
         # We need to manually close the database connection here or
         # else Django will leave it dangling
         connection.close()
@@ -255,6 +249,8 @@ class Rollup:
             with concurrent.futures.ThreadPoolExecutor(max_workers=settings.MAX_THREAD_COUNT) as pool:
                 for author in authors:
                     pool.submit(cls.compile_author_rollups_thread, repo, author)
+            cls.aggregate_author_rollup(repo, intervals[1])
+            cls.aggregate_author_rollup(repo, intervals[2])
         else:
             for author in authors:
                 cls.aggregate_author_rollup_day(repo, author)
