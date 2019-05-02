@@ -66,6 +66,7 @@ The following should be installed using a package manager such as Homebrew or Ap
 - Pip
 - Python 3.6+
 - PostgreSQL (with CLI)
+- Expect
 
 ### Installing Dependencies
 Run `pip install -r requirements.txt` to install required modules.
