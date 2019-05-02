@@ -166,7 +166,7 @@ SrcOptics provides a daemon job for automatically keeping repositories and their
 
 Modifying srcOptics is a familiar experience to those who have used Django before. In general the code is well commented, although there are a few remaining organizational issues. Please feel free to submit any pull requests you may have.
 
-### Project Heirarchy
+### Project Hierarchy
 Some of the notable code locations:
 * `config`: Holds Django Settings
 * `srcOptics/models`: Django models for postgresql backend.
@@ -178,7 +178,8 @@ Some of the notable code locations:
 * `srcOptics/views`: The index, repository, and author pages.
   * The `graphs` directory holds implementations of various repository or author specific graphs
 * `srcOptics/templates`: Django templates used to generate webpages. Used by the views code
-* `srcOptics/static/_scss`: SASS sytesheets which are compiled into CSS. See the Random tips section for more.
+* `srcOptics/static/_scss`: SASS stylesheets which are compiled into CSS. See the Random tips section for more.
+* `srcOptics/static/endscripts.js`: JS file containing AJAX requests and other DOM-related magic
 * `srcOptics/create.py`: Helper methods to create model objects.
   * This will eventually be moved into the individual model classes.
 
