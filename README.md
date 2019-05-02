@@ -14,7 +14,7 @@ One of the primary goals of srcOptics is to track community or team involvement 
 * Average commits per day.
 * Author activity across all repositories.
 
-SrcOptics is perfect for monitoring the health of an open source, corporate, or academic codebase. This project originated in the Senior Design Center at North Carolina State University. It was designed to allow teaching staff to quickly view multiple student repositories and discern if a team is productive or in need of assistance.
+SrcOptics is perfect for monitoring the health of an open source, corporate, or academic code base. This project originated in the Senior Design Center at North Carolina State University. It was designed to allow teaching staff to quickly view multiple student repositories and discern if a team is productive or in need of assistance.
 
 ## Installation Instructions At A Glance
 
@@ -55,7 +55,7 @@ This guide will instruct you on how to have a working srcOptics app on your syst
 The general per-repository workflow is as follows:
 * *Scan* a repository to import version control metadata into postgresql.
   * Uses the `addrepo` command
-* *Aggregate* time-interval statitics for a repository.
+* *Aggregate* time-interval statistics for a repository.
   * Uses the `stat` command
 
 Both of these tasks are encapsulated by the daemon provided. Scanning _Must_ take place before aggregation, or else there is no repository to aggregate. Once there are statistics aggregated information can be displayed by the Django server.
@@ -65,7 +65,7 @@ The following should be installed using a package manager such as Homebrew or Ap
 - Git
 - Pip
 - Python 3.6+
-- PostgreSQL (with CLI)
+- PostgreSQL
 - Expect
 
 ### Installing Dependencies
@@ -77,7 +77,7 @@ Before any databases can be created, postgresql must be initialized:
 * rc.d style: `service postgresql initdb`.
 * systemd: `postgresql-setup initdb`
 
-The default name of the database used is called `srcopt`. It is created using the `init` command. For things to run smoothly you must first create a role for the unix user you wish to run srcoptics as. The role needs to have createdb permissions along with ownership of the `srcopt` database.
+The default name of the database used is called `srcopt`. It is created using the `init` command. For things to run smoothly you must first create a role for the unix user you wish to run srcOptics as. The role needs to have createdb permissions along with ownership of the `srcopt` database.
 
 ```
 # Run before creating a new database
@@ -99,9 +99,9 @@ SrcOptics requires some basic objects to be initialized before it can run proper
 python manage.py init -s
 ```
 
-This will create the default database (default name is 'srcopt'), perform migrations, and initialize a root organization. Both of these steps are required for srcoptics to run. `init` will also prompt the user for a username and password for a new superuser.
+This will create the default database (default name is 'srcopt'), perform migrations, and initialize a root organization. Both of these steps are required for srcOptics to run. `init` will also prompt the user for a username and password for a new superuser.
 
-The `-s` argument creates a key for symmetric encryption of login credential passwords. The key location can be configured in the Django settings. This only needs to be used the first time. It will not delete any existing keys it finds. The default location is `/etc/srcoptics/*`, the user running srcoptics needs to have write permissions to this directory.
+The `-s` argument creates a key for symmetric encryption of login credential passwords. The key location can be configured in the Django settings. This only needs to be used the first time. It will not delete any existing keys it finds. The default location is `/etc/srcoptics/*`, the user running srcOptics needs to have write permissions to this directory.
 
 ```
 mkdir /etc/srcoptics
@@ -114,7 +114,7 @@ Management commands can be run with `python manage.py <command_name>`
 | Command       | Summary           | 
 | ------------- |:-------------:|
 | init		| set up database resources and perform migrations |
-| runserver	| run the webserver |
+| runserver	| run the web server |
 | addrepo	| pull remote repositories and scan them into the database |
 | stat		| aggregate statistics for a _single_ repository |
 | scan		| run the scanning and aggregation daemon  |
@@ -170,17 +170,17 @@ Modifying srcOptics is a familiar experience to those who have used Django befor
 ### Project Hierarchy
 Some of the notable code locations:
 * `config`: Holds Django Settings
-* `srcOptics/models`: Django models for postgresql backend.
+* `srcOptics/models`: Django models for postgresql back end.
 * `srcOptics/management/commands`: Django management commands such as init, addrepo, etc.
 * `srcOptics/scanner`: The repository scanner. Also holds the daemon implementation.
 * `srcOptics/stats`: The statistic aggregator. This can be found in `rollup.py`.
   * The term Rollup is the same thing as Aggregation.
 * `srcOptics/tests`: Django tests can be run with `python manage.py test`
 * `srcOptics/views`: The index, repository, and author pages.
-  * The `graphs` directory holds implementations of various repository or author specific graphs
-* `srcOptics/templates`: Django templates used to generate webpages. Used by the views code
-* `srcOptics/static/_scss`: SASS stylesheets which are compiled into CSS. See the Random tips section for more.
-* `srcOptics/static/endscripts.js`: JS file containing AJAX requests and other DOM-related magic
+  * The `graphs` directory holds implementations of various repository or author specific graphs.
+* `srcOptics/templates`: Django templates used to generate web pages. Used by the views code.
+* `srcOptics/static/_scss`: SASS style sheets which are compiled into CSS. See the Random tips section for more.
+* `srcOptics/static/endscripts.js`: Javascript file containing AJAX requests and other DOM-related functionality.
 * `srcOptics/create.py`: Helper methods to create model objects.
   * This will eventually be moved into the individual model classes.
 
@@ -191,7 +191,7 @@ Some of the notable code locations:
 
 If your package manager does not install the `sass` utility, the raw `sassc` compiler can be used. Here is a hacky one liner you can use to create main.css with only `sassc`:
 ```
-cat srcoptics/static/_scss/main.scss srcoptics/static/_scss/*.scss | sassc -I srcoptics/static/_scss --style compressed -s > srcoptics/static/main.css
+cat srcoptics/static/_scss/main.scss srcoptics/static/_scss/*.scss | sassc -I srcoptics/static/_scss --style compressed -s > srcOptics/static/main.css
 ```
 
 * Like most Django projects, the `settings.py` file contains many useful variables for configuring srcoptics. These should all be heavily commented. Future support for Django split settings will be added.
