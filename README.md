@@ -34,7 +34,7 @@ mkdir /etc/srcoptics
 pip install -r requirements.txt
 
 # create a role for whatever <username> you would like to run srcOptics as
-sudo -u pgsql createuser --createdb <username>
+sudo -u postgres createuser --createdb <username>
 python manage.py init -s
 
 # scan a repository into the system
@@ -80,12 +80,14 @@ The default name of the database used is called `srcopt`. It is created using th
 
 ```
 # Run before creating a new database
-sudo -u pgsql createuser --createdb <username>
+sudo -u postgres createuser --createdb <username>
 
 # To add a new user to an existing database:
 CREATE ROLE <username> WITH CREATEDB SUPERUSER;
 ALTER DATABASE srcopt OWNER TO <username>;
 ```
+`createuser` must be run as the default postgresql user. On some systems this is `postgres`, and on others it is `pgsql`.
+
 For more roles, please refer to the [documentation](https://www.w3resource.com/PostgreSQL/postgresql-database-roles.php)
 
 ### Initialization
