@@ -19,7 +19,7 @@ class AuthorGraph:
         self.end = kwargs['q']['end']
         self.attribute = kwargs['q']['attribute']
         self.page = int(kwargs['q']['page'])
-        self.range = 5
+        self.range = 6
 
 
     def top_graphs(self):
