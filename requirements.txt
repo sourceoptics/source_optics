@@ -2,5 +2,5 @@ Django==2.0.10
 psycopg2-binary==2.7.7
 django-tables2==2.0.4
 plotly==3.7.1
-cryptography
+cryptography>=2.6.1
 coverage==4.5.3
