@@ -61,14 +61,27 @@ NOTE: the `init` command will be going away in future releases, and be replaced 
 django management commands for database setup.  There may be another management command for creating the initial
 organization and secrets that are used to encrypt repository access credentials.
 
+Verification
+============
+
+Visit http://servername:8000/admin and make sure there is a "root" organization added.  You may rename this.
+
+You may now add repositories at this time using the web interface.  (See below for CLI imports).
+
+You may also wish to add some Tag objects to help categorize things.
+
+Do not interact with Statistics, Author, File, and File Change objects in Django Admin directly.
+
+Before proceeding further to the web interface, lets first scan the repository or repository you have added
+so there will be some graphs and statistics to view.
+
 Django Management Commands
 ==========================
 
-Generally we'd prefer you add objects using the Django admin interface at http://servername/admin at this time.
-Certain parts of the CLI that relate to adding repos are not yet finalized.
-
 Once you have repos in the system, you will need to periodically pull in new commits and calculate statistics
 on the repo in order to see updated information in the web interface.
+
+This is done with a shell command:
 
 ```
 python manage.py daemon
@@ -77,7 +90,8 @@ python manage.py daemon
 Options will be added to this command over time to make it work more easily with cron and other init systems.
 
 
-### Shortcuts
+Other Shortcuts
+===============
 
 To quickly add a large amount of repos that are part of a github organization, one can run the following:
 
@@ -92,9 +106,17 @@ python manage.py addrepo -g https://api.github.com/users/<name>/repos
 python manage.py addrepo -g https://api.github.com/orgs/<name>/repos
 ```
 
-You may wish to return to the Django admin view to add tags, descriptions, and so on.
+You may wish to return to the Django admin view in the future to add or edit tags, descriptions, and so on.
 
-### Random tips
+Web Interface
+=============
+
+With some repositories added to the system and now scanned, visit http://servername and verify you can
+see some graphs.
+
+Random tips
+==========
+
 
 * SCSS file must be compiled into CSS for changes to take effect.
   * install 'sass'
