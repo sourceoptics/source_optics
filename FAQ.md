@@ -22,8 +22,11 @@ Performance
 
 Small repos will always be fast to scan for the first time.  Repositories with many tens of thousands of commits and contributors may take a long time to scan the first time, though subsequent updates will be fast.
 
-The very most popular repos on github MAY take several hours depending on computing hardware available.  Optimizations to this process, 
-particularly in regards to tracking file content, are pending.
+For instance, to scan some of the largest open source projects with thousands of contributors, the initial import of the git repository and
+recording of all commits may take 10 minutes on a reasonably current iMac.  However the initial statistics calculation could take 8-10 hours.
+Additional updates, if run frequently enough, will only take minutes per repo.
+
+Performance will likely be upgraded in future versions.
 
 Access Control
 ==============

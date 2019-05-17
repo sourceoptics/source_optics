@@ -151,6 +151,7 @@ class Rollup:
         date_index = cls.get_first_day(repo.last_scanned, interval)
         author_instances = []
         while date_index < cls.today:
+            print("repo=%s, interval=%s" % (repo, interval))
             end_date = cls.get_end_day(date_index, interval)
 
 
@@ -174,7 +175,8 @@ class Rollup:
             #iterate through the query set and create author objects
             for d in days:
                 auth = Author.objects.get(pk=d['author_id'])
-                author_instances = Creator.create_author_rollup(date_index, interval[0], repo, auth, d['lines_added_total'], d['lines_removed_total'],
+                # FIXME: these should use keyword arguments
+                author_instances = Creator.create_author_rollup(date_index, interval[0], repo, author, d['lines_added_total'], d['lines_removed_total'],
                 d['lines_changed_total'], d['commit_total_total'], d['files_changed_total'], flush, author_instances)
 
             # if there aren't any stats for the given time range, just create dummy empty data

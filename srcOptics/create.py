@@ -124,6 +124,7 @@ class Creator:
             Statistic.objects.bulk_create(total_instances, len(total_instances))
         return []
 
+    # FIXME: this should all use keyword arguments
     def create_author_rollup(start_date, interval, repo, author, lines_added, lines_removed,
                             lines_changed, commit_total, files_changed, flush, author_instances):
         if len(author_instances) < 100 and flush == False:
