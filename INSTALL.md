@@ -14,6 +14,8 @@ should not be very different.
 We first assume your system has Python 3 installed, and 'pip' points at pip3, and you have
 a PostgreSQL instance running.  'git' and 'expect' must also be in your path.
 
+If you are developing on a Mac, we recommend using "Postgres.app" and "pgadmin".
+
 ```
 # from the checkout directory
 
@@ -31,6 +33,18 @@ From the 'psql' prompt you will need to create a new role to allow database acce
 # To add a new user to an existing database:
 CREATE ROLE <username> WITH CREATEDB SUPERUSER;
 ALTER DATABASE srcopt OWNER TO <username>;
+```
+
+Add your database configuration settings to /etc/srcoptics/conf.d/database.py:
+
+```
+DATABASES = {
+            'default': {
+                        'ENGINE':'django.db.backends.postgresql',
+                        'USER':  'postgres',
+                        'NAME': 'srcopt',   
+                    }
+            }
 ```
 
 Now complete the setup:

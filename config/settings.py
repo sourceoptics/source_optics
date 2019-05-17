@@ -12,6 +12,13 @@ https://docs.djangoproject.com/en/2.1/ref/settings/
 
 import os, django
 
+from split_settings.tools import optional, include
+
+include(
+    '/etc/srcoptics/conf.d/*.py',
+    optional('local_settings.py')
+)
+
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", __file__)
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -76,14 +83,7 @@ WSGI_APPLICATION = 'config.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/2.1/ref/settings/#databases
-
-DATABASES = {
-            'default': {
-                        'ENGINE':'django.db.backends.postgresql',
-                        'USER':  os.environ.get('DB_USER', ''),
-						'NAME': 'srcopt',
-					   }
-            }
+# add to /etc/srcoptics/conf.d/database.py
 
 # Password validation
 # https://docs.djangoproject.com/en/2.1/ref/settings/#auth-password-validators
