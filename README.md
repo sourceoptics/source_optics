@@ -69,6 +69,13 @@ License
 
 Apache 2
 
+Questions/Troubleshooting
+=========================
+
+The mailing list will be available soon.
+
+Until then, see FAQ.md
+
 Authors/Credits
 ===============
 
