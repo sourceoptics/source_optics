@@ -72,10 +72,20 @@ Apache 2
 Authors/Credits
 ===============
 
- Ady Francis
- Pranesh Kamalakanthan
- Austin Shafer
- Nick Wrenn
+Initial version:
+
+ * Ady Francis
+ * Pranesh Kamalakanthan
+ * Austin Shafer
+ * Nick Wrenn
+ 
+ Concept: Michael DeHaan
+
+Mailing List
+============
+
+A mailing list is coming very soon, until then contact michael@michaeldehaan.net with questions.
+
 
 
 
