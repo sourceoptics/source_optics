@@ -5,6 +5,7 @@ This is just a short list of things to do to the project. The following ideas ar
 
 - License headers
 - Preserve date selection on all navigation
+- Verify scanning transactions are seperate between scan and statistics, so repos show up faster
 - Come up with a wider date window by default, so the graphs aren't usually blank
 - Add a 'commit log' for every project that shows authors/commits, is filterable, and ignores branch names
 - Make CLI options flags for scanner consistent for use with cron and systemd
@@ -22,7 +23,11 @@ This is just a short list of things to do to the project. The following ideas ar
 - More stats
 - More reports
 - Views for per file stats
-- Show scanning status in the web interface somewhere
+- Fix naive datetime warnings (DateTimeField Statistic.start_date received a naive datetime (2019-05-17 22:32:32.957787) while time zone support is active)
+- Show scanning status in the web interface somewhere, ideally a percentage
+- When selecting wide time ranges, default to monthly averages not day data
+- Consider loading graphs asynchronously (ajax the URL, etc) to increase responsiveness with multiple graphs
+
 
 
 
