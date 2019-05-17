@@ -4,9 +4,12 @@ Roadmap
 This is just a short list of things to do to the project. The following ideas are subject to change at any time.
 
 - License headers
+- Add a CLI command to delete a repo
+- When deleting a repo in Django admin, the prompt about deleting all associated objects jams the Django admin interface
 - Preserve date selection on all navigation
 - Verify scanning transactions are seperate between scan and statistics, so repos show up faster
 - Come up with a wider date window by default, so the graphs aren't usually blank
+- Refactoring - keyword args, break into smaller functions
 - Add a 'commit log' for every project that shows authors/commits, is filterable, and ignores branch names
 - Make CLI options flags for scanner consistent for use with cron and systemd
 - Change the add repo command into a 'import' command
@@ -27,7 +30,8 @@ This is just a short list of things to do to the project. The following ideas ar
 - Show scanning status in the web interface somewhere, ideally a percentage
 - When selecting wide time ranges, default to monthly averages not day data
 - Consider loading graphs asynchronously (ajax the URL, etc) to increase responsiveness with multiple graphs
-
+- SIGINT to the scan process requires two sigints - probably need to hook signals to join threads (?)
+- Move function comments into docstrings
 
 
 

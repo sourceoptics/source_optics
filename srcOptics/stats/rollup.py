@@ -61,6 +61,8 @@ class Rollup:
         # This allows us to scan the current day
         while date_index.date() != cls.today.date():
 
+            print("Aggregrate Day: %s, %s" % (repo, date_index))
+
             #Filters commits by date_index's day value as well as the repo
             commits = Commit.objects.filter(commit_date__contains=date_index.date(), repo=repo)
 
@@ -87,6 +89,7 @@ class Rollup:
 
             #Aggregate values from query set for rollup
             data = commits.aggregate(lines_added=Sum("lines_added"), lines_removed = Sum("lines_removed"))
+            # FIXME: an object using slots here might be faster
             data['commit_total'] = len(commits)
             data['files_changed'] = file_total
             data['author_total'] = author_count
@@ -110,6 +113,9 @@ class Rollup:
         # Daily rollups aren't dependent on the time
         # This allows us to scan the current day
         while date_index.date() != cls.today.date():
+
+            # FIXME: move to debug logging
+            print("Author Rollup by Day: %s, %s" % (repo, author))
 
             #Filters commits by author,  date_index's day value, and repo
             commits = Commit.objects.filter(author=author, commit_date__contains=date_index.date(), repo=repo)
@@ -148,10 +154,13 @@ class Rollup:
     # Compile each statistic for the author based on the interval over the date range
     @classmethod
     def aggregate_author_rollup(cls, repo, interval):
+
         date_index = cls.get_first_day(repo.last_scanned, interval)
         author_instances = []
         while date_index < cls.today:
-            print("repo=%s, interval=%s" % (repo, interval))
+
+            # FIXME: move to debug logging
+            print("Author Rollup Aggregration: repo=%s, interval=%s" % (repo, interval))
             end_date = cls.get_end_day(date_index, interval)
 
 
@@ -173,8 +182,9 @@ class Rollup:
             if end_date >= cls.today:
                 flush = True
             #iterate through the query set and create author objects
+            author = None
             for d in days:
-                auth = Author.objects.get(pk=d['author_id'])
+                author = Author.objects.get(pk=d['author_id'])
                 # FIXME: these should use keyword arguments
                 author_instances = Creator.create_author_rollup(date_index, interval[0], repo, author, d['lines_added_total'], d['lines_removed_total'],
                 d['lines_changed_total'], d['commit_total_total'], d['files_changed_total'], flush, author_instances)
@@ -182,7 +192,7 @@ class Rollup:
             # if there aren't any stats for the given time range, just create dummy empty data
             # This is necessary to flush data for the bulk create.
             if len(days) == 0:
-                author_instances = Creator.create_author_rollup(date_index, interval[0], repo, auth, 0, 0,
+                author_instances = Creator.create_author_rollup(date_index, interval[0], repo, author, 0, 0,
                 0, 0, 0, flush, author_instances)
             #Increment to next week or month
             end_date = end_date + datetime.timedelta(days=1)
@@ -191,6 +201,9 @@ class Rollup:
     #Compile rollup for interval by aggregating daily stats
     @classmethod
     def aggregate_interval_rollup(cls, repo, interval):
+
+        # FIXME: move to debug logging
+        print("Interval Rollup: %s, %s" % (repo, interval))
 
         #Gets the first day depending on the interval
         date_index = cls.get_first_day(repo.last_scanned, interval)

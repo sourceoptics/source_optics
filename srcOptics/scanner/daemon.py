@@ -1,3 +1,6 @@
+# FIXME: this class needs to be parameterized to run in a loop or run in a format more ameniable to cron, until then, it's been modified so the management
+# command runs against all repos exactly once and stops.
+
 import datetime
 import time
 
@@ -13,13 +16,13 @@ from srcOptics.models import Repository
 #
 class Daemon:
 
-    threshold = 30
+    threshold = 1 # 30
     repo_sleep = 5
     thread_sleep = 5
 
     @classmethod
     def scan(cls):
-        print("Starting daemon...")
+        print("Starting scan loop...")
 
         while True:
             repos = Repository.objects.all()
@@ -28,13 +31,15 @@ class Daemon:
             #TODO: probably should sort this by repos with least amt of commits first
             for repo in repos:
 
+                print("Repo: %s" % repo)
+
                 # Calculate time difference based on last_pulled date
                 today = datetime.datetime.now(tz=timezone.utc)
                 if repo.last_pulled is not None:
                     timediff = (today - repo.last_pulled).total_seconds() / 60.0
 
                 # For enabled repos that haven't been pulled since last threshold, scan and aggregate
-                if repo.enabled == True and (repo.last_pulled is None or timediff > cls.threshold) :
+                if repo.enabled == True: # and (repo.last_pulled is None or timediff > cls.threshold) :
 
                     # Scan the repository and update the last pulled date
                     print("Scanning " + str(repo))
@@ -56,5 +61,8 @@ class Daemon:
                 # Wait some time after scanning each repo
                 time.sleep(cls.repo_sleep)
 
-            time.sleep(cls.thread_sleep)
-            print("Checking for new data...")
+
+            break
+
+            # time.sleep(cls.thread_sleep)
+            # print("Checking for new data...")
