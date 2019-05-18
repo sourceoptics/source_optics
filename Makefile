@@ -6,20 +6,20 @@ help:
 	@egrep "^# target:" [Mm]akefile
 
 test:
-	python manage.py test
+	python3 manage.py test
 
 update:
-	pip install -U -r requirements.txt
+	pip3 install -U -r requirements.txt
 
 migrate:
-	python manage.py makemigrations
-	python manage.py migrate
+	python3 manage.py makemigrations
+	python3 manage.py migrate
 
 server:
-	python manage.py runserver
+	python3 manage.py runserver
 
 install:
-	python manage.py init -es
+	python3 manage.py init -es
 
 compilecss:
 	sass --update --sourcemap=none --style compressed srcOptics/static/_scss:srcOptics/static
