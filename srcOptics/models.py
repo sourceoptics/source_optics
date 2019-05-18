@@ -132,9 +132,7 @@ class Commit(models.Model):
 
     class Meta:
         indexes = [
-            models.Index(fields=['commit_date', 'author']),
             models.Index(fields=['commit_date', 'author', 'repo']),
-            models.Index(fields=['commit_date', 'repo']),
         ]
 
     def __str__(self):
@@ -214,8 +212,6 @@ class Statistic(models.Model):
 
         indexes = [
             models.Index(fields=['interval', 'author', 'repo', 'file', 'start_date'], name="rollup1"),
-            models.Index(fields=['interval', 'author'], name="rollup2"),
-            models.Index(fields=['interval', 'author', 'start_date'], name='rollup3'),
             models.Index(fields=['start_date', 'interval', 'repo', 'author'], name='author_rollup'),
         ]
 
