@@ -60,47 +60,55 @@ class Rollup:
         # Daily rollups aren't dependent on the time
         # This allows us to scan the current day
         while date_index.date() != cls.today.date():
+            date_index = cls.aggregrate_day_rollup_internal(repo, total_instances, date_index)
+                        
+        return date_index
 
-            print("Aggregrate Day: %s, %s" % (repo, date_index))
+    @classmethod
+    def aggregrate_day_rollup_internal(cls, repo, total_instances, date_index):
 
-            #Filters commits by date_index's day value as well as the repo
-            commits = Commit.objects.filter(commit_date__contains=date_index.date(), repo=repo)
+        # FIXME: we should be able to check if this already exists and not recalculate it.
 
-            flush = False
-            # Create total rollup row for the day
-            if date_index.date() == (cls.today.date() - datetime.timedelta(days=1)):
-                flush = True
+        print("Aggregrate Day: %s, %s" % (repo, date_index))
 
-            # If there are no commits for the day, continue
-            if len(commits) == 0 and flush == False:
-                date_index += datetime.timedelta(days=1)
-                continue
-            elif len(commits) == 0 and flush == True:
-                total_instances = Creator.flush_total_rollups(total_instances)
-                date_index += datetime.timedelta(days=1)
-                continue
+        #Filters commits by date_index's day value as well as the repo
+        commits = Commit.objects.filter(commit_date__contains=date_index.date(), repo=repo)
 
-            #Count the number of files in a commit
-            file_total = cls.count_files(commits)
+        flush = False
+        # Create total rollup row for the day
+        if date_index.date() == (cls.today.date() - datetime.timedelta(days=1)):
+            flush = True
 
-            #Get all the authors for the commits for that day
-            authors_for_day = commits.values_list('author')
-            author_count = len(set(authors_for_day))
-
-            #Aggregate values from query set for rollup
-            data = commits.aggregate(lines_added=Sum("lines_added"), lines_removed = Sum("lines_removed"))
-            # FIXME: an object using slots here might be faster
-            data['commit_total'] = len(commits)
-            data['files_changed'] = file_total
-            data['author_total'] = author_count
-            #Calculated by adding lines added and removed
-            data['lines_changed'] = int(data['lines_added']) + int(data['lines_removed'])
-
-            # Create total rollup row for the day
-            total_instances = Creator.create_total_rollup(date_index, intervals[0][0], repo, data['lines_added'], data['lines_removed'],
-            data['lines_changed'], data['commit_total'], data['files_changed'], data['author_total'], flush, total_instances)
-            #Increment date_index to the next day
+        # If there are no commits for the day, continue
+        if len(commits) == 0 and flush == False:
             date_index += datetime.timedelta(days=1)
+            return date_index
+        elif len(commits) == 0 and flush == True:
+            total_instances = Creator.flush_total_rollups(total_instances)
+            date_index += datetime.timedelta(days=1)
+            return date_index
+
+        #Count the number of files in a commit
+        file_total = cls.count_files(commits)
+
+        #Get all the authors for the commits for that day
+        authors_for_day = commits.values_list('author')
+        author_count = len(set(authors_for_day))
+
+        #Aggregate values from query set for rollup
+        data = commits.aggregate(lines_added=Sum("lines_added"), lines_removed = Sum("lines_removed"))
+        # FIXME: an object using slots here might be faster
+        data['commit_total'] = len(commits)
+        data['files_changed'] = file_total
+        data['author_total'] = author_count
+        #Calculated by adding lines added and removed
+        data['lines_changed'] = int(data['lines_added']) + int(data['lines_removed'])
+
+        # Create total rollup row for the day
+        total_instances = Creator.create_total_rollup(date_index, intervals[0][0], repo, data['lines_added'], data['lines_removed'],
+        data['lines_changed'], data['commit_total'], data['files_changed'], data['author_total'], flush, total_instances)
+        #Increment date_index to the next day
+        date_index += datetime.timedelta(days=1)
         return date_index
 
     # Compile each statistic for each author over every day in the date range
@@ -115,7 +123,7 @@ class Rollup:
         while date_index.date() != cls.today.date():
 
             # FIXME: move to debug logging
-            print("Author Rollup by Day: %s, %s" % (repo, author))
+            print("Author Rollup by Day: %s, %s, %s" % (repo, date_index, author))
 
             #Filters commits by author,  date_index's day value, and repo
             commits = Commit.objects.filter(author=author, commit_date__contains=date_index.date(), repo=repo)
@@ -275,6 +283,7 @@ class Rollup:
     #Compute rollups for specified repo passed in by daemon
     #TODO: Index commit_date and repo together
     @classmethod
+    # FIXME: shouldn't be atomic here, but should be more resilent on change
     @transaction.atomic
     def rollup_repo(cls, repo):
 

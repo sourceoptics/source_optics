@@ -4,6 +4,8 @@
 
 from srcOptics.models import *
 
+# FIXME: move these into class methods on the model objects
+
 class Creator:
 
     # ------------------------------------------------------------------
@@ -112,16 +114,21 @@ class Creator:
             total_instances.append(Statistic(start_date = start_date, interval = interval, repo = repo, lines_added = lines_added,
             lines_removed = lines_removed, lines_changed = lines_changed, commit_total = commit_total, files_changed = files_changed,
             author_total = author_total))
+            # FIXME: why does this return early and not call bulk_create ?
             return total_instances
         total_instances.append(Statistic(start_date = start_date, interval = interval, repo = repo, lines_added = lines_added,
         lines_removed = lines_removed, lines_changed = lines_changed, commit_total = commit_total, files_changed = files_changed,
         author_total = author_total))
-        Statistic.objects.bulk_create(total_instances, len(total_instances))
+        # FIXME: the default in Django is to create all, so we should really pass a smaller batch size?
+        Statistic.objects.bulk_create(total_instances, len(total_instances), ignore_conflicts=True)
+        # FIXME: why does this always return []?  Is this return used?
         return []
 
     def flush_total_rollups(total_instances):
         if len(total_instances) > 0:
-            Statistic.objects.bulk_create(total_instances, len(total_instances))
+            # FIXME: the default in Django is to create all, so we should really pass a smaller batch size?
+            Statistic.objects.bulk_create(total_instances, len(total_instances), ignore_conflicts=True)
+        # FIXME: why does this always return []?  Is this return used?
         return []
 
     # FIXME: this should all use keyword arguments
@@ -134,9 +141,14 @@ class Creator:
             return author_instances
         author_instances.append(Statistic(start_date = start_date, interval = interval, repo = repo, author=author, lines_added = lines_added,
         lines_removed = lines_removed, lines_changed = lines_changed, commit_total = commit_total, files_changed = files_changed))
-        Statistic.objects.bulk_create(author_instances, len(author_instances))
+        # FIXME: the default in Django is to create all, so we should really pass a smaller batch size?
+        Statistic.objects.bulk_create(author_instances, len(author_instances), ignore_conflicts=True)
+        # FIXME: why does this always return []?  Is this return used?
         return []
 
     def flush_author_rollups(author_instances):
-        Statistic.objects.bulk_create(author_instances, len(author_instances))
+        # FIXME: the default in Django is to create all, so we should really pass a smaller batch size?        # FIXME: the default in Django is to create all, so we should really pass a smaller batch size?
+
+        Statistic.objects.bulk_create(author_instances, len(author_instances), ignore_conflicts=True)
+        # FIXME: why does this always return []?  Is this return used?
         return []

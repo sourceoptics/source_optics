@@ -5,7 +5,7 @@ This is just a short list of things to do to the project. The following ideas ar
 
 - License headers
 - Add a CLI command to delete a repo
-- When deleting a repo in Django admin, the prompt about deleting all associated objects jams the Django admin interface
+- When deleting a repo in Django admin, the prompt about deleting all associated objects jams the Django admin interface (try workaround: https://code.djangoproject.com/ticket/10919)
 - Preserve date selection on all navigation
 - Verify scanning transactions are seperate between scan and statistics, so repos show up faster
 - Come up with a wider date window by default, so the graphs aren't usually blank

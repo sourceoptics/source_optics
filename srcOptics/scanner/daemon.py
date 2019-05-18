@@ -1,6 +1,8 @@
 # FIXME: this class needs to be parameterized to run in a loop or run in a format more ameniable to cron, until then, it's been modified so the management
 # command runs against all repos exactly once and stops.
 
+# FIXME: you should be able to choose to run scans, aggregartions, or both, or pick a particular repo or list of repos by name
+
 import datetime
 import time
 
