@@ -64,7 +64,7 @@ class Rollup:
 
             # enable speeding by rollups already computed in event of ctrl-c or fault
             if (repo.last_rollup is None) or (repo.last_rollup <= date_index):
-                date_index = cls.aggregrate_day_rollup_internal(repo, total_instances, date_index)
+                date_index = cls.aggregate_day_rollup_internal(repo, total_instances, date_index)
                 repo.last_rollup = date_index
                 repo.save()
             else:
@@ -75,11 +75,10 @@ class Rollup:
         return date_index
 
     @classmethod
-    def aggregrate_day_rollup_internal(cls, repo, total_instances, date_index):
+    def aggregate_day_rollup_internal(cls, repo, total_instances, date_index):
 
         # FIXME: we should be able to check if this already exists and not recalculate it.
 
-        print("Aggregrate Day: %s, %s" % (repo, date_index))
 
         #Filters commits by date_index's day value as well as the repo
         commits = Commit.objects.filter(commit_date__contains=date_index.date(), repo=repo).prefetch_related('files')
@@ -88,7 +87,7 @@ class Rollup:
         if len(commits) == 0 :
             date_index += datetime.timedelta(days=1)
             return date_index
-
+        print("Aggregate Day: %s, %s" % (repo, date_index))
 
         #Count the number of files in a commit
         file_total = cls.count_files(commits)
@@ -107,7 +106,7 @@ class Rollup:
         data['lines_changed'] = int(data['lines_added']) + int(data['lines_removed'])
 
         # Create total rollup row for the day
-        total_instances = Creator.create_total_rollup(start_date=date_index, interval=intervals[0][0], repo=repo, 
+        Creator.create_total_rollup(start_date=date_index, interval=intervals[0][0], repo=repo, 
             lines_added=data['lines_added'], 
             lines_removed=data['lines_removed'],
             lines_changed=data['lines_changed'], 
@@ -184,7 +183,7 @@ class Rollup:
         while date_index < cls.today:
 
             # FIXME: move to debug logging
-            print("Author Rollup Aggregration: repo=%s, interval=%s" % (repo, interval))
+            print("Author Rollup Aggregration: author=%s, repo=%s, interval=%s" % (author, repo, interval))
             end_date = cls.get_end_day(date_index, interval)
 
 

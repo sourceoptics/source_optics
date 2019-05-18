@@ -34,4 +34,6 @@ This is just a short list of things to do to the project. The following ideas ar
 - SIGINT to the scan process requires two sigints - probably need to hook signals to join threads (?)
 - Move function comments into docstrings
 - The aggregration code uses "repo.last_scanned" to decide where to resume, and it should use a different statistic, last_rollup. Right now this field is added but really represents last daily rollups, so we need an additional field.
+- Graphs with a large amount of data are too slow, database not optimized?
+- The date widget automatically changes the URL and is too hard to adjust by typing. Consider a simpler widget.  (Also can't easily go back several years)
 
