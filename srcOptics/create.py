@@ -24,6 +24,7 @@ class Creator:
     # ------------------------------------------------------------------
     def create_author(email, repo):
         author_instance,created = Author.objects.get_or_create(email=email)
+        # FIXME: probably should avoid calling .save() if already there w/ correct relations
         author_instance.repos.add(repo)
         author_instance.save()
         return author_instance
@@ -119,15 +120,13 @@ class Creator:
         total_instances.append(Statistic(start_date = start_date, interval = interval, repo = repo, lines_added = lines_added,
         lines_removed = lines_removed, lines_changed = lines_changed, commit_total = commit_total, files_changed = files_changed,
         author_total = author_total))
-        # FIXME: the default in Django is to create all, so we should really pass a smaller batch size?
-        Statistic.objects.bulk_create(total_instances, len(total_instances), ignore_conflicts=True)
+        Statistic.objects.bulk_create(total_instances, 5000, ignore_conflicts=True)
         # FIXME: why does this always return []?  Is this return used?
         return []
 
     def flush_total_rollups(total_instances):
         if len(total_instances) > 0:
-            # FIXME: the default in Django is to create all, so we should really pass a smaller batch size?
-            Statistic.objects.bulk_create(total_instances, len(total_instances), ignore_conflicts=True)
+            Statistic.objects.bulk_create(total_instances, 5000, ignore_conflicts=True)
         # FIXME: why does this always return []?  Is this return used?
         return []
 
@@ -141,14 +140,13 @@ class Creator:
             return author_instances
         author_instances.append(Statistic(start_date = start_date, interval = interval, repo = repo, author=author, lines_added = lines_added,
         lines_removed = lines_removed, lines_changed = lines_changed, commit_total = commit_total, files_changed = files_changed))
-        # FIXME: the default in Django is to create all, so we should really pass a smaller batch size?
-        Statistic.objects.bulk_create(author_instances, len(author_instances), ignore_conflicts=True)
+        Statistic.objects.bulk_create(author_instances, 5000, ignore_conflicts=True)
         # FIXME: why does this always return []?  Is this return used?
         return []
 
     def flush_author_rollups(author_instances):
         # FIXME: the default in Django is to create all, so we should really pass a smaller batch size?        # FIXME: the default in Django is to create all, so we should really pass a smaller batch size?
 
-        Statistic.objects.bulk_create(author_instances, len(author_instances), ignore_conflicts=True)
+        Statistic.objects.bulk_create(author_instances, 5000, ignore_conflicts=True)
         # FIXME: why does this always return []?  Is this return used?
         return []

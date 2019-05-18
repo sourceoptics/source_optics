@@ -88,9 +88,11 @@ class LoginCredential(models.Model):
 class Repository(models.Model):
     class Meta:
         verbose_name_plural = "repositories"
+        
     organization = models.ForeignKey(Organization, on_delete=models.SET_NULL, null=True)
     enabled = models.BooleanField(default=True)
     last_scanned = models.DateTimeField(blank=True, null=True)
+    last_rollup = models.DateTimeField(blank=True, null=True)
     earliest_commit = models.DateTimeField(blank=True, null=True)
     tags = models.ManyToManyField('Tag', related_name='tags', blank=True)
     last_pulled = models.DateTimeField(blank = True, null = True)
@@ -110,7 +112,7 @@ class Author(models.Model):
         return self.email
 
 class Tag(models.Model):
-    name = models.TextField(max_length=64, blank=True, null=True)
+    name = models.TextField(max_length=64, db_index=True, blank=True, null=True)
     repos = models.ManyToManyField(Repository, related_name='tagged_repos', blank=True)
 
     def __str__(self):
@@ -130,11 +132,9 @@ class Commit(models.Model):
 
     class Meta:
         indexes = [
-            models.Index(fields=['commit_date', 'repo']),
+            models.Index(fields=['commit_date', 'author']),
             models.Index(fields=['commit_date', 'author', 'repo']),
-            #BrinIndex(fields=['lines_added', 'lines_removed'])
         ]
-
 
     def __str__(self):
         return self.subject
@@ -204,13 +204,13 @@ class Statistic(models.Model):
     #            'ct': self.commit_total, 'fc': self.files_changed, 'at': self.author_total})
 
     class Meta:
+
+        unique_together = [
+            [ 'start_date', 'interval', 'repo', 'author', 'file' ]
+        ]
+
         indexes = [
-        models.Index(fields=['start_date', 'interval', 'repo'], name='total_rollup'),
-        models.Index(fields=['start_date', 'interval', 'repo', 'author'], name='author_rollup'),
-        BrinIndex(fields=['start_date', 'interval', 'repo'], name='total_rollup_brin'),
-        BrinIndex(fields=['start_date', 'interval', 'repo', 'author'], name='author_rollup_brin'),
-        #models.Index(fields=['author', 'interval']),
-        #BrinIndex(fields=['interval', 'lines_added', 'lines_removed', 'lines_changed', 'commit_total', 'files_changed', 'author_total'])
+            models.Index(fields=['start_date', 'interval', 'repo', 'author'], name='author_rollup'),
         ]
 
     @classmethod

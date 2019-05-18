@@ -60,8 +60,15 @@ class Rollup:
         # Daily rollups aren't dependent on the time
         # This allows us to scan the current day
         while date_index.date() != cls.today.date():
-            date_index = cls.aggregrate_day_rollup_internal(repo, total_instances, date_index)
-                        
+
+            # enable speeding by rollups already computed in event of ctrl-c or fault
+            if (repo.last_rollup is None) or (repo.last_rollup <= date_index):
+                date_index = cls.aggregrate_day_rollup_internal(repo, total_instances, date_index)
+                repo.last_rollup = date_index
+                repo.save()
+            else:
+                date_index += datetime.timedelta(days=1)
+
         return date_index
 
     @classmethod
@@ -283,8 +290,8 @@ class Rollup:
     #Compute rollups for specified repo passed in by daemon
     #TODO: Index commit_date and repo together
     @classmethod
-    # FIXME: shouldn't be atomic here, but should be more resilent on change
-    @transaction.atomic
+    # FIXME: shouldn't be atomic here probably, so killing halfway through allows resumption
+    # @transaction.atomic
     def rollup_repo(cls, repo):
 
         #This means that the repo has not been scanned
