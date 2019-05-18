@@ -307,7 +307,7 @@ class Rollup:
     #TODO: Index commit_date and repo together
     @classmethod
     # FIXME: shouldn't be atomic here probably, so killing halfway through allows resumption
-    # @transaction.atomic
+    @transaction.atomic
     def rollup_repo(cls, repo):
 
         #This means that the repo has not been scanned
