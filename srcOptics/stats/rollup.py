@@ -183,7 +183,7 @@ class Rollup:
         while date_index < cls.today:
 
             # FIXME: move to debug logging
-            print("Author Rollup Aggregration: author=%s, repo=%s, interval=%s" % (author, repo, interval))
+            print("Author Rollup Aggregration: repo=%s, interval=%s" % (repo, interval))
             end_date = cls.get_end_day(date_index, interval)
 
 
