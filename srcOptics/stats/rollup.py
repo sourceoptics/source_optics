@@ -57,6 +57,7 @@ class Rollup:
 
         total_instances = []
         date_index = repo.last_scanned
+
         # Daily rollups aren't dependent on the time
         # This allows us to scan the current day
         while date_index.date() != cls.today.date():
@@ -122,10 +123,18 @@ class Rollup:
     @classmethod
     def aggregate_author_rollup_day(cls, repo, author):
 
+        #earliest_commit = Commit.objects.filter(repo=repo).earliest("commit_date").commit_date
+
         date_index = repo.last_scanned
         author_instances = []
 
-        all_dates = Commit.objects.filter(author=author, repo=repo).values_list('commit_date', flat=True).all()
+        all_dates = [ x.date() for x in Commit.objects.filter(author=author, repo=repo).values_list('commit_date', flat=True).all() ]
+
+        def has_date(which, many):
+            for x in many:
+                if x == which:
+                    return True
+            return False
 
         # Daily rollups aren't dependent on the time
         # This allows us to scan the current day
@@ -135,7 +144,7 @@ class Rollup:
             if date_index.date() == (cls.today.date() - datetime.timedelta(days=1)):
                 flush = True
 
-            if date_index not in all_dates:
+            if not has_date(date_index.date(), all_dates):
                 date_index += datetime.timedelta(days=1)
                 if flush:
                     author_instances = Creator.flush_author_rollups(author_instances)
@@ -175,6 +184,7 @@ class Rollup:
 
         date_index = cls.get_first_day(repo.last_scanned, interval)
         author_instances = []
+
         while date_index < cls.today:
 
             # FIXME: move to debug logging
