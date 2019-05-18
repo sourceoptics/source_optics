@@ -153,7 +153,7 @@ MAX_THREAD_COUNT = None
 # multi-threaded aggregation so that the unit tests behave
 #
 #   hopefully this will go away eventually
-MULTITHREAD_AGGREGATE = True
+MULTITHREAD_AGGREGATE = False
 
 # the threshold for number of commits at which to print
 # some dots as a status update. This is done in git.py

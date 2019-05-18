@@ -145,7 +145,7 @@ def get_query_strings(request):
 
 # author summary statistics
 def get_lifetime_stats_author(author):
-    commits = Commit.objects.filter(author=author).order_by('commit_date')
+    commits = Commit.objects.filter(author=author).order_by('commit_date').prefetch_related('files')
     earliest = commits[0].commit_date
     today = datetime.now(tz=timezone.utc)
     age = abs(today - earliest).days

@@ -162,6 +162,11 @@ class File(models.Model):
     lines_added = models.IntegerField(default=0)
     lines_removed = models.IntegerField(default=0)
 
+
+    indexes = [
+        models.Index(fields=['repo', 'name', 'path', 'ext'], name='file_index'),
+    ]
+
     def __str__(self):
         return self.path
 

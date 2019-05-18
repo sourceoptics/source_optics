@@ -79,7 +79,7 @@ class Rollup:
         print("Aggregrate Day: %s, %s" % (repo, date_index))
 
         #Filters commits by date_index's day value as well as the repo
-        commits = Commit.objects.filter(commit_date__contains=date_index.date(), repo=repo)
+        commits = Commit.objects.filter(commit_date__contains=date_index.date(), repo=repo).prefetch_related('files')
 
         flush = False
         # Create total rollup row for the day
@@ -125,28 +125,31 @@ class Rollup:
         date_index = repo.last_scanned
         author_instances = []
 
+        all_dates = Commit.objects.filter(author=author, repo=repo).values_list('commit_date', flat=True).all()
+
         # Daily rollups aren't dependent on the time
         # This allows us to scan the current day
         while date_index.date() != cls.today.date():
-
-            # FIXME: move to debug logging
-            print("Author Rollup by Day: %s, %s, %s" % (repo, date_index, author))
-
-            #Filters commits by author,  date_index's day value, and repo
-            commits = Commit.objects.filter(author=author, commit_date__contains=date_index.date(), repo=repo)
 
             flush = False
             if date_index.date() == (cls.today.date() - datetime.timedelta(days=1)):
                 flush = True
 
-            # If there are no commits for the day, continue
-            if len(commits) == 0 and flush == False:
+            if date_index not in all_dates:
                 date_index += datetime.timedelta(days=1)
+                if flush:
+                    author_instances = Creator.flush_author_rollups(author_instances)
                 continue
-            elif len(commits) == 0 and flush == True:
-                author_instances = Creator.flush_author_rollups(author_instances)
-                date_index += datetime.timedelta(days=1)
-                continue
+            else:
+                print(" -> %s" % date_index)
+
+            # FIXME: move to debug logging
+            # print("Author Rollup by Day: %s, %s, %s" % (repo, date_index, author))
+
+            #Filters commits by author,  date_index's day value, and repo
+            commits = Commit.objects.filter(author=author, commit_date__contains=date_index.date(), repo=repo).prefetch_related('files')
+
+
 
             #Count the number of files in a commit
             file_total = cls.count_files(commits)
@@ -265,10 +268,11 @@ class Rollup:
 
     #We only want to iterate through the authors once.
     #Currently, this seems like the easiest way to do so
-    @classmethod
+    @classmethod 
     def compile_author_rollups (cls, repo):
         #Need to compile authors separately. Iterator is used for memory efficiency
         authors = Author.objects.filter(repos__in=[repo]).iterator()
+        total_authors = Author.objects.filter(repos__in=[repo]).count()
 
         # Django unit tests can be run as parallel, but this causes problems with
         # lingering postgres connections. use the concurrent flag to disable
@@ -276,14 +280,22 @@ class Rollup:
         #
         #   hopefully this will go away eventually
         if settings.MULTITHREAD_AGGREGATE is True:
+
+            # this is currently DISABLED by DEFAULT, because I theorize the connection.close is pretty ineffecient
+            # look into connection pool here and generalize this at a higher level? -- MPD
+
             with concurrent.futures.ThreadPoolExecutor(max_workers=settings.MAX_THREAD_COUNT) as pool:
                 for author in authors:
                     pool.submit(cls.compile_author_rollups_thread, repo, author)
             cls.aggregate_author_rollup(repo, intervals[1])
             cls.aggregate_author_rollup(repo, intervals[2])
         else:
+            count = 0
             for author in authors:
+                count = count + 1
+                print("Author %s: %s -> # %s/%s" % (repo, author, count, total_authors))
                 cls.aggregate_author_rollup_day(repo, author)
+            # FIXME: use specific constants for day and week here.
             cls.aggregate_author_rollup(repo, intervals[1])
             cls.aggregate_author_rollup(repo, intervals[2])
 
