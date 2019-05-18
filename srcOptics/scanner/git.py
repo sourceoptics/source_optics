@@ -238,7 +238,7 @@ class Scanner:
                 # "print cute dots"
                 status_count += 1
                 if status_count > settings.DOTS_THRESHOLD:
-                    print('.', end='', flush=True)
+                    print('.', end='')
                     status_count = 0
                     width_count += 1
                     # line wrap

@@ -109,44 +109,17 @@ class Creator:
         commit.save()
         return file_instance
 
-    def create_total_rollup(start_date, interval, repo, lines_added, lines_removed,
-                            lines_changed, commit_total, files_changed, author_total, flush, total_instances):
-        if len(total_instances) < 100 and flush == False:
-            total_instances.append(Statistic(start_date = start_date, interval = interval, repo = repo, lines_added = lines_added,
+    # FIXME: eliminate this function
+    def create_total_rollup(start_date=None, interval=None, repo=None, lines_added=None, lines_removed=None,
+                            lines_changed=None, commit_total=None, files_changed=None, author_total=None, total_instances=None):
+        total_instances.append(Statistic(start_date = start_date, interval = interval, repo = repo, lines_added = lines_added,
             lines_removed = lines_removed, lines_changed = lines_changed, commit_total = commit_total, files_changed = files_changed,
             author_total = author_total))
-            # FIXME: why does this return early and not call bulk_create ?
-            return total_instances
-        total_instances.append(Statistic(start_date = start_date, interval = interval, repo = repo, lines_added = lines_added,
-        lines_removed = lines_removed, lines_changed = lines_changed, commit_total = commit_total, files_changed = files_changed,
-        author_total = author_total))
-        Statistic.objects.bulk_create(total_instances, 5000, ignore_conflicts=True)
-        # FIXME: why does this always return []?  Is this return used?
-        return []
-
-    def flush_total_rollups(total_instances):
-        if len(total_instances) > 0:
-            Statistic.objects.bulk_create(total_instances, 5000, ignore_conflicts=True)
-        # FIXME: why does this always return []?  Is this return used?
-        return []
 
     # FIXME: this should all use keyword arguments
     def create_author_rollup(start_date, interval, repo, author, lines_added, lines_removed,
-                            lines_changed, commit_total, files_changed, flush, author_instances):
-        if len(author_instances) < 100 and flush == False:
-            author_instances.append(Statistic(start_date = start_date, interval = interval, repo = repo, author = author, lines_added = lines_added,
-            lines_removed = lines_removed, lines_changed = lines_changed, commit_total = commit_total,
-            files_changed = files_changed, author_total = 1))
-            return author_instances
+                            lines_changed, commit_total, files_changed, author_instances):
         author_instances.append(Statistic(start_date = start_date, interval = interval, repo = repo, author=author, lines_added = lines_added,
         lines_removed = lines_removed, lines_changed = lines_changed, commit_total = commit_total, files_changed = files_changed))
-        Statistic.objects.bulk_create(author_instances, 5000, ignore_conflicts=True)
-        # FIXME: why does this always return []?  Is this return used?
-        return []
 
-    def flush_author_rollups(author_instances):
-        # FIXME: the default in Django is to create all, so we should really pass a smaller batch size?        # FIXME: the default in Django is to create all, so we should really pass a smaller batch size?
 
-        Statistic.objects.bulk_create(author_instances, 5000, ignore_conflicts=True)
-        # FIXME: why does this always return []?  Is this return used?
-        return []
