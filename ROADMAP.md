@@ -26,6 +26,7 @@ This is just a short list of things to do to the project. The following ideas ar
 - More graphs
 - More stats
 - More reports
+- Graph and cell colors should  not be random, but should have some reasonable default and maybe be configurable (possibly from the tag).
 - Views for per file stats
 - Fix naive datetime warnings (DateTimeField Statistic.start_date received a naive datetime (2019-05-17 22:32:32.957787) while time zone support is active)
 - Show scanning status in the web interface somewhere, ideally a percentage
