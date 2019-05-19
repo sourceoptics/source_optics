@@ -17,7 +17,7 @@ It should be equally relevant to many types of users including:
 Website
 =======
 
-See [sourceoptics.io](http://sourceoptics.io])
+See [sourceoptics.io](https://sourceoptics.io)
 
 Technical Details
 =================
