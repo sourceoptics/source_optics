@@ -5,22 +5,22 @@ from django.forms import ModelForm, PasswordInput
 from .models import *
 from srcOptics.scanner.git import Scanner
 
-def scan_selected(modeladmin, request, queryset):
-    for rep in queryset:
-        print("Scanning repository: " + rep.url)
-        Scanner.scan_repo(rep.url, rep.name, rep.cred)
+def fast_delete(modeladmin, request, queryset):
+    queryset.delete()
 
 class RepoAdmin(admin.ModelAdmin):
     list_display = ('name','last_pulled', 'last_scanned', 'enabled')
     fields = ['organization', 'enabled', 'tags', 'cred','name', 'url']
-    actions = [scan_selected]
+    actions = [fast_delete]
 
 class CommitAdmin(admin.ModelAdmin):
     list_display = ('sha', 'subject', 'repo', 'author', 'commit_date')
+    actions = [fast_delete]
 
 class StatAdmin(admin.ModelAdmin):
     list_display = ('start_date', 'interval', 'repo', 'author', 'commit_total',
     'lines_added', 'lines_removed', 'lines_changed', 'files_changed', 'author_total')
+    actions = [fast_delete]
 
 class LoginCredentialForm(ModelForm):
     password = forms.CharField(widget=PasswordInput())
