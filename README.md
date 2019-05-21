@@ -19,6 +19,8 @@ Website
 
 See [sourceoptics.io](https://sourceoptics.io)
 
+[Initial blog post](https://medium.com/@michaeldehaan/presenting-source-optics-better-git-analytics-for-teams-28ad3d238356)
+
 Technical Details
 =================
 
@@ -57,17 +59,10 @@ Once installed and running, add in data via Django admin, ex: http://servername/
 
 View graphs at http://servername/
 
-Discussion
-==========
-
-User Q&A, Ideas, and Contributions are all welcome. 
-
-Stop by the mailing list at <TBD>.
-
 License
 =======
 
-Apache 2
+All source is provided under the Apache 2 license, (C) All Project Contributors.
 
 Questions/Troubleshooting
 =========================
@@ -86,14 +81,30 @@ Initial version:
  * Austin Shafer
  * Nick Wrenn
  
- Concept: Michael DeHaan
+ Concept/Management: Michael DeHaan
 
 Mailing List
 ============
 
-A mailing list is coming very soon, until then contact michael@michaeldehaan.net with questions.
+A user & development discussion list is available on Google Groups. Setup & maintaince questions, ideas,
+and code questions are all equally appropriate.  
 
+To join, visit [https://groups.google.com/forum/#!forum/sourceoptics](https://groups.google.com/forum/#!forum/sourceoptics).  First posts are moderated to reduce spam, and most first posts should be approved in 24 hours.
 
+Requests for features and ideas should be sent to the mailing list, not GitHub.
+
+Code Contribution Preferences
+=============================
+
+A few small guidelines to keep things easy to manage.
+
+1) Contributions should be by github pull request on a seperate branch per topic. Do not combine features. Rebase your pull requests to keep them up to date and avoid merges in the git history.  
+
+2) TWe care a lot about managing the surface area of the application to keep it easy to maintain and operate, and this project should move pretty fast. To keep frustrations over repeated work low, discussion of feature ideas *prior* to submitting a pull request is strongly encouraged (i.e. what do you think about X, how should this be implemented?). For bugfixes, feel free to submit code directly. If you make a database change, you must check in a new Django migrations file.
+
+3) Please do not send any submissions to tweak PEP8, pylint, or other code preferences.  Management will do that periodically, this breaks source code attribution.  Similarly, do not submit additions to add packaging or integration with third party build or test services.
+
+Thank you!
 
 
 
