@@ -34,6 +34,7 @@ Django Admin
 
 Scanner/Stats
 =============
+- Scanner code doesn't like spaces in repo object names
 - When calculating rollups, store the last rollups fully computed on the repo object to avoid duplicate recalc. on failure or ctrl-c
 - Verify scanning transactions are seperate between scan and statistics, so repos show up faster
 
