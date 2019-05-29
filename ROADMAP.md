@@ -34,6 +34,7 @@ Django Admin
 
 Scanner/Stats
 =============
+- There are bugs in 'author count' on the main page (possibly due to restarts or the scanner getting stuck), this should just show the count of database relations
 - Scanner code doesn't like spaces in repo object names
 - When calculating rollups, store the last rollups fully computed on the repo object to avoid duplicate recalc. on failure or ctrl-c
 - Verify scanning transactions are seperate between scan and statistics, so repos show up faster
