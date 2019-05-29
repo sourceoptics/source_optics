@@ -50,7 +50,7 @@ For install as well as basic operations instructions, see INSTALL.md
 Roadmap
 =======
 
-See ROADMAP.md
+See GitHub Projects
 
 Usage
 =====
