@@ -26,8 +26,8 @@ class StatTable(tables.Table):
     
     # FIXME: introduce FontAwesome icons, add new reversed URLs to views
 
-    team = tables.TemplateColumn("team", linkify=('repo_team', {'repo_name': tables.A('repo.name') }))
-    contributors = tables.TemplateColumn("contributors", linkify=('repo_contributors', {'repo_name': tables.A('repo.name') }))
+    team = tables.TemplateColumn('<i class="fas fa-users"></i>', linkify=('repo_team', {'repo_name': tables.A('repo.name') }))
+    contributors = tables.TemplateColumn('<i class="fas fa-user"></i>', linkify=('repo_contributors', {'repo_name': tables.A('repo.name') }))
     repo_last_pulled = tables.DateTimeColumn(verbose_name='Last Pulled', format='m\/d\/y P')
     repo_last_scanned = tables.DateTimeColumn(verbose_name='Last Scanned', format='m\/d\/y P')
     lines_added = ColumnNumber(verbose_name='Lines Added', attrs={"th": {"class": "lines"}})
