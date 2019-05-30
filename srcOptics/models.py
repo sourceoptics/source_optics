@@ -99,9 +99,15 @@ class Repository(models.Model):
     cred = models.ForeignKey(LoginCredential, on_delete=models.CASCADE, null=True, blank = True)
     url = models.TextField(max_length=256, unique=True, blank=False)
     name = models.TextField(db_index=True, max_length=32, blank=False, unique=True, null=False)
+    color = models.CharField(max_length=10, null=True, blank=True)
 
     def __str__(self):
         return self.name
+
+    def effective_color(self):
+        if self.color:
+            return self.color
+        return "#000000"
 
 
 class Author(models.Model):

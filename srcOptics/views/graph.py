@@ -29,6 +29,8 @@ View basic graph for a repo
 
 # Uses the provided parameters to generate a graph and returns it
 def generate_graph_data(**kwargs):
+    # FIXME: this shouldn't use a loose kwargs
+
     # Array for dates
     dates = []
 
@@ -40,7 +42,11 @@ def generate_graph_data(**kwargs):
     # Filter Rollup table for daily interval statistics for the current repository over the specified time range
     #
     # In the authors page, we leave out the repo argument
+    color = "#000000"
     if 'repo' in kwargs.keys():
+        repo_obj = Repository.objects.get(name=kwargs['repo'])
+        color = repo_obj.effective_color()
+        # FIXME: should just be passing objects around, not strings!
         stats_set = Statistic.objects.filter(
             interval=interval,
             repo=kwargs['repo'],
@@ -70,7 +76,7 @@ def generate_graph_data(**kwargs):
         name=kwargs['name'],
         fill='tonexty',
         line={
-            'color': GRAPH_COLORS[hash(kwargs['name']) % len(GRAPH_COLORS)]
+            'color': color
         },
         showlegend=False
     )
