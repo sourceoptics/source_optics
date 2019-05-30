@@ -4,10 +4,9 @@
 <main>
   <h1>{{ repo.name }} : Contributor Summary </h1>
 
-  <a href="{% url 'repo_team' repo.name %}">(Switch to Team Summary?)</a><br/><br/>
+  <a href="{% url 'repo_team' repo.name %}"><i class="fas fa-users"></i>&nbsp;&nbsp;Switch to Team Summary?</a><br/><br/>
 
-<!-- FIXME: add nav to team summary -->
-
+{% include 'partials/date_select.html' %}
 {% include 'partials/footer.html' %}
 
 <section>
