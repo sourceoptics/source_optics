@@ -18,32 +18,26 @@ from django.contrib.humanize.templatetags.humanize import intcomma
 
 from random import randint
 
-"""
-View function for home page of site
-"""
+
 def index(request):
-    #list of all organizations
+    """
+    Site homepage lists all repos (or all repos in an organization)
+    """
 
-    #organization parameter
     org = request.GET.get('org')
-
-    #Passes the filter to util query to get a list of repos
     repos = util.query(request.GET.get('filter'), org)
-
-    #Returns a start and end date from query strings
     queries = util.get_query_strings(request)
 
-    #Aggregates statistics for a repository based on start and end date
+    # aggregates statistics for repositories based on start and end date
     stats = util.get_all_repo_stats(repos=repos, start=queries['start'], end=queries['end'])
-    #Returns statistic table data
     stat_table = StatTable(stats)
 
-
-    RequestConfig(request, paginate={'per_page': 10}).configure(stat_table)
+    # FIXME: make pagination configurable
+    RequestConfig(request, paginate={'per_page': 100 }).configure(stat_table)
 
     context = {
         'title': 'SrcOptics',
-        'organizations':Organization.objects.all(),
+        'organizations': Organization.objects.all(),
         'repositories': repos,
         'stats': stat_table
     }
@@ -54,9 +48,21 @@ def index(request):
 """
 Data to be displayed for the repo details view
 """
-def repo_details(request, slug):
+
+# FIXME: not all of the code is needed for each (author elements vs line_elements?), simplify this later
+
+def repo_team(request, repo_name):
+    return _repo_details(request, repo_name, template='repo_team.html')
+
+def repo_contributors(request, repo_name):
+    return _repo_details(request, repo_name, template='repo_contributors.html')
+
+def _repo_details(request, repo_name, template=None):
+    
+    assert template is not None
+
     #Gets repo name from url slug
-    repo = Repository.objects.get(name=slug)
+    repo = Repository.objects.get(name=repo_name)
 
     queries = util.get_query_strings(request)
 
@@ -66,11 +72,13 @@ def repo_details(request, slug):
     RequestConfig(request, paginate={'per_page': 10}).configure(stat_table)
 
     #Generates line graphs based on attribute query param
-    line_elements = graph.attribute_graphs(request, slug)
+    # FIXME: take the object, not the name
+    line_elements = graph.attribute_graphs(request, repo_name)
 
     #Generates line graph of an attribute for the top contributors
     # to that attribute within the specified time period
-    author_elements = graph.attribute_author_graphs(request, slug)
+    # FIXME: take the object, not the name
+    author_elements = graph.attribute_author_graphs(request, repo_name)
 
     #possible attribute values to filter by
     attributes = Statistic.ATTRIBUTES
@@ -94,7 +102,7 @@ def repo_details(request, slug):
 
     #Context variable being passed to template
     context = {
-        'title': repo,
+        'repo': repo,
         'stats': stat_table,
         'summary_stats': summary_stats,
         'data': line_elements,
@@ -103,15 +111,15 @@ def repo_details(request, slug):
         'attributes': attributes,
         'intervals':intervals
     }
-    return render(request, 'repo_details.html', context=context)
+    return render(request, template, context=context)
 
 
 """
 Data to be displayed for the author details view
 """
-def author_details(request, slug):
+def author_details(request, author_email):
     #Gets repo name from url slug
-    auth = Author.objects.get(email=slug)
+    auth = Author.objects.get(email=author_email)
 
     queries = util.get_query_strings(request)
 
