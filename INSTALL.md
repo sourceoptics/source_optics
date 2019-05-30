@@ -119,13 +119,9 @@ Random tips
 
 
 * SCSS file must be compiled into CSS for changes to take effect.
-  * install 'sass'
-  * 'make compilecss'
+  * sudo gem install sass
+  * 'make css'
 
-If your package manager does not install the `sass` utility, the raw `sassc` compiler can be used. Here is a hacky one liner you can use to create main.css with only `sassc`:
-
-```
-cat srcoptics/static/_scss/main.scss srcoptics/static/_scss/*.scss | sassc -I srcoptics/static/_scss --style compressed -s > srcOptics/static/main.css
 ```
 
 
