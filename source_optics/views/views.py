@@ -20,7 +20,8 @@ from random import randint
 
 from django.contrib.auth.models import User, Group
 from rest_framework import viewsets
-from .. serializers import UserSerializer, GroupSerializer, RepositorySerializer, CredentialSerializer, OrganizationSerializer
+from .. serializers import UserSerializer, GroupSerializer, RepositorySerializer, CredentialSerializer, OrganizationSerializer, \
+    AuthorSerializer, CommitSerializer, StatisticSerializer
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -53,6 +54,20 @@ class CredentialViewSet(viewsets.ModelViewSet):
     queryset = LoginCredential.objects.all()
     serializer_class = CredentialSerializer
 
+class CommitViewSet(viewsets.ModelViewSet):
+
+    queryset = Commit.objects.all()
+    serializer_class = CommitSerializer
+
+class AuthorViewSet(viewsets.ModelViewSet):
+
+    queryset = Author.objects.all()
+    serializer_class = AuthorSerializer
+
+class StatisticViewSet(viewsets.ModelViewSet):
+
+    queryset = Statistic.objects.all()
+    serializer_class = StatisticSerializer
 
 
 def index(request):

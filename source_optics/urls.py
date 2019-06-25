@@ -9,6 +9,9 @@ router.register(r'groups', views.GroupViewSet)
 router.register(r'repositories', views.RepositoryViewSet)
 router.register(r'organizations', views.OrganizationViewSet)
 router.register(r'credentials', views.CredentialViewSet)
+router.register(r'author', views.AuthorViewSet)
+router.register(r'statistic', views.StatisticViewSet)
+router.register(r'commit', views.CommitViewSet)
 
 
 urlpatterns = [
