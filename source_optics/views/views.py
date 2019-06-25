@@ -47,37 +47,43 @@ class RepositoryViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Repository.objects.all()
     serializer_class = RepositorySerializer
     filter_backends = (DjangoFilterBackend,)
+    filterset_fields = ('name', 'url', 'cred', 'tags', 'earliest_commit', 'last_scanned', 'enabled', 'organization')
 
 class OrganizationViewSet(viewsets.ReadOnlyModelViewSet):
 
     queryset = Organization.objects.all()
     serializer_class = OrganizationSerializer
     filter_backends = (DjangoFilterBackend,)
+    filterset_fields = ('name',)
 
 class CredentialViewSet(viewsets.ReadOnlyModelViewSet):
 
     queryset = LoginCredential.objects.all()
     serializer_class = CredentialSerializer
     filter_backends = (DjangoFilterBackend,)
+    filterset_fields = ('name', 'username')
 
 class CommitViewSet(viewsets.ReadOnlyModelViewSet):
 
     queryset = Commit.objects.all()
     serializer_class = CommitSerializer
     filter_backends = (DjangoFilterBackend,)
+    filterset_fields = ('repo', 'author', 'sha', 'commit_date', 'author_date', 'subject', 'lines_added', 'lines_removed')
 
 class AuthorViewSet(viewsets.ReadOnlyModelViewSet):
 
     queryset = Author.objects.all()
     serializer_class = AuthorSerializer
     filter_backends = (DjangoFilterBackend,)
+    filterset_fields = ('email', 'repos')
 
 class StatisticViewSet(viewsets.ReadOnlyModelViewSet):
 
     queryset = Statistic.objects.all()
     serializer_class = StatisticSerializer
     filter_backends = (DjangoFilterBackend,)
-
+    filterset_fields = ('start_date', 'interval', 'repo', 'author', 'lines_added', 'lines_removed', 'lines_changed',
+                        'commit_total', 'author_total')
 
 def index(request):
     """
