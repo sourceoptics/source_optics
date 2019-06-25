@@ -5,3 +5,4 @@ django-tables2==2.0.4
 plotly==3.7.1
 cryptography>=2.6.1
 coverage==4.5.3
+djangorestframework==3.8.2

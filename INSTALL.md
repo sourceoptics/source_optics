@@ -20,10 +20,10 @@ If you are developing on a Mac, we recommend using "Postgres.app" and "pgadmin".
 # from the checkout directory
 
 ## set up the application
-mkdir /etc/srcoptics
+mkdir /etc/source_optics
 pip install -r requirements.txt
 
-# create a role for whatever <username> you would like to run srcOptics as
+# create a role for whatever <username> you would like to run source_optics as
 sudo -u postgres createuser --createdb <username>
 ```
 
@@ -32,17 +32,17 @@ From the 'psql' prompt you will need to create a new role to allow database acce
 ```
 # To add a new user to an existing database:
 CREATE ROLE <username> WITH CREATEDB SUPERUSER;
-ALTER DATABASE srcopt OWNER TO <username>;
+ALTER DATABASE source_optics OWNER TO <username>;
 ```
 
-Add your database configuration settings to /etc/srcoptics/conf.d/database.py:
+Add your database configuration settings to /etc/source_optics/conf.d/database.py:
 
 ```
 DATABASES = {
             'default': {
                         'ENGINE':'django.db.backends.postgresql',
                         'USER':  'postgres',
-                        'NAME': 'srcopt',   
+                        'NAME': 'USERNAME_FROM_ABOVE',   
                     }
             }
 ```
@@ -84,7 +84,7 @@ on the repo in order to see updated information in the web interface.
 This is done with a shell command:
 
 ```
-python manage.py daemon
+python manage.py scan
 ```
 
 Options will be added to this command over time to make it work more easily with cron and other init systems.
@@ -114,11 +114,11 @@ Web Interface
 With some repositories added to the system and now scanned, visit http://servername and verify you can
 see some graphs.
 
-Random tips
-==========
+Random development tips
+=======================
 
 
-* SCSS file must be compiled into CSS for changes to take effect.
+* SCSS must be compiled into CSS for changes to take effect.
   * sudo gem install sass
   * 'make css'
 
