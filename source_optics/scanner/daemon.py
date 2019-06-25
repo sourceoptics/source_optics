@@ -9,8 +9,8 @@ import time
 from django.utils import timezone
 
 from . git import Scanner
-from . stats.rollup import Rollup
-from . models import Repository
+from .. stats.rollup import Rollup
+from .. models import Repository
 
 #
 # Daemon that checks for repositories that have been added and enabled to scan
