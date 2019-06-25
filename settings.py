@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'source_optics',
     'django_tables2',
+    'rest_framework'
 ]
 
 MIDDLEWARE = [
