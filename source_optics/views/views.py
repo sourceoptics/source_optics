@@ -22,52 +22,61 @@ from django.contrib.auth.models import User, Group
 from rest_framework import viewsets
 from .. serializers import UserSerializer, GroupSerializer, RepositorySerializer, CredentialSerializer, OrganizationSerializer, \
     AuthorSerializer, CommitSerializer, StatisticSerializer
+from django_filters.rest_framework import DjangoFilterBackend
 
-
-class UserViewSet(viewsets.ModelViewSet):
+class UserViewSet(viewsets.ReadOnlyModelViewSet):
     """
     API endpoint that allows users to be viewed or edited.
     """
     queryset = User.objects.all().order_by('-date_joined')
     serializer_class = UserSerializer
+    filter_backends = (DjangoFilterBackend,)
 
 
-class GroupViewSet(viewsets.ModelViewSet):
+
+class GroupViewSet(viewsets.ReadOnlyModelViewSet):
     """
     API endpoint that allows groups to be viewed or edited.
     """
     queryset = Group.objects.all()
     serializer_class = GroupSerializer
+    filter_backends = (DjangoFilterBackend,)
 
-class RepositoryViewSet(viewsets.ModelViewSet):
+class RepositoryViewSet(viewsets.ReadOnlyModelViewSet):
 
     queryset = Repository.objects.all()
     serializer_class = RepositorySerializer
+    filter_backends = (DjangoFilterBackend,)
 
-class OrganizationViewSet(viewsets.ModelViewSet):
+class OrganizationViewSet(viewsets.ReadOnlyModelViewSet):
 
     queryset = Organization.objects.all()
     serializer_class = OrganizationSerializer
+    filter_backends = (DjangoFilterBackend,)
 
-class CredentialViewSet(viewsets.ModelViewSet):
+class CredentialViewSet(viewsets.ReadOnlyModelViewSet):
 
     queryset = LoginCredential.objects.all()
     serializer_class = CredentialSerializer
+    filter_backends = (DjangoFilterBackend,)
 
-class CommitViewSet(viewsets.ModelViewSet):
+class CommitViewSet(viewsets.ReadOnlyModelViewSet):
 
     queryset = Commit.objects.all()
     serializer_class = CommitSerializer
+    filter_backends = (DjangoFilterBackend,)
 
-class AuthorViewSet(viewsets.ModelViewSet):
+class AuthorViewSet(viewsets.ReadOnlyModelViewSet):
 
     queryset = Author.objects.all()
     serializer_class = AuthorSerializer
+    filter_backends = (DjangoFilterBackend,)
 
-class StatisticViewSet(viewsets.ModelViewSet):
+class StatisticViewSet(viewsets.ReadOnlyModelViewSet):
 
     queryset = Statistic.objects.all()
     serializer_class = StatisticSerializer
+    filter_backends = (DjangoFilterBackend,)
 
 
 def index(request):
