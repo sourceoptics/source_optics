@@ -1,3 +1,5 @@
+# contributor note: the django UI will be eventually replaced by a new dynamic frontend speaking to the REST API, do not add features
+
 # Copyright 2018 SourceOptics Project Contributors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");

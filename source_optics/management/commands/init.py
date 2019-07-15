@@ -20,6 +20,9 @@ from ... models import Organization
 import os, getpass, subprocess
 from cryptography import fernet
 
+# FIXME: always create secret if it does not exist
+# FIXME: only create the org if there are no organizations
+
 
 class Command(BaseCommand):
     help = 'Initializes DB and creates an admin account'
@@ -30,17 +33,6 @@ class Command(BaseCommand):
 
     def handle(self, *args, **kwargs):
 
-        subprocess.call('rm -rf', shell=True)
-        try:
-            subprocess.call('dropdb srcopt', shell=True)
-        except OSError:
-            pass
-
-        subprocess.call('createdb srcopt', shell=True)
-
-        call_command('makemigrations')
-
-        call_command('migrate')
 
         if kwargs['easy']:
             username = 'admin'

@@ -1,3 +1,5 @@
+# contributor note: the django UI will be eventually replaced by a new dynamic frontend speaking to the REST API, do not add features
+
 import django_tables2 as tables
 from ..models import Statistic, Repository
 from django.contrib.humanize.templatetags.humanize import intcomma

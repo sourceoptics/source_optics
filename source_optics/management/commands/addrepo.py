@@ -13,6 +13,9 @@
 # limitations under the License.
 #
 
+# FIXME: the "add repo" command should be split from the github import command, and there
+# will likely be a seperate management command for gitlab import.
+
 from django.core.management.base import BaseCommand, CommandError
 
 from ... scanner.git import Scanner

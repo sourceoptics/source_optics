@@ -1,3 +1,7 @@
+# FIXME/REFACTOR: this util module mixes frontend and backend concepts, only the BACKEND concepts should remain and these should
+# be moved away from a (utils) namespace
+#
+
 from django.http import *
 from django.core import serializers
 from datetime import datetime, timedelta

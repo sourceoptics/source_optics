@@ -1,3 +1,5 @@
+# contributor note: the django UI will be eventually replaced by a new dynamic frontend speaking to the REST API, do not add features
+
 from django.db.models import Sum, Count
 
 from ...models import Repository, Commit, Statistic, Tag, Author
