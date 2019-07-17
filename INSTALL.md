@@ -5,9 +5,10 @@ Source Optics is a Django web app that also has some simple
 backend management commands that are intended to be run from cron or a other scheduler.
 
 It does not have any cloud requirements or network dependencies other than (presently)
-needing PostgreSQL.  Testing on other databases has been limited at this point.
+needing PostgreSQL.  Testing on other databases has been limited at this point but we limit
+database features used to keep it portable.
 
-This guide is a work in progress, but essentially Source Optics is a standard Django app
+This guide is evolving (feedback welcome), but essentially Source Optics is a standard Django app
 with standard Django management commands. If you have deployed one Django app, this one
 should not be very different.
 
@@ -50,16 +51,17 @@ DATABASES = {
 Now complete the setup:
 
 ```
-# create a superuser and the default organization
+python manage.py migrate
+
+python manage.py createsuperuser
+
+# create the initial secret for credential encryption in the database and the default organization object
 python manage.py init -s
 
 # run the application on port 8000
 python manage.py runserver 0:8000
 ```
 
-NOTE: the `init` command will be going away in future releases, and be replaced by use of the standard
-django management commands for database setup.  There may be another management command for creating the initial
-organization and secrets that are used to encrypt repository access credentials.
 
 Verification
 ============
@@ -87,8 +89,16 @@ This is done with a shell command:
 python manage.py scan
 ```
 
-Options will be added to this command over time to make it work more easily with cron and other init systems.
+This should normally be invoked with ssh-agent in order to allow working with SSH keys and passphrases, which
+are used for some git checkouts:
 
+```
+ssh-agent python manage.py scan
+```
+
+Is enough.
+
+A supervisord config may be supplied in the near future.
 
 Other Shortcuts
 ===============
@@ -108,6 +118,8 @@ python manage.py addrepo -g https://api.github.com/orgs/<name>/repos
 
 You may wish to return to the Django admin view in the future to add or edit tags, descriptions, and so on.
 
+This command will be split soon into different commands for github and gitlab.
+
 Web Interface
 =============
 
@@ -121,7 +133,6 @@ Random development tips
 * SCSS must be compiled into CSS for changes to take effect.
   * sudo gem install sass
   * 'make css'
-
 ```
 
 

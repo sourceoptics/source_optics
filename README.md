@@ -1,11 +1,14 @@
 Source Optics
 =============
 
-Source Optics is a repository analysis tool, with a primary focus on:
+Source Optics is a repository analysis tool, focused on understanding
+code activity and the teams that work on them.
 
-* graphical output
+Features include:
+
+* quick at-a-glance graphical output
 * quickly comparing multiple repositories
-* scanning multiple branches, as opposed to just master.
+* analyzing multiple branches together, as opposed to just master.
 
 It should be equally relevant to many types of users including:
 
@@ -32,13 +35,17 @@ the same installation.  In a university setting, this means that you can keep pr
 from one course or past semesters seperate from the others.
 
 Any background tasks are implemented as Django management commands, which could be run by
-any task management system and/or cron.  Celery is not used.
-
-Graphs are generated from Plotly, so no javascript experience is required to work on
-the project.
+any task management system and/or cron.  Celery is not needed.
 
 Currently the admin interface uses the built-in Django management interface, for instance,
 to add new repos. This can also be scripted and will evolve over time.
+
+There is a current Django template frontend and a planned React Frontend will soon speak
+to a built-in REST API.
+
+The API is largely read-only but will support injection of user data via a few custom
+POST endpoints, allowing display in-GUI of data from source code analysis systems, build
+systems, etc.
 
 For those wishing to try out Source Optics, it should run happily from a laptop.
 
@@ -81,7 +88,12 @@ Initial version:
  * Austin Shafer
  * Nick Wrenn
  
- Concept/Management: Michael DeHaan
+Concept/Management: 
+ * Michael DeHaan
+ * NCSU Senior Design Center
+
+Other additions:
+ * Michael DeHaan
 
 Mailing List
 ============

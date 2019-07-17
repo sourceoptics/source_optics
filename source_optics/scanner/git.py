@@ -106,7 +106,7 @@ class Scanner:
     # ------------------------------------------------------------------
     # Clones the repo if it doesn't exist in the work folder and pulls if it does
     def clone_repo(repo_url, work_dir, repo_name, cred):
-        expect_file = ""
+        expect_file = None
         options = ""
         # we need to get the org name here to give to create_repo. This could be
         # more efficient
@@ -114,41 +114,46 @@ class Scanner:
             org_name = Repository.objects.get(url=repo_url).organization
         except Repository.DoesNotExist:
             org_name = 'root'
-        repo_instance = Creator.create_repo(org_name, repo_url, repo_name, cred)
+        repo_obj = Creator.create_repo(org_name, repo_url, repo_name, cred)
 
         # If a credential was provided, add the password in an expect file to the git config
         if cred is not None:
-            expect_file = cred.expect_pass()
-            options += ' --config core.askpass=\'' + expect_file + '\''
+            if cred.is_password():
+                expect_file = cred.expect_pass()
+                options += ' --config core.askpass=\'' + expect_file + '\''
+
+
             repo_url = Scanner.fix_repo_url(repo_url, cred.username)
 
-        # exceptions at this point may print out sensitive information, such as
-        # the user's password. Anyone could just use the python shell to view the passwords,
-        # but we catch all exceptions and don't print their error messages. The django admin
-        # view is the main attack vector, as one admin could trick it to print the password
-        # of another admin's github account.
-        try:
-            if os.path.isdir(work_dir + '/' + repo_name) and os.path.exists(work_dir + '/' + repo_name):
+        dest_path = os.path.join(work_dir, repo_name)
 
-                print('git pull ' + repo_url + ' ' + work_dir)
+        try:
+            if os.path.isdir(dest_path) and os.path.exists(dest_path):
+
+                print(f"git pull {repo_url} {work_dir}")
                 if cred is not None:
-                    cred.git_pull_with_expect_file(path=work_dir + '/' + repo_name)
+                    cred.git_pull_with_expect_file(path=dest_path)
                 else:
-                    cmd = subprocess.Popen('git pull', shell=True, stdout=subprocess.PIPE, cwd=work_dir + '/' + repo_name)
+                    # FIXME: move to subprocess wrapper from Vespene with timeouts
+                    cmd = subprocess.Popen('git pull', shell=True, stdout=subprocess.PIPE, cwd=dest_path)
                     cmd.wait()
 
             else:
-                print('git clone ' + repo_url + ' ' + work_dir + '/' + repo_name + options)
-                os.system('git clone ' + repo_url + ' ' + work_dir + '/' + repo_name + options)
+                cmd = f"git clone {repo_url} {dest_path} {options}"
+                print(cmd)
+                # FIXME: move to subprocess wrapper from Vespene with timeouts
+                os.system(cmd)
 
         except:
+            # exceptions are not printed here in case they may show sensitive info, but since the password
+            # is in a temporary expect file, is this the case?
             print("ERROR: Failed to clone repository")
 
         # clean up the expect files so we don't accidentally leak passwords
-        if cred is not None:
+        if expect_file is not None:
             os.remove(expect_file)
 
-        return repo_instance
+        return repo_obj
 
     # ------------------------------------------------------------------
     # Uses git log to gather the commit data for a repository

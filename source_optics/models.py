@@ -19,12 +19,14 @@ from django.contrib.postgres.indexes import BrinIndex
 from django.contrib.auth.models import Group, User
 from django import forms
 
-from cryptography import fernet
+# FIXME: remove non-database behavior from this module
 import binascii
 from django.conf import settings
 import tempfile
 import os
 import subprocess
+from source_optics.scanner.encrypt import SecretsManager
+
 
 class Organization(models.Model):
 
@@ -39,10 +41,15 @@ class Organization(models.Model):
 class LoginCredential(models.Model):
 
     name = models.TextField(max_length=64, blank=False)
-    username = models.TextField(max_length=32, blank=False)
-    password = models.TextField(max_length=128,  blank=False)
+    username = models.TextField(max_length=32, blank=True)
+    password = models.TextField(max_length=128,  blank=True, null=True)
+    ssh_private_key = models.TextField(blank=True, null=True)
+    ssh_unlock_passphrase = models.TextField(blank=True, null=True)
     description = models.TextField(max_length=128, blank=True, null=True)
 
+    class Meta:
+        verbose_name = 'Credential'
+        verbose_name_plural = 'Credentials'
 
     def __str__(self):
         return self.username
@@ -51,29 +58,47 @@ class LoginCredential(models.Model):
     #  (password needs to be unencrypted when saved)
 
     def save(self, *args, **kwargs):
-        # from vespene
-        fd = open(settings.SYMMETRIC_SECRET_KEY, "r")
-        symmetric = fd.read()
-        fd.close()
-        ff = fernet.Fernet(symmetric)
-        enc = ff.encrypt(self.password.encode('utf-8'))
-        self.password = binascii.hexlify(enc).decode('utf-8')
+        mgr = SecretsManager()
+        self.password = mgr.cloak(self.password)
+        self.ssh_private_key = mgr.cloak(self.ssh_private_key)
+        self.ssh_unlock_passphrase = mgr.cloak(self.ssh_unlock_passphrase)
         super().save(*args, **kwargs)
 
-    # also from vespene
+    def is_password(self):
+        """
+        Is this credential password based?  Prefer the key if available.
+        """
+        if not self.ssh_private_key and password:
+            return True
+        return False
+
+    def is_keyfile(self):
+        """
+        Is this credential SSH-key based?  Prefer this over any password.
+        ssh_agent.py can handle unlock passphrases and SSH agent support.
+        See also INSTALL.md
+        """
+        if self.ssh_private_key:
+            return True
+        return False
 
     def unencrypt_password(self):
-        fd = open(settings.SYMMETRIC_SECRET_KEY, "r")
-        symmetric = fd.read()
-        fd.close()
-        ff = fernet.Fernet(symmetric)
-        enc = binascii.unhexlify(self.password)
-        msg = ff.decrypt(enc)
-        return msg.decode('utf-8')
+        mgr = SecretsManager()
+        return mgr.uncloak(self.password)
 
-    # create an expect file for git clone
+    def unencrypt_ssh_private_key(self):
+        mgr = SecretsManager()
+        return mgr.uncloak(self.ssh_private_key)
+
+    def unencrypt_unlock_ssh_passphrase(self):
+        mgr = SecretsManager()
+        return mgr.uncloak(self.ssh_unlock_passphrase)
 
     def expect_pass(self):
+        """
+        create an expect file for git clone
+        """
+        # FIXME: move this behavior to git.py
         pw = self.unencrypt_password()
         (fd, fname) = tempfile.mkstemp()
         fh = open(fname, "w")
@@ -85,6 +110,7 @@ class LoginCredential(models.Model):
         return fname
 
     def git_pull_with_expect_file(self, path):
+        # FIXME: move this behavior to git.py
 
         # expect format of Username for 'https://github.ncsu.edu':
         (_, fname) = tempfile.mkstemp()

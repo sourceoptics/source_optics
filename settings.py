@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/2.1/ref/settings/
 import os, django
 
 from split_settings.tools import optional, include
+from collections import OrderedDict
 
 include(
     '/etc/source_optics/conf.d/*.py',
@@ -171,3 +172,11 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 100
 }
 
+
+PLUGIN_SEARCH_PATH = []
+
+PLUGIN_CONFIGURATION = dict(
+    secrets=OrderedDict(
+        basic="source_optics.plugins.secrets.cloak_v1"
+    ),
+)
