@@ -90,16 +90,18 @@ def execute_command(repo, command, input_text=None, env=None, log=True, timeout=
 
         line = ansi_escape.sub('', line)
 
-    #if output_log or message_log:
-    #    # FIXME: standardize logging
-    #    print(line)
 
         if log:
             print(line)
-        out = "" + line
+
+
+        out = out + line
 
 
     process.wait()
+
+    if process.returncode != 0:
+        raise Exception("command failed: rc=%s" % process.returncode)
 
     return out
 

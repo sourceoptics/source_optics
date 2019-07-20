@@ -90,7 +90,7 @@ class LoginCredential(models.Model):
         mgr = SecretsManager()
         return mgr.uncloak(self.ssh_private_key)
 
-    def unencrypt_unlock_ssh_passphrase(self):
+    def unencrypt_ssh_unlock_passphrase(self):
         mgr = SecretsManager()
         return mgr.uncloak(self.ssh_unlock_passphrase)
 

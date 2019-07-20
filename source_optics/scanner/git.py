@@ -113,6 +113,7 @@ class Scanner:
         # FIXME: need to use my git class?
 
         expect_file = None
+        key_mgmt = None
         options = ""
         # we need to get the org name here to give to create_repo. This could be
         # more efficient
@@ -134,9 +135,20 @@ class Scanner:
         dest_path = os.path.join(work_dir, repo_name)
 
         dest_git = os.path.join(dest_path, ".git")
+
+        if repo_url.startswith("ssh://"):
+            key_mgmt = {
+                "GIT_SSH_COMMAND": "ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no",
+            }
+            if not cred or not cred.ssh_private_key:
+                raise Exception(
+                    "add one or more SSH keys to the repo's assigned credential object or use a http:// or https:// URL")
+
         if os.path.isdir(dest_path) and os.path.exists(dest_path) and os.path.exists(dest_git):
 
-            prev = os.chdir(dest_path)
+            prev = os.getcwd()
+            os.chdir(dest_path)
+            # FIXME: command wrapper should take an optional cwd
             commands.execute_command(repo_obj, "git pull", timeout=200, env=key_mgmt)
             os.chdir(prev)
 
@@ -152,12 +164,7 @@ class Scanner:
             key_mgmt = None
             cmd = f"git clone {repo_url} {dest_path} {options}"
 
-            if repo_url.startswith("ssh://"):
-                key_mgmt = {
-                    "GIT_SSH_COMMAND": "ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no",
-                }
-                if not cred or not cred.ssh_private_key:
-                    raise Exception("add one or more SSH keys to the repo's assigned credential object or use a http:// or https:// URL")
+
 
             commands.execute_command(repo_obj, cmd, log=False, timeout=600, env=key_mgmt)
 
@@ -169,6 +176,9 @@ class Scanner:
     # ------------------------------------------------------------------
     # Uses git log to gather the commit data for a repository
     def log_repo(repo, work_dir, repo_name, repo_instance):
+
+        # FIXME: refactor this into two files, splitting the logger and the checkout code
+
         repo_url = repo.url
         status_count = 0
         width_count = 0
@@ -180,8 +190,14 @@ class Scanner:
         # We echo "EOF" to the end of the log output so we can tell when we are done
         cmd_string = ('git log --all --numstat --date=iso-strict-local --pretty=format:'
                       + PRETTY_STRING + '; echo "\nEOF"')
-        prev = os.chdir(repo_dir)
-        commands.execute_command(repo, cmd_string, log=False, timeout=600)
+        # FIXME: as with above note, make command wrapper understand chdir
+        prev = os.getcwd()
+        os.chdir(repo_dir)
+
+        if repo_name == "warpseq":
+            print("HEY I AM RUNNING!")
+
+        out = commands.execute_command(repo, cmd_string, log=False, timeout=600)
         os.chdir(prev)
 
         # Parsing happens in two stages. The first stage is a pretty string containing easily parsed fields for
@@ -207,8 +223,15 @@ class Scanner:
         files_flag = False
 
         # PARSER ----------------------------------------------
-        for line in iter(cmd.stdout.readline,''):
-            line = line.decode('utf-8')
+
+        # FIXME: this doesn't really "stream" the output but in practice should not matter, if it does, revisit
+        # later and add some new features to the commands wrapper
+        # FIXME: consider alternative approaches to delimiter parsing, make this more modular
+
+        lines = out.split("\n")
+
+
+        for line in lines:
 
             # escape the empty line(s)
             if not line or line == "\n":
@@ -221,7 +244,6 @@ class Scanner:
             # if the first character is '{', then we are no longer parsing files
             # we should drop through to stage 1 so that we can process this line as json
             if line[0:len(DEL)] == DEL:
-                re_flag = True
                 # clear last commit so that we don't accidentaly tie things to the wrong commit
                 last_commit = {}
                 files_flag = False
@@ -247,6 +269,7 @@ class Scanner:
                     #                   name       commit       lines add  lines rm
                     Creator.create_filechange(fields[2], last_commit, fields[0], fields[1], binary)
 
+            print("RE_FLAG=%s" % re_flag)
             # STAGE 1 -----------------------------------------
             if re_flag:
                 data = PARSER_RE.match(line).groupdict()
@@ -258,6 +281,7 @@ class Scanner:
                                                                  data['commit'],
                                                                  parse_datetime(data['commit_date']),
                                                                  parse_datetime(data['author_date']), 0, 0)
+                print("CREATED COMMIT=%s" % commit_instance)
 
 
                 # if we have seen this commit before, causing it to

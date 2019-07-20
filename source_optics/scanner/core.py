@@ -67,18 +67,16 @@ class RepoProcessor:
 
 
 
-            if "ssh://" in repo.url:
-                if repo.cred and repo.ssh_private_key:
-                    agent_manager.add_key(self, repo, repo.cred)
+            if "http://" not in repo.url and "https://" not in repo.url:
+                if repo.cred and repo.cred.ssh_private_key:
+                    print("ADDING KEY")
+                    agent_manager.add_key(repo, repo.cred)
                     used_ssh = True
                 else:
-                    # FIXME, stderr, exit code, etc
-                    raise Exception("repo (%s) is missing an SSH credential" % repo.name)
+                    raise Exception("repo checkout of %s requires SSH credentials" % repo.name)
 
-            if used_ssh:
-                # drop old keys
-                agent_manager.cleanup(repo)
 
+            # FIXME: better detection if a private repo
             # FIXME: refactor into smaller functions
 
             # Scan the repository and update the last pulled date
@@ -86,12 +84,22 @@ class RepoProcessor:
             scan_time_start = time.clock()
 
             # FIXME: this should only take "repo" as a parameter.
+            print("--- SCANNING: %s" % repo)
+
+            # this is where the logging of commit objects happens
             Scanner.scan_repo(repo, repo.name, repo.cred)
+
+            # FIXME: refactor into smaller functions
+
             scan_time_total = time.clock() - scan_time_start
             print ("Scanning complete. Operation time for " + str(repo) + ": " + str(scan_time_total) + "s")
             repo.last_pulled = datetime.datetime.now(tz=timezone.utc)
             print("last_pulled: "  + str(repo.last_pulled))
             repo.save()
+
+            if used_ssh:
+                # drop old keys
+                agent_manager.cleanup(repo)
 
             # Generate the statistics for the repository
             print ("Aggregating stats for " + str(repo))

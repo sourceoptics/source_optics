@@ -19,7 +19,7 @@ class SecretsManager(object):
             return False
         return msg.startswith(self.HEADER)
 
-    def decloak(self, msg):
+    def uncloak(self, msg):
         if not self.is_cloaked(msg):
             return msg
         else:

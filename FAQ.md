@@ -8,6 +8,18 @@ You will need to add a SSH private key and optionally an unlock password.
 Repo cloning for private repos requires an SSH key, as the password field is *NOT* used, though this field may
 be used for some future API requests.
 
+Git Checkout Troubleshooting
+============================
+
+If a repo does not have a SSH credential associated, a SSH checkout will fail.
+
+If the SSH key requires a password to unlock, this password must be stored on the credential object.
+
+Repos with http:// and https:// URLs may not be private repos, for security reasons only SSH keys are stored (encrypted) in the system.
+
+GitHub's SSH key must be added to known hosts. Rather than doing this automatically, just run the scanner once before attaching it to cron and answer yes to add the key.
+This way if GitHub is somehow MITM'ed, future checkouts will fail.
+
 How Do I Organize My Large Installation?
 ========================================
 
