@@ -52,7 +52,7 @@ class LoginCredential(models.Model):
         verbose_name_plural = 'Credentials'
 
     def __str__(self):
-        return self.username
+        return self.name
 
     # encrypt the password when we save this
     #  (password needs to be unencrypted when saved)

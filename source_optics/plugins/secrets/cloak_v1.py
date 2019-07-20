@@ -19,22 +19,31 @@ class BasicV1(object):
     def __init__(self):
         pass
 
+    def get_key(self):
+        symmetric = settings.SYMMETRIC_SECRET_KEY
+        fh = open(symmetric, 'rb')
+        data = fh.read()
+        fh.close()
+        return data
+
     def cloak(self, msg):
-        symetric = settings.SYMMETRIC_SECRET_KEY
-        #print("SYM=%s" % symetric)
-        ff = fernet.Fernet(symetric)
-        msg = base64.b64encode(msg)
-        enc = ff.encrypt(msg)
-        enc = base64.b64encode(enc)
-        return "%s%s" % (self.HEADER, enc)
+        symmetric = self.get_key()
+        ff = fernet.Fernet(symmetric)
+        msg = msg.encode('utf-8')
+        encrypted = ff.encrypt(msg)
+        printable = binascii.hexlify(encrypted).decode('ascii')
+        versioned = "%s%s" % (self.HEADER, printable)
+        return versioned
 
     def decloak(self, msg):
-        symetric = settings.SYMMETRIC_SECRET_KEY
-        ff = fernet.Fernet(symetric)
-        henc = msg.replace(self.HEADER, "", 1)
-        msg = ff.decrypt(henc)
-        msg = base64.b64decode(msg)
-        return msg
+        symmetric = self.get_key()
+        ff = fernet.Fernet(symmetric)
+        encrypted = msg.replace(self.HEADER, "", 1)
+        unencrypted = ff.decrypt(encrypted)
+        printable = binascii.unhexlify(unencrypted)
+        # print("DECODED: %s" % printable)
+        return printable
+
 
 class Plugin(object):
 

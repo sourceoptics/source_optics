@@ -38,7 +38,8 @@ class StatAdmin(admin.ModelAdmin):
     actions = [fast_delete]
 
 class LoginCredentialForm(ModelForm):
-    password = forms.CharField(widget=PasswordInput())
+    password = forms.CharField(widget=PasswordInput(), required=False)
+    ssh_unlock_password = forms.CharField(widget=PasswordInput(), required=False)
     class Meta:
         model = LoginCredential
         fields = '__all__'
