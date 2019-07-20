@@ -1,7 +1,12 @@
 How Do I Add A Private Repo
 ===========================
 
-First create a credentials object and assign it in Django admin
+First create a credentials object and assign it in Django admin.
+
+You will need to add a SSH private key and optionally an unlock password.
+
+Repo cloning for private repos requires an SSH key, as the password field is *NOT* used, though this field may
+be used for some future API requests.
 
 How Do I Organize My Large Installation?
 ========================================
@@ -23,8 +28,9 @@ Performance
 Small repos will always be fast to scan for the first time.  Repositories with many tens of thousands of commits and contributors may take a long time to scan the first time, though subsequent updates will be fast.
 
 For instance, to scan some of the largest open source projects with thousands of contributors, the initial import of the git repository and
-recording of all commits may take 10 minutes on a reasonably current iMac.  However the initial statistics calculation could take 8-10 hours.
-Additional updates, if run frequently enough, will only take minutes per repo.
+recording of all commits may take 10 minutes on a reasonably current iMac.  
+
+Additional updates, if run frequently enough, will be very short, especially if they are run frequently.
 
 Performance will likely be upgraded in future versions.
 

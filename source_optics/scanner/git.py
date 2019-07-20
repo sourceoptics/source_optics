@@ -18,6 +18,7 @@ import subprocess
 import getpass
 import re
 import datetime
+import traceback
 
 from django.utils.dateparse import parse_datetime
 from django.utils import timezone
@@ -25,6 +26,7 @@ from django.conf import settings
 from .. models import *
 from .. create import Creator
 from django.db import transaction
+from . import commands
 
 GIT_TYPES = ["https://", "http://"]
 
@@ -90,7 +92,8 @@ class Scanner:
     # ------------------------------------------------------------------
     # Entrypoint method which calls the clone and scan methods
     @transaction.atomic
-    def scan_repo(repo_url, name, cred):
+    def scan_repo(repo, name, cred):
+        repo_url = repo.url
         # Calculate the work directory by translating up two directories from this file
         #   eventually make this a settings variable so users can store it wherever
         work_dir = os.path.abspath(os.path.dirname(__file__).rsplit("/", 2)[0]) + '/work'
@@ -101,11 +104,14 @@ class Scanner:
         else:
             repo_name = name
         repo_instance = Scanner.clone_repo(repo_url, work_dir, repo_name, cred)
-        Scanner.log_repo(repo_url, work_dir, repo_name, repo_instance)
+        Scanner.log_repo(repo, work_dir, repo_name, repo_instance)
 
     # ------------------------------------------------------------------
     # Clones the repo if it doesn't exist in the work folder and pulls if it does
     def clone_repo(repo_url, work_dir, repo_name, cred):
+
+        # FIXME: need to use my git class?
+
         expect_file = None
         options = ""
         # we need to get the org name here to give to create_repo. This could be
@@ -127,46 +133,56 @@ class Scanner:
 
         dest_path = os.path.join(work_dir, repo_name)
 
-        try:
-            if os.path.isdir(dest_path) and os.path.exists(dest_path):
+        dest_git = os.path.join(dest_path, ".git")
+        if os.path.isdir(dest_path) and os.path.exists(dest_path) and os.path.exists(dest_git):
 
-                print(f"git pull {repo_url} {work_dir}")
-                if cred is not None:
-                    cred.git_pull_with_expect_file(path=dest_path)
-                else:
-                    # FIXME: move to subprocess wrapper from Vespene with timeouts
-                    cmd = subprocess.Popen('git pull', shell=True, stdout=subprocess.PIPE, cwd=dest_path)
-                    cmd.wait()
+            prev = os.chdir(dest_path)
+            commands.execute_command(repo_obj, "git pull", timeout=200, env=key_mgmt)
+            os.chdir(prev)
 
-            else:
-                cmd = f"git clone {repo_url} {dest_path} {options}"
-                print(cmd)
-                # FIXME: move to subprocess wrapper from Vespene with timeouts
-                os.system(cmd)
+        else:
 
-        except:
-            # exceptions are not printed here in case they may show sensitive info, but since the password
-            # is in a temporary expect file, is this the case?
-            print("ERROR: Failed to clone repository")
+            print("CREATING: %s" % dest_path)
+            # os.makedirs can be a flakey in OS X, so shelling out
+            commands.execute_command(repo_obj, "mkdir -p %s" % dest_path, log=True, timeout=5)
 
-        # clean up the expect files so we don't accidentally leak passwords
-        if expect_file is not None:
-            os.remove(expect_file)
+            # on-disk repo doesn't exist yet, need to clone
+            # FIXME: refactor into smaller functions
+
+            key_mgmt = None
+            cmd = f"git clone {repo_url} {dest_path} {options}"
+
+            if repo_url.startswith("ssh://"):
+                key_mgmt = {
+                    "GIT_SSH_COMMAND": "ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no",
+                }
+                if not cred or not cred.ssh_private_key:
+                    raise Exception("add one or more SSH keys to the repo's assigned credential object or use a http:// or https:// URL")
+
+            commands.execute_command(repo_obj, cmd, log=False, timeout=600, env=key_mgmt)
+
+
+
 
         return repo_obj
 
     # ------------------------------------------------------------------
     # Uses git log to gather the commit data for a repository
-    def log_repo(repo_url, work_dir, repo_name, repo_instance):
+    def log_repo(repo, work_dir, repo_name, repo_instance):
+        repo_url = repo.url
         status_count = 0
         width_count = 0
         line_count = 0
-        
+
+        repo_dir = os.path.join(work_dir, repo_name)
+
         # python subprocess iteration doesn't have an EOF indicator that I can find.
         # We echo "EOF" to the end of the log output so we can tell when we are done
         cmd_string = ('git log --all --numstat --date=iso-strict-local --pretty=format:'
                       + PRETTY_STRING + '; echo "\nEOF"')
-        cmd = subprocess.Popen(cmd_string, shell=True, stdout=subprocess.PIPE, cwd=work_dir + '/' + repo_name)
+        prev = os.chdir(repo_dir)
+        commands.execute_command(repo, cmd_string, log=False, timeout=600)
+        os.chdir(prev)
 
         # Parsing happens in two stages. The first stage is a pretty string containing easily parsed fields for
         # the commit and author objects. The second stage processes lines added and removed for the current

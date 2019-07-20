@@ -94,43 +94,6 @@ class LoginCredential(models.Model):
         mgr = SecretsManager()
         return mgr.uncloak(self.ssh_unlock_passphrase)
 
-    def expect_pass(self):
-        """
-        create an expect file for git clone
-        """
-        # FIXME: move this behavior to git.py
-        pw = self.unencrypt_password()
-        (fd, fname) = tempfile.mkstemp()
-        fh = open(fname, "w")
-        fh.write("#!/bin/sh\n")
-        fh.write("echo %s" % pw)
-        fh.close()
-        os.close(fd)
-        os.chmod(fname, 0o700)
-        return fname
-
-    def git_pull_with_expect_file(self, path):
-        # FIXME: move this behavior to git.py
-
-        # expect format of Username for 'https://github.ncsu.edu':
-        (_, fname) = tempfile.mkstemp()
-        fh = open(fname, "w")
-        script = """
-        #!/usr/bin/expect -f
-        spawn git pull
-        expect {
-        "Password for*:" { send "%s\n"; }
-        "Already up to date." { }
-        }
-        interact
-        """ % self.unencrypt_password()
-        fh.write(script)
-        fh.close()
-        cmd = subprocess.Popen("/usr/bin/expect -f %s" % fname, shell=True,
-                               stdout=subprocess.PIPE, cwd=path)
-        cmd.wait()
-        os.remove(fname)
-        return cmd.returncode
 
 class Repository(models.Model):
 

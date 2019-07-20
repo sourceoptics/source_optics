@@ -34,12 +34,14 @@ def get_timeout():
     return TIMEOUT
 
 
-def execute_command(repo, command, input_text=None, env=None, log_command=True, output_log=True, message_log=False,
-                    timeout=None):
+def execute_command(repo, command, input_text=None, env=None, log=True, timeout=None):
     """
     Execute a command (a list or string) with input_text as input, appending
     the output of all commands to the build log.
     """
+
+    # FIXME: standard logging
+    print(">%s" % command)
 
     timeout_cmd = get_timeout()
 
@@ -57,10 +59,13 @@ def execute_command(repo, command, input_text=None, env=None, log_command=True, 
     if env and sock:
         env['SSH_AUTH_SOCK'] = sock
 
-    if log_command:
-        LOG.debug("executing: %s" % command)
-        if build:
-            build.append_message(command)
+    if log:
+        # FIXME: logging here
+        print(command)
+        # LOG.debug("executing: %s" % command)
+        # could also keep history in db, but... later
+        # if build:
+        #    build.append_message(command)
 
     process = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                                shell=shell, env=env)
@@ -85,10 +90,12 @@ def execute_command(repo, command, input_text=None, env=None, log_command=True, 
 
         line = ansi_escape.sub('', line)
 
-    if output_log or message_log:
-        # FIXME: standardize logging
-        print(line)
+    #if output_log or message_log:
+    #    # FIXME: standardize logging
+    #    print(line)
 
+        if log:
+            print(line)
         out = "" + line
 
 

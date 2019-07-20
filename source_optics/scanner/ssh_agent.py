@@ -17,43 +17,43 @@ class SshAgentManager(object):
     def __init__(self):
         self.tempfile_paths = []
 
-    def add_key(self, cred):
+    def add_key(self, repo, cred):
 
         (_, keyfile) = tempfile.mkstemp()
         answer_file = None
 
         try:
             fh = open(keyfile, "w")
-            private = cred.get_private_key()
+            private = cred.unencrypt_ssh_private_key()
             fh.write(private)
             fh.close()
 
             answer_file = None
 
-            if cred.unlock_password:
+            if cred.ssh_unlock_passphrase:
                 LOG.debug("adding SSH key with passphrase!")
-                self.ssh_add_with_passphrase(keyfile, access.get_unlock_password())
+                self.ssh_add_with_passphrase(repo, keyfile, access.unencrypt_ssh_unlock_passphrase())
             else:
                 if ',ENCRYPTED' in private:
                     raise Exception("SSH key has a passphrase but an unlock password was not set. Aborting")
                 LOG.debug("adding SSH key without passphrase!")
-                self.ssh_add_without_passphrase(keyfile)
+                self.ssh_add_without_passphrase(repo, keyfile)
         finally:
             os.remove(keyfile)
             if answer_file:
                 os.remove(answer_file)
 
-    def cleanup(self):
+    def cleanup(self, repo):
         # remove SSH identities
         print("removing SSH identities")
-        commands.execute_command(self.build, "ssh-add -D", log_command=False, message_log=False, output_log=False)
+        commands.execute_command(repo, "ssh-add -D", log=False)
 
-    def ssh_add_without_passphrase(self, keyfile):
+    def ssh_add_without_passphrase(self, repo, keyfile):
         print(keyfile)
         cmd = "ssh-add %s < /dev/null" % keyfile
-        commands.execute_command(self.build, cmd, env=None, log_command=False, message_log=False, output_log=False)
+        commands.execute_command(repo, cmd, env=None, log=False)
 
-    def ssh_add_with_passphrase(self, keyfile, passphrase):
+    def ssh_add_with_passphrase(self, repo, keyfile, passphrase):
         (_, fname) = tempfile.mkstemp()
         fh = open(fname, "w")
         script = """
@@ -66,6 +66,6 @@ class SshAgentManager(object):
         """ % (keyfile, passphrase)
         fh.write(script)
         fh.close()
-        commands.execute_command(self.build, "/usr/bin/expect -f %s" % fname, output_log=False, message_log=False)
+        commands.execute_command(repo, "/usr/bin/expect -f %s" % fname, log=False)
         os.remove(fname)
         return fname
