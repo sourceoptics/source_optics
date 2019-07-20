@@ -39,10 +39,9 @@ class BasicV1(object):
         symmetric = self.get_key()
         ff = fernet.Fernet(symmetric)
         encrypted = msg.replace(self.HEADER, "", 1)
-        unencrypted = ff.decrypt(encrypted)
-        printable = binascii.unhexlify(unencrypted)
-        # print("DECODED: %s" % printable)
-        return printable
+        bytes = binascii.unhexlify(encrypted)
+        unencrypted = ff.decrypt(bytes).decode('utf-8')
+        return unencrypted
 
 
 class Plugin(object):
