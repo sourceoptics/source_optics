@@ -20,13 +20,16 @@
 
 import datetime
 import time
+import os
 
 from django.utils import timezone
+from django.db import transaction
 
-from . git import Scanner
 from .. stats.rollup import Rollup
 from .. models import Repository
 from . ssh_agent import SshAgentManager
+from . checkout import Checkout
+from . commits import Commits
 
 #
 # Daemon that checks for repositories that have been added and enabled to scan
@@ -87,7 +90,7 @@ class RepoProcessor:
             print("--- SCANNING: %s" % repo)
 
             # this is where the logging of commit objects happens
-            Scanner.scan_repo(repo, repo.name, repo.cred)
+            cls.scan_repo(repo)
 
             # FIXME: refactor into smaller functions
 
@@ -109,3 +112,18 @@ class RepoProcessor:
             print ("Rollup complete. Operation time for " + str(repo) + ": " + str(stat_time_total) + "s")
 
 
+    @classmethod
+    @transaction.atomic
+    def scan_repo(cls, repo):
+        repo_url = repo.url
+        cred = repo.cred
+        # Calculate the work directory by translating up two directories from this file
+        #   eventually make this a settings variable so users can store it wherever
+
+        base_path = os.path.abspath(os.path.dirname(__file__).rsplit("/", 2)[0])
+        work_dir = os.path.join(base_path, 'work')
+        os.system('mkdir -p ' + work_dir)
+
+
+        repo_instance = Checkout.clone_repo(repo, work_dir)
+        Commits.process_commits(repo, work_dir)

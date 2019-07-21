@@ -15,7 +15,7 @@
 
 from django.core.management.base import BaseCommand, CommandError
 
-from ... scanner.core import RepoProcessor
+from ... scanner.processor import RepoProcessor
 
 #
 # The scan management command is used to kick of the daemon job which

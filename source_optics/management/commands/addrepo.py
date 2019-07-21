@@ -18,7 +18,7 @@
 
 from django.core.management.base import BaseCommand, CommandError
 
-from ... scanner.git import Scanner
+from ... scanner.checkout import Scanner
 from ... models import *
 import getpass
 import requests

@@ -20,7 +20,7 @@ class SshAgentManager(object):
 
     def add_key(self, repo, cred):
 
-        (_, keyfile) = tempfile.mkstemp(dir='scratch')
+        (_, keyfile) = tempfile.mkstemp()
         answer_file = None
 
         try:
@@ -35,26 +35,23 @@ class SshAgentManager(object):
             answer_file = None
 
             if cred.ssh_unlock_passphrase:
-                #LOG.debug("adding SSH key with passphrase!")
-
                 passphrase = cred.unencrypt_ssh_unlock_passphrase()
-                print("PASS=(%s)" % passphrase)
                 self.ssh_add_with_passphrase(repo, keyfile, passphrase)
             else:
                 if ',ENCRYPTED' in private:
                     # FYI: this seemingly may not always occur with locked keys
                     raise Exception("SSH key has a passphrase but an unlock password was not set. Aborting")
-                #LOG.debug("adding SSH key without passphrase!")
                 self.ssh_add_without_passphrase(repo, keyfile)
         finally:
-            # FIXME: temporary
-            #os.remove(keyfile)
-            #if answer_file:
-            #    os.remove(answer_file)
+            os.remove(keyfile)
+            if answer_file:
+                os.remove(answer_file)
             pass
 
     def cleanup(self, repo):
-        # remove SSH identities
+        """
+        remove all SSH identities
+        """
         print("removing SSH identities")
         commands.execute_command(repo, "ssh-add -D", log=False)
 

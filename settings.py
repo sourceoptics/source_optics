@@ -159,7 +159,7 @@ MAX_THREAD_COUNT = None
 MULTITHREAD_AGGREGATE = False
 
 # the threshold for number of commits at which to print
-# some dots as a status update. This is done in git.py
+# some dots as a status update. This is done in checkout.py
 DOTS_THRESHOLD = 1000
 # the number of columns before we line break
 DOTS_WIDTH = 10

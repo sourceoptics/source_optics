@@ -13,22 +13,12 @@
 # limitations under the License.
 #
 
-import os
-import subprocess
-import getpass
 import re
-import datetime
-import traceback
 
 from django.utils.dateparse import parse_datetime
-from django.utils import timezone
-from django.conf import settings
 from .. models import *
 from .. create import Creator
-from django.db import transaction
 from . import commands
-
-GIT_TYPES = ["https://", "http://"]
 
 # The parser will use regex to grab the fields from the
 # github pretty print. Fields with (?P<name>) are the
@@ -37,7 +27,7 @@ GIT_TYPES = ["https://", "http://"]
 # entire string in one line (it reads line by line)
 #
 # The delimitor (DEL) will separate each field to parse
-DEL = '&DEL&'
+DEL = '&DEL&>'
 
 # Fields recorded (in order)
 # commit hash %H
@@ -72,104 +62,24 @@ PARSER_RE_STRING = ('(' + DEL + '(?P<commit>.*)' + DEL
 PARSER_RE = re.compile(PARSER_RE_STRING, re.VERBOSE)
 
 
-#
-# This class clones a repository (GIT) using a provided URL and credential
-# and proceeds to execute git log on it to scan its data
-#
-class Scanner:
+class Commits:
 
-    # -----------------------------------------------------------------
-    # Adds the github username into the URL, taken from Vespene code
-    def fix_repo_url(repo_url, cred):
-        username = cred.username
-        if username != '':
-            if "@" not in repo_url:
-                for prefix in GIT_TYPES:
-                    if repo_url.startswith(prefix):
-                        repo_url = repo_url.replace(prefix, "")
-                        return "%s%s@%s" % (prefix, username, repo_url)
-        return repo_url
+    """
+    This class clones a repository (GIT) using a provided URL and credential
+    and proceeds to execute git log on it to scan its data
+    """
 
-    # ------------------------------------------------------------------
-    # Entrypoint method which calls the clone and scan methods
-    @transaction.atomic
-    def scan_repo(repo, name, cred):
-        repo_url = repo.url
-        # Calculate the work directory by translating up two directories from this file
-        #   eventually make this a settings variable so users can store it wherever
-        work_dir = os.path.abspath(os.path.dirname(__file__).rsplit("/", 2)[0]) + '/work'
-        os.system('mkdir -p ' + work_dir)
+    @classmethod
+    def process_commits(cls, repo, work_dir):
 
-        if name is None:
-            repo_name = repo_url.rsplit('/', 1)[1]
-        else:
-            repo_name = name
-        repo_instance = Scanner.clone_repo(repo_url, work_dir, repo_name, cred)
-        Scanner.log_repo(repo, work_dir, repo_name, repo_instance)
-
-    # ------------------------------------------------------------------
-    # Clones the repo if it doesn't exist in the work folder and pulls if it does
-    def clone_repo(repo_url, work_dir, repo_name, cred):
-
-        # FIXME: need to use my git class?
-
-        key_mgmt = None
-        options = ""
-        repo_obj = Repository.objects.get(name=repo_name)
-        repo_url = repo_obj.url
-
-        # If a credential was provided, add the password in an expect file to the git config
-        if cred is not None:
-            repo_url = Scanner.fix_repo_url(repo_url, cred)
-
-        dest_path = os.path.join(work_dir, repo_name)
-
-        dest_git = os.path.join(dest_path, ".git")
-
-        if repo_url.startswith("ssh://"):
-            key_mgmt = {
-                "GIT_SSH_COMMAND": "ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no",
-            }
-            if not cred or not cred.ssh_private_key:
-                raise Exception(
-                    "add one or more SSH keys to the repo's assigned credential object or use a http:// or https:// URL")
-
-        if os.path.isdir(dest_path) and os.path.exists(dest_path) and os.path.exists(dest_git):
-
-            prev = os.getcwd()
-            os.chdir(dest_path)
-            # FIXME: command wrapper should take an optional cwd
-            commands.execute_command(repo_obj, "git pull", timeout=200, env=key_mgmt)
-            os.chdir(prev)
-
-        else:
-
-            print("CREATING: %s" % dest_path)
-            # os.makedirs can be a flakey in OS X, so shelling out
-            commands.execute_command(repo_obj, "mkdir -p %s" % dest_path, log=True, timeout=5)
-
-            # on-disk repo doesn't exist yet, need to clone
-            # FIXME: refactor into smaller functions
-
-            key_mgmt = None
-            cmd = f"git clone {repo_url} {dest_path} {options}"
-
-
-
-            commands.execute_command(repo_obj, cmd, log=False, timeout=600, env=key_mgmt)
-
-
-
-
-        return repo_obj
-
-    # ------------------------------------------------------------------
-    # Uses git log to gather the commit data for a repository
-    def log_repo(repo, work_dir, repo_name, repo_instance):
+        """
+        Uses git log to gather the commit data for a repository
+        """
 
         # FIXME: refactor this into two files, splitting the logger and the checkout code
+        # FIXME: remove all of these variables that are just instance.foo
 
-        repo_url = repo.url
+        repo_name = repo.name
         status_count = 0
         width_count = 0
         line_count = 0
@@ -184,8 +94,6 @@ class Scanner:
         prev = os.getcwd()
         os.chdir(repo_dir)
 
-        if repo_name == "warpseq":
-            print("HEY I AM RUNNING!")
 
         out = commands.execute_command(repo, cmd_string, log=False, timeout=600)
         os.chdir(prev)
@@ -264,8 +172,9 @@ class Scanner:
             if re_flag:
                 data = PARSER_RE.match(line).groupdict()
 
-                author_instance = Creator.create_author(data['author_email'], repo_instance)
-                commit_instance, created = Creator.create_commit(repo_instance,
+                # FIXME: merge with models file and obsolete these 'creator' methods
+                author_instance = Creator.create_author(data['author_email'], repo)
+                commit_instance, created = Creator.create_commit(repo,
                                                                  data["subject"],
                                                                  author_instance,
                                                                  data['commit'],

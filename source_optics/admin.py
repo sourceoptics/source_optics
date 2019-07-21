@@ -14,11 +14,8 @@
 #
 
 from django.contrib import admin
-from django import forms
 from django.forms import ModelForm, PasswordInput
-# Register your models here.
-from .models import *
-from . scanner.git import Scanner
+from . models import *
 
 def fast_delete(modeladmin, request, queryset):
     queryset.delete()
