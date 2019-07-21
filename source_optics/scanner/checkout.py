@@ -30,48 +30,6 @@ from . import commands
 
 GIT_TYPES = ["https://", "http://"]
 
-# The parser will use regex to grab the fields from the
-# github pretty print. Fields with (?P<name>) are the
-# capture groups used to turn matching areas of the pretty
-# string into entries in a dictionary. The parser wants the
-# entire string in one line (it reads line by line)
-#
-# The delimitor (DEL) will separate each field to parse
-DEL = '&DEL&>'
-
-# Fields recorded (in order)
-# commit hash %H
-# author_name %an
-# author_date %ad
-# commit_date %cd
-# author_email %ae
-# subject %f
-PRETTY_STRING = ('\'' + DEL + '%H' + DEL
-        + '%an' + DEL
-        + '%ad' + DEL
-        + '%cd' + DEL
-        + '%ae' + DEL
-        + '%f' + DEL
-        + '\'')
-
-# our regex to match the string. must be in same order as fields in PRETTY_STRING
-# to add fields in the future, add a line to this query:
-# PARSER_RE_STRING = (...
-#   ...
-#   '(?P<new_field_name>.*)' + DEL
-#   ')')
-#
-# Example match: ''
-PARSER_RE_STRING = ('(' + DEL + '(?P<commit>.*)' + DEL
-    + '(?P<author_name>.*)' + DEL
-    + '(?P<author_date>.*)' + DEL
-    + '(?P<commit_date>.*)' + DEL
-    + '(?P<author_email>.*)' + DEL
-    + '(?P<subject>.*)' + DEL
-    + ')')
-PARSER_RE = re.compile(PARSER_RE_STRING, re.VERBOSE)
-
-
 #
 # This class clones a repository (GIT) using a provided URL and credential
 # and proceeds to execute git log on it to scan its data
