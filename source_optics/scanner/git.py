@@ -80,7 +80,8 @@ class Scanner:
 
     # -----------------------------------------------------------------
     # Adds the github username into the URL, taken from Vespene code
-    def fix_repo_url(repo_url, username):
+    def fix_repo_url(repo_url, cred):
+        username = cred.username
         if username != '':
             if "@" not in repo_url:
                 for prefix in GIT_TYPES:
@@ -112,25 +113,14 @@ class Scanner:
 
         # FIXME: need to use my git class?
 
-        expect_file = None
         key_mgmt = None
         options = ""
-        # we need to get the org name here to give to create_repo. This could be
-        # more efficient
-        try:
-            org_name = Repository.objects.get(url=repo_url).organization
-        except Repository.DoesNotExist:
-            org_name = 'root'
-        repo_obj = Creator.create_repo(org_name, repo_url, repo_name, cred)
+        repo_obj = Repository.objects.get(name=repo_name)
+        repo_url = repo_obj.url
 
         # If a credential was provided, add the password in an expect file to the git config
         if cred is not None:
-            if cred.is_password():
-                expect_file = cred.expect_pass()
-                options += ' --config core.askpass=\'' + expect_file + '\''
-
-
-            repo_url = Scanner.fix_repo_url(repo_url, cred.username)
+            repo_url = Scanner.fix_repo_url(repo_url, cred)
 
         dest_path = os.path.join(work_dir, repo_name)
 

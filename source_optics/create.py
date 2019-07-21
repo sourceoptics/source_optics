@@ -23,18 +23,6 @@ from . models import *
 
 class Creator:
 
-    # ------------------------------------------------------------------
-    # DB helper functions
-    #
-    # Wrappers for adding objects to the database to keep that functionality
-    # out of the clone/scanning functions above.
-
-    # ------------------------------------------------------------------
-    def create_repo(org_name, repo_url, repo_name, cred):
-        org_parent = Organization.objects.get(name=org_name)
-        #Removed name argument so that user can specify arbitrary repo name
-        repo_instance,created = Repository.objects.get_or_create(organization=org_parent, url=repo_url, name=repo_name, defaults={'cred':cred})
-        return repo_instance
 
     # ------------------------------------------------------------------
     def create_author(email, repo):
