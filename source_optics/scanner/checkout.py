@@ -85,13 +85,13 @@ class Checkout:
     def fix_repo_url(cls, repo):
         cred = repo.cred
         repo_url = repo.url
-        username = cred.username
-        if username:
-            if "@" not in repo_url:
-                for prefix in GIT_TYPES:
-                    if repo_url.startswith(prefix):
-                        repo_url = repo_url.replace(prefix, "")
-                        return "%s%s@%s" % (prefix, username, repo_url)
+        if not cred or not cred.username:
+            return repo_url
+        if "@" not in repo_url:
+            for prefix in GIT_TYPES:
+                if repo_url.startswith(prefix):
+                    repo_url = repo_url.replace(prefix, "")
+                    return "%s%s@%s" % (prefix, cred.username, repo_url)
         return repo_url
 
 
