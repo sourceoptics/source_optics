@@ -1,8 +1,7 @@
 from django.core.management.base import BaseCommand, CommandError
 from github import Github
 from ... models import Organization, Repository
-import os
-
+import fnmatch
 
 class Command(BaseCommand):
     help = 'creates repo objects from a github API endpoint'
@@ -37,6 +36,12 @@ class Command(BaseCommand):
             #print(dir(github_repo))
             #print(github_repo.name)
             #print(github_repo.ssh_url)
+
+            filter = credential.import_filter
+            if filter and not fnmatch.fnmatch(github_repo.name, filter):
+                print("repo (%s) doesn't match fnmatch filter (%s), skipping" % (github_repo.name, filter))
+                continue
+
             (repo, created) = Repository.objects.get_or_create(
                 name=github_repo.name,
                 organization=org,
