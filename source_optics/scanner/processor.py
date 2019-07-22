@@ -24,8 +24,9 @@ import os
 
 from django.utils import timezone
 from django.db import transaction
+from django.conf import settings
 
-from .. stats.rollup import Rollup
+from source_optics.scanner.rollup import Rollup
 from .. models import Repository
 from . ssh_agent import SshAgentManager
 from . checkout import Checkout
@@ -43,31 +44,39 @@ class RepoProcessor:
 
 
     @classmethod
-    def scan(cls):
+    def scan(cls, organization_filter=None):
 
         agent_manager = SshAgentManager()
 
         # FIXME: grab flock in case cron interval is too close
 
-        print("Processing all repos...")
+        print("processing repos...")
 
-        repos = Repository.objects.all()
+        repos = None
+        if organization_filter:
+            repos = Repository.objects.filter(organization__name__contains=organization_filter).all()
+        else:
+            repos = Repository.objects.all()
 
         # Check through every repository
-        #TODO: probably should sort this by repos with least amt of commits first
+
         for repo in repos:
 
+
             used_ssh = False
-            print("Repo: %s" % repo)
+            print("repo: %s" % repo)
 
             if not repo.enabled:
+                print("(disabled, skipping)")
                 continue
 
             # Calculate time difference based on last_pulled date
             today = datetime.datetime.now(tz=timezone.utc)
             if repo.last_pulled is not None:
                 timediff = (today - repo.last_pulled).total_seconds() / 60.0
-
+                if timediff < settings.PULL_THRESHOLD and not repo.force_next_pull:
+                    print("(recently processed, skipping)")
+                    continue
 
 
             if "http://" not in repo.url and "https://" not in repo.url:
@@ -98,6 +107,8 @@ class RepoProcessor:
             print ("Scanning complete. Operation time for " + str(repo) + ": " + str(scan_time_total) + "s")
             repo.last_pulled = datetime.datetime.now(tz=timezone.utc)
             print("last_pulled: "  + str(repo.last_pulled))
+
+            repo.force_next_pull = False
             repo.save()
 
             if used_ssh:

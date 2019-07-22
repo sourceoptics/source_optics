@@ -18,8 +18,8 @@ from django.db.models import Sum, Count, IntegerField
 from django.db.models.functions import Cast
 from django.conf import settings
 from django.utils import timezone
-from .. models import *
-from .. create import Creator # FIXME: eliminate this
+from source_optics.models import *
+from source_optics.create import Creator # FIXME: eliminate this
 import concurrent.futures
 import datetime
 import json

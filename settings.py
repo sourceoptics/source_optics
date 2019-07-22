@@ -164,6 +164,8 @@ DOTS_THRESHOLD = 1000
 # the number of columns before we line break
 DOTS_WIDTH = 10
 
+
+
 REST_FRAMEWORK = {
     'DEFAULT_FILTER_BACKENDS': (
         'django_filters.rest_framework.DjangoFilterBackend',
@@ -180,3 +182,10 @@ PLUGIN_CONFIGURATION = dict(
         basic="source_optics.plugins.secrets.cloak_v1"
     ),
 )
+
+# ===========================
+# APP PREFERENCES
+
+# pull new code from repos if not pulled in N minutes, 0 = always pull
+PULL_THRESHOLD = 0
+

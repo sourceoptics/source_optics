@@ -23,7 +23,13 @@ from ... scanner.processor import RepoProcessor
 # for statistics 
 #
 class Command(BaseCommand):
-    help = 'Scans a repository off of the queue'
+
+    help = 'Scans one or more repositories'
+
+    def add_arguments(self, parser):
+        parser.add_argument('-o', '--organization_pattern', dest='org', type=str, help='Only process organizations with this substring', default=None)
 
     def handle(self, *args, **kwargs):
-        RepoProcessor.scan()
+
+        organization_filter = kwargs['org']
+        RepoProcessor.scan(organization_filter=organization_filter)
