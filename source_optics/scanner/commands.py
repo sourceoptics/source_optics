@@ -41,7 +41,7 @@ def execute_command(repo, command, input_text=None, env=None, log=True, timeout=
     """
 
     # FIXME: standard logging
-    print(">%s" % command)
+    print("(%s) >%s" % (repo.name, command))
 
     timeout_cmd = get_timeout()
 
@@ -59,16 +59,13 @@ def execute_command(repo, command, input_text=None, env=None, log=True, timeout=
     if env and sock:
         env['SSH_AUTH_SOCK'] = sock
 
-    if log:
-        # FIXME: logging here
-        print(command)
-        # LOG.debug("executing: %s" % command)
-        # could also keep history in db, but... later
-        # if build:
-        #    build.append_message(command)
+
+    print("> %s" % command)
+
 
     process = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                                shell=shell, env=env)
+
 
     if input_text is None:
         input_text = ""
@@ -91,8 +88,8 @@ def execute_command(repo, command, input_text=None, env=None, log=True, timeout=
         line = ansi_escape.sub('', line)
 
 
-        if log:
-            print(line)
+        #if log:
+        print(line)
 
 
         out = out + line

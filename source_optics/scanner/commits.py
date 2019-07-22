@@ -118,6 +118,10 @@ class Commits:
         # later and add some new features to the commands wrapper
         # FIXME: consider alternative approaches to delimiter parsing?
 
+        if "does not have any commits yet" in out:
+            print("skipping, no commits yet")
+            return False
+
         lines = out.split("\n")
 
         for line in lines:
@@ -139,6 +143,7 @@ class Commits:
             else:
                  cls.handle_file_information(repo, line, last_commit)
 
+        return True
 
     @classmethod
     def handle_file_information(cls, repo, line, last_commit):

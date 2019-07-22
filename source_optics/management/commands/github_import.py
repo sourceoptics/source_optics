@@ -1,5 +1,6 @@
 from django.core.management.base import BaseCommand, CommandError
 from github import Github
+from ... models import Organization, Repository
 import os
 
 
@@ -13,23 +14,41 @@ class Command(BaseCommand):
 
         org = kwargs['org']
         if not org:
-            raise CommandError("-o <organization name>" is required")
+            raise CommandError("-o <organization name> is required")
 
-        org = Organization.get(name=org)
+        org = Organization.objects.get(name=org)
 
-        if org.credential is None:
+        credential = org.credential
+        if credential is None:
             raise CommandError("no credential is associated with this organization")
 
         handle = None
-        if organization.credential.api_endpoint:
-            handle = Github(scm_login.username, scm_login.password(), base_url=organization.credential.api_endpoint)
+
+
+        if credential.api_endpoint:
+            handle = Github(credential.username, credential.unencrypt_password(), base_url=credential.api_endpoint)
         else:
-            handle = Github(scm_login.username, scm_login.get_password())
+            handle = Github(credential.username, credential.unencrypt_password())
+        github_org = handle.get_organization(credential.organization_identifier)
 
-
-        github_repos = org.get_repos(type='all')
+        github_repos = github_org.get_repos(type='all')
         for github_repo in github_repos:
-            print(github_repo)
+            #print(github_repo)
+            #print(dir(github_repo))
+            #print(github_repo.name)
+            #print(github_repo.ssh_url)
+            (repo, created) = Repository.objects.get_or_create(
+                name=github_repo.name,
+                organization=org,
+                defaults=dict(
+                    url=github_repo.ssh_url
+                )
+            )
+            if created:
+                print("created: %s" % repo)
+            else:
+                print("already existed: %s" % repo)
+
 
 
     #def fix_scm_url(self, repo, username):

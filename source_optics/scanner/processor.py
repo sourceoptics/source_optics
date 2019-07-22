@@ -99,7 +99,10 @@ class RepoProcessor:
             print("--- SCANNING: %s" % repo)
 
             # this is where the logging of commit objects happens
-            cls.scan_repo(repo)
+            ok = cls.scan_repo(repo)
+            if not ok:
+                print("problem scanning repo, skipping")
+                continue
 
             # FIXME: refactor into smaller functions
 
@@ -133,6 +136,10 @@ class RepoProcessor:
         work_dir = os.path.join(base_path, 'work')
         os.system('mkdir -p ' + work_dir)
 
+        ok = Checkout.clone_repo(repo, work_dir)
+        if not ok:
+            print("problem with checkout, skipping")
+            return False
 
-        repo_instance = Checkout.clone_repo(repo, work_dir)
-        Commits.process_commits(repo, work_dir)
+        ok = Commits.process_commits(repo, work_dir)
+        return ok

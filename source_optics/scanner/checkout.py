@@ -84,7 +84,15 @@ class Checkout:
             prev = os.getcwd()
             os.chdir(dest_path)
             # FIXME: command wrapper should take an optional cwd
-            commands.execute_command(repo, "git pull", timeout=200, env=key_mgmt)
+
+            try:
+                out = commands.execute_command(repo, "git pull", timeout=200, env=key_mgmt)
+            except Exception:
+                # FIXME: finer grained catch here
+                traceback.print_exc()
+                print("checkout failure, possibly no commits yet?, skipping")
+                return False
+
             os.chdir(prev)
 
         else:
@@ -101,6 +109,6 @@ class Checkout:
 
             commands.execute_command(repo, cmd, log=False, timeout=600, env=key_mgmt)
 
-        return repo
+        return True
 
 

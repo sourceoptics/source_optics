@@ -43,12 +43,14 @@ class Organization(models.Model):
 class Credential(models.Model):
 
     name = models.TextField(max_length=64, blank=False)
-    username = models.TextField(max_length=32, blank=True, help_text='github/gitlab username')
-    password = models.TextField(max_length=128,  blank=True, null=True, help_text='github/gitlab password (if using API imports)')
+    username = models.TextField(max_length=32, blank=True, help_text='for github/gitlab username')
+    password = models.TextField(max_length=128,  blank=True, null=True, help_text='for github/gitlab imports')
     ssh_private_key = models.TextField(blank=True, null=True, help_text='for cloning private repos')
     ssh_unlock_passphrase = models.TextField(blank=True, null=True, help_text='for cloning private repos')
     description = models.TextField(max_length=128, blank=True, null=True)
-    api_endpoint = models.TextField(blank=True, null=True, help_text="optional git hosting API endpoint for import commands")
+    organization_identifier = models.CharField(max_length=256, blank=True, null=True, help_text='for github/gitlab imports')
+    import_filter = models.CharField(max_length=256, blank=True, null=True, help_text='if set, only import repos matching this fnmatch pattern')
+    api_endpoint = models.TextField(blank=True, null=True, help_text="for github/gitlab imports off private instances")
 
     class Meta:
         verbose_name = 'Credential'
@@ -102,7 +104,9 @@ class Repository(models.Model):
 
     class Meta:
         verbose_name_plural = "repositories"
-        
+        unique_together = [
+            [ 'name', 'organization' ]
+        ]
     organization = models.ForeignKey(Organization, on_delete=models.SET_NULL, null=True)
     enabled = models.BooleanField(default=True, help_text='if false, disable scanning')
     last_scanned = models.DateTimeField(blank=True, null=True)
@@ -111,7 +115,7 @@ class Repository(models.Model):
     tags = models.ManyToManyField('Tag', related_name='tags', blank=True)
     last_pulled = models.DateTimeField(blank = True, null = True)
     url = models.TextField(max_length=256, unique=True, blank=False, help_text='use a git ssh url for private repos, else http/s are ok')
-    name = models.TextField(db_index=True, max_length=32, blank=False, unique=True, null=False)
+    name = models.TextField(db_index=True, max_length=32, blank=False, null=False)
     color = models.CharField(max_length=10, null=True, blank=True)
     force_next_pull = models.BooleanField(null=False, default=False)
 
