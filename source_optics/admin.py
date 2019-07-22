@@ -34,16 +34,16 @@ class StatAdmin(admin.ModelAdmin):
     'lines_added', 'lines_removed', 'lines_changed', 'files_changed', 'author_total')
     actions = [fast_delete]
 
-class LoginCredentialForm(ModelForm):
+class CredentialForm(ModelForm):
     password = forms.CharField(widget=PasswordInput(), required=False)
-    ssh_unlock_password = forms.CharField(widget=PasswordInput(), required=False)
+    ssh_unlock_passphrase = forms.CharField(widget=PasswordInput(), required=False)
     class Meta:
-        model = LoginCredential
+        model = Credential
         fields = '__all__'
 
 
-class LoginCredentialAdmin(admin.ModelAdmin):
-    form = LoginCredentialForm
+class CredentialAdmin(admin.ModelAdmin):
+    form = CredentialForm
 
 admin.site.register(Organization)
 admin.site.register(Statistic, StatAdmin)
@@ -53,4 +53,4 @@ admin.site.register(Commit, CommitAdmin)
 admin.site.register(FileChange)
 admin.site.register(File)
 admin.site.register(Tag)
-admin.site.register(LoginCredential, LoginCredentialAdmin)
+admin.site.register(Credential, CredentialAdmin)

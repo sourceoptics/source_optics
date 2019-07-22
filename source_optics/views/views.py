@@ -75,7 +75,7 @@ class OrganizationViewSet(viewsets.ReadOnlyModelViewSet):
 
 class CredentialViewSet(viewsets.ReadOnlyModelViewSet):
 
-    queryset = LoginCredential.objects.all()
+    queryset = Credential.objects.all()
     serializer_class = CredentialSerializer
     filter_backends = (DjangoFilterBackend,)
     filterset_fields = ('name', 'username')

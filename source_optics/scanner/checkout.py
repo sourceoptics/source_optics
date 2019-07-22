@@ -41,7 +41,7 @@ class Checkout:
 
     @classmethod
     def fix_repo_url(cls, repo):
-        cred = repo.cred
+        cred = repo.organization.credential
         repo_url = repo.url
         if not cred or not cred.username:
             return repo_url
@@ -65,7 +65,7 @@ class Checkout:
         repo_name = repo.name
         repo
         repo_url = repo.url # FIXME: remove these short variables
-        cred = repo.cred
+        cred = repo.organization.credential
         repo_name = repo.name
         repo_url = cls.fix_repo_url(repo)
         dest_path = os.path.join(work_dir, repo_name)

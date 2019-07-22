@@ -15,7 +15,7 @@
 
 from django.contrib.auth.models import User, Group
 from rest_framework import serializers
-from . models import Repository, Organization, LoginCredential, Author, Commit, Statistic
+from . models import Repository, Organization, Credential, Author, Commit, Statistic
 
 class UserSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
@@ -34,7 +34,7 @@ class RepositorySerializer(serializers.HyperlinkedModelSerializer):
 
 class CredentialSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
-        model = LoginCredential
+        model = Credential
         fields = ('name', 'username', 'description')
 
 class OrganizationSerializer(serializers.HyperlinkedModelSerializer):

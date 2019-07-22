@@ -32,20 +32,23 @@ class Organization(models.Model):
 
     # parent = models.ForeignKey('self', on_delete=models.SET_NULL, null=True)
     name = models.TextField(max_length=32, blank=False, unique=True)
-    admins = models.ManyToManyField(User, related_name='+')
-    members = models.ManyToManyField(User, related_name='+')
+    admins = models.ManyToManyField(User, related_name='+', help_text='currently unused')
+    members = models.ManyToManyField(User, related_name='+', help_text='currently unused')
+
+    credential = models.ForeignKey('Credential', on_delete=models.SET_NULL, null=True, help_text='used for repo imports and git checkouts')
 
     def __str__(self):
         return self.name
 
-class LoginCredential(models.Model):
+class Credential(models.Model):
 
     name = models.TextField(max_length=64, blank=False)
-    username = models.TextField(max_length=32, blank=True)
-    password = models.TextField(max_length=128,  blank=True, null=True)
-    ssh_private_key = models.TextField(blank=True, null=True)
-    ssh_unlock_passphrase = models.TextField(blank=True, null=True)
+    username = models.TextField(max_length=32, blank=True, help_text='github/gitlab username')
+    password = models.TextField(max_length=128,  blank=True, null=True, help_text='github/gitlab password (if using API imports)')
+    ssh_private_key = models.TextField(blank=True, null=True, help_text='for cloning private repos')
+    ssh_unlock_passphrase = models.TextField(blank=True, null=True, help_text='for cloning private repos')
     description = models.TextField(max_length=128, blank=True, null=True)
+    api_endpoint = models.TextField(blank=True, null=True, help_text="optional git hosting API endpoint for import commands")
 
     class Meta:
         verbose_name = 'Credential'
@@ -101,14 +104,13 @@ class Repository(models.Model):
         verbose_name_plural = "repositories"
         
     organization = models.ForeignKey(Organization, on_delete=models.SET_NULL, null=True)
-    enabled = models.BooleanField(default=True)
+    enabled = models.BooleanField(default=True, help_text='if false, disable scanning')
     last_scanned = models.DateTimeField(blank=True, null=True)
     last_rollup = models.DateTimeField(blank=True, null=True)
     earliest_commit = models.DateTimeField(blank=True, null=True)
     tags = models.ManyToManyField('Tag', related_name='tags', blank=True)
     last_pulled = models.DateTimeField(blank = True, null = True)
-    cred = models.ForeignKey(LoginCredential, on_delete=models.CASCADE, null=True, blank = True)
-    url = models.TextField(max_length=256, unique=True, blank=False)
+    url = models.TextField(max_length=256, unique=True, blank=False, help_text='use a git ssh url for private repos, else http/s are ok')
     name = models.TextField(db_index=True, max_length=32, blank=False, unique=True, null=False)
     color = models.CharField(max_length=10, null=True, blank=True)
     force_next_pull = models.BooleanField(null=False, default=False)

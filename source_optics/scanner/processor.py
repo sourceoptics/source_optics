@@ -80,9 +80,9 @@ class RepoProcessor:
 
 
             if "http://" not in repo.url and "https://" not in repo.url:
-                if repo.cred and repo.cred.ssh_private_key:
+                if repo.organization.credential and repo.organization.credential.ssh_private_key:
                     print("ADDING KEY")
-                    agent_manager.add_key(repo, repo.cred)
+                    agent_manager.add_key(repo, repo.organization.credential)
                     used_ssh = True
                 else:
                     raise Exception("repo checkout of %s requires SSH credentials" % repo.name)
@@ -126,8 +126,6 @@ class RepoProcessor:
     @classmethod
     @transaction.atomic
     def scan_repo(cls, repo):
-        repo_url = repo.url
-        cred = repo.cred
         # Calculate the work directory by translating up two directories from this file
         #   eventually make this a settings variable so users can store it wherever
 
