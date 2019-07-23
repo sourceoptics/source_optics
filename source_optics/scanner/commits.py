@@ -21,13 +21,9 @@ from . import commands
 import re
 from django.conf import settings
 
-# The parser will use regex to grab the fields from the
-# github pretty print. Fields with (?P<name>) are the
-# capture groups used to turn matching areas of the pretty
-# string into entries in a dictionary. The parser wants the
-# entire string in one line (it reads line by line)
-#
-# The delimitor (DEL) will separate each field to parse
+# we use git --log with a special one-line format string to capture certain fields
+# we regex across those fields with a custom delimiter to make it easy to find them
+
 DEL = '&DEL&>'
 
 # Fields recorded (in order)
@@ -37,29 +33,13 @@ DEL = '&DEL&>'
 # commit_date %cd
 # author_email %ae
 # subject %f
-PRETTY_STRING = ('\'' + DEL + '%H' + DEL
-        + '%an' + DEL
-        + '%ad' + DEL
-        + '%cd' + DEL
-        + '%ae' + DEL
-        + '%f' + DEL
-        + '\'')
 
-# our regex to match the string. must be in same order as fields in PRETTY_STRING
-# to add fields in the future, add a line to this query:
-# PARSER_RE_STRING = (...
-#   ...
-#   '(?P<new_field_name>.*)' + DEL
-#   ')')
-#
-# Example match: ''
-PARSER_RE_STRING = ('(' + DEL + '(?P<commit>.*)' + DEL
-    + '(?P<author_name>.*)' + DEL
-    + '(?P<author_date>.*)' + DEL
-    + '(?P<commit_date>.*)' + DEL
-    + '(?P<author_email>.*)' + DEL
-    + '(?P<subject>.*)' + DEL
-    + ')')
+PRETTY_STRING = f"'{DEL}%H{DEL}%an{DEL}%ad{DEL}%cd{DEL}%ae{DEL}%f{DEL}'"
+
+# the regex to match the string, which must watch the log format PRETTY_STRING
+
+PARSER_RE_STRING = f"{DEL}(?P<commit>.*){DEL}(?P<author_name>.*){DEL}(?P<author_date>.*){DEL}(?P<commit_date>.*){DEL}(?P<author_email>.*){DEL}(?P<subject>.*){DEL}"
+
 PARSER_RE = re.compile(PARSER_RE_STRING, re.VERBOSE)
 
 
