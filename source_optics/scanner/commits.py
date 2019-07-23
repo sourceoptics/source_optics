@@ -134,7 +134,7 @@ class Commits:
                     # we've seen this commit before, so we're done
                     break
             else:
-                 cls.handle_file_information(repo, line, last_commit)
+                cls.handle_file_information(repo, line, last_commit)
 
         return True
 

@@ -52,7 +52,7 @@ clean:
 	find . -name '__pycache__' | xargs rm -rf
 
 indent_check:
-	pep8 --select E111 source_optics/
+	pycodestyle --select E111 source_optics/
 
 pyflakes:
 	pyflakes source_optics/
