@@ -191,9 +191,19 @@ see some graphs.
 
 Over time, expect to see lots of new features in this area.
 
+Upgrades
+========
 
-Backups/Maintaince
-==================
+SourceOptics doesn't have versioned releases at this time, and you should be able to run directly
+out of source checkouts.
+
+When you do a "git pull", apply database migrations from "python manage.py migrate". Any new
+config settings will appear in settings.py automatically, and if you want to make any changes, do not
+edit settings.py, but add overrides in /etc/sourceoptics/conf.d/*.py.  You can make any files
+you want there that end in "*.py" and they will all be loaded.
+
+Backups/Maintenance
+===================
 
 You should make database backups.  The 'work' directory inside the project is not important to save,
 as new checkouts will recreate the git clones.
