@@ -17,20 +17,20 @@
 
 import traceback
 from urllib.parse import parse_qs
-from django.http import *
-from django.shortcuts import render
+from django.http import HttpResponse, HttpResponseServerError
+from django.shortcuts import render, redirect
 from django.views.decorators.csrf import csrf_exempt
 from django_filters.rest_framework import DjangoFilterBackend
 from django_tables2 import RequestConfig
 from rest_framework import viewsets
-from django.contrib.auth.models import Group
-from ..models import *
+from django.contrib.auth.models import User, Group
+from ..models import Repository, Organization, Credential, Commit, Author, Statistic
 from ..serializers import (AuthorSerializer, CommitSerializer,
                            CredentialSerializer, GroupSerializer,
                            OrganizationSerializer, RepositorySerializer,
                            StatisticSerializer, UserSerializer)
 from . import graph, util
-from .tables import *
+from .tables import StatTable, AuthorStatTable
 from .webhooks import Webhooks
 
 
@@ -273,7 +273,7 @@ def webhook_post(request, *args, **kwargs):
         if token is not None:
             token = token[0]
         Webhooks(request, token).handle()
-    except Exception as e:
+    except Exception:
         traceback.print_exc()
         #LOG.error("error processing webhook: %s" % str(e))
         return HttpResponseServerError("webhook processing error")

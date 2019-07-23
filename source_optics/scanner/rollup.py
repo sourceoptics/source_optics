@@ -13,17 +13,11 @@
 # limitations under the License.
 #
 
-import concurrent.futures
 import datetime
-import json
-
-from django.conf import settings
 from django.db import transaction
-from django.db.models import Count, IntegerField, Sum
-from django.db.models.functions import Cast
+from django.db.models import Sum
 from django.utils import timezone
-from django.utils.dateparse import parse_datetime
-from source_optics.models import Repository, Organization, Statistic, Commit, FileChange, File, Author
+from source_optics.models import Statistic, Commit, Author
 
 intervals =  Statistic.INTERVALS
 
@@ -47,9 +41,9 @@ class Rollup:
     #Gets the first day of the week or the month depending on intervals
     #Sets the time to 12:00 AM or 00:00 for that day
     def get_first_day(date_index, interval):
-        if interval[0] is 'WK':
+        if interval[0] == 'WK':
             date_index -= datetime.timedelta(days=date_index.isoweekday() % 7)
-        elif interval[0] is 'MN':
+        elif interval[0] == 'MN':
             date_index = date_index.replace(day = 1)
         date_index = date_index.replace(hour=0, minute=0, second=0, microsecond=0)
         return date_index
@@ -57,9 +51,9 @@ class Rollup:
     #Gets the last day of the week or month depending on INTERVALS
     #Sets the time to 11:59 PM or 23:59 for the day
     def get_end_day(date_index, interval):
-        if interval[0] is 'WK':
+        if interval[0] == 'WK':
             date_index = date_index + datetime.timedelta(days=6)
-        elif interval[0] is 'MN':
+        elif interval[0] == 'MN':
             date_delta = date_index.replace(day = 28) + datetime.timedelta(days = 4)
             date_index = date_delta - datetime.timedelta(days=date_delta.day)
 
@@ -289,18 +283,12 @@ class Rollup:
     @classmethod
     def compile_total_rollup (cls, repo, interval):
         #Compile day using repo data
-        if interval[0] is 'DY':
+        if interval[0] == 'DY': # FIXME: use constants everywhere
             last_scanned = cls.aggregate_day_rollup(repo)
         #compile other intervals using day stats which have been aggregated
         else:
             last_scanned = cls.aggregate_interval_rollup(repo, interval)
-
-    @classmethod
-    def compile_author_rollups_thread (cls, repo, author):
-        cls.aggregate_author_rollup_day(repo, author)
-        # We need to manually close the database connection here or
-        # else Django will leave it dangling
-        connection.close()
+        return last_scanned
 
     #We only want to iterate through the authors once.
     #Currently, this seems like the easiest way to do so
@@ -310,30 +298,14 @@ class Rollup:
         authors = Author.objects.filter(repos__in=[repo]).iterator()
         total_authors = Author.objects.filter(repos__in=[repo]).count()
 
-        # Django unit tests can be run as parallel, but this causes problems with
-        # lingering postgres connections. use the concurrent flag to disable
-        # multi-threaded aggregation so that the unit tests behave
-        #
-        #   hopefully this will go away eventually
-        if settings.MULTITHREAD_AGGREGATE is True:
-
-            # this is currently DISABLED by DEFAULT, because I theorize the connection.close is pretty ineffecient
-            # look into connection pool here and generalize this at a higher level? -- MPD
-
-            with concurrent.futures.ThreadPoolExecutor(max_workers=settings.MAX_THREAD_COUNT) as pool:
-                for author in authors:
-                    pool.submit(cls.compile_author_rollups_thread, repo, author)
-            cls.aggregate_author_rollup(repo, intervals[1])
-            cls.aggregate_author_rollup(repo, intervals[2])
-        else:
-            count = 0
-            for author in authors:
-                count = count + 1
-                print("Author %s: %s -> # %s/%s" % (repo, author, count, total_authors))
-                cls.aggregate_author_rollup_day(repo, author)
+        count = 0
+        for author in authors:
+            count = count + 1
+            print("Author %s: %s -> # %s/%s" % (repo, author, count, total_authors))
+            cls.aggregate_author_rollup_day(repo, author)
             # FIXME: use specific constants for day and week here.
-            cls.aggregate_author_rollup(repo, intervals[1])
-            cls.aggregate_author_rollup(repo, intervals[2])
+        cls.aggregate_author_rollup(repo, intervals[1])
+        cls.aggregate_author_rollup(repo, intervals[2])
 
     #Compute rollups for specified repo passed in by daemon
     #TODO: Index commit_date and repo together
@@ -351,6 +323,8 @@ class Rollup:
             repo.earliest_commit = earliest_commit
 
         for interval in intervals:
+            # FIXME: the return from this function is never used, should it be?
+            # FIXME: also it says 'last_scanned' but rollups should record different times
             cls.compile_total_rollup(repo, interval)
 
         cls.compile_author_rollups(repo)

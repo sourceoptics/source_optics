@@ -16,8 +16,10 @@
 import os
 from django.utils.dateparse import parse_datetime
 
-from ..models import *
+from ..models import File, FileChange, Commit, Author
 from . import commands
+import re
+from django.conf import settings
 
 # The parser will use regex to grab the fields from the
 # github pretty print. Fields with (?P<name>) are the
@@ -74,12 +76,6 @@ class Commits:
         """
         Uses git log to gather the commit data for a repository
         """
-
-        # FIXME: refactor this into two files, splitting the logger and the checkout code
-        # FIXME: remove all of these variables that are just instance.foo
-
-        repo_name = repo.name
-
         # python subprocess iteration doesn't have an EOF indicator that I can find.
         # We echo "EOF" to the end of the log output so we can tell when we are done
         cmd_string = ('git log --all --numstat --date=iso-strict-local --pretty=format:'

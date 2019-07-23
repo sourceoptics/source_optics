@@ -57,7 +57,7 @@ class RepoProcessor:
         fh = open(fname, 'w+')
         try:
             fcntl.flock(fh, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        except IOError as e:
+        except IOError:
             print("Another scanner process is likely using the lockfile: %s" % fname)
             sys.exit(0)
         return fh

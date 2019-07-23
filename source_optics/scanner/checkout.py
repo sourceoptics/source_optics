@@ -14,8 +14,6 @@
 #
 
 import traceback
-
-from ..models import *
 from . import commands
 import os
 
@@ -54,10 +52,8 @@ class Checkout:
 
         key_mgmt = None
         options = ""
-        repo_name = repo.name
         repo_url = repo.url # FIXME: remove these short variables
         cred = repo.organization.credential
-        repo_name = repo.name
         repo_url = cls.fix_repo_url(repo)
         dest_git = os.path.join(work_dir, ".git")
 
@@ -76,7 +72,7 @@ class Checkout:
             # FIXME: command wrapper should take an optional cwd
 
             try:
-                out = commands.execute_command(repo, "git pull", timeout=200, env=key_mgmt)
+                commands.execute_command(repo, "git pull", timeout=200, env=key_mgmt)
             except Exception:
                 # FIXME: finer grained catch here
                 traceback.print_exc()

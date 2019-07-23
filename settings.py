@@ -146,19 +146,6 @@ RECORD_FILE_CHANGES = False
 # should be created in init
 SYMMETRIC_SECRET_KEY = '/etc/source_optics/cred.key'
 
-# maximum number of threads to launch per concurrent task
-# used in the stat aggregator
-#
-# None lets django automatically select a count
-MAX_THREAD_COUNT = None
-
-# Django unit tests can be run as parallel, but this causes problems with
-# lingering postgres connections. use the concurrent flag to disable
-# multi-threaded aggregation so that the unit tests behave
-#
-#   hopefully this will go away eventually
-MULTITHREAD_AGGREGATE = False
-
 # the threshold for number of commits at which to print
 # some dots as a status update. This is done in checkout.py
 DOTS_THRESHOLD = 1000
