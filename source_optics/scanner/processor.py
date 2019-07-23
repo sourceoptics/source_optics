@@ -23,6 +23,7 @@ import fcntl
 import os
 import sys
 import time
+import shutil
 
 from django.conf import settings
 from django.db import transaction
@@ -30,7 +31,7 @@ from django.utils import timezone
 
 from source_optics.scanner.rollup import Rollup
 
-from ..models import Repository
+from ..models import Repository, Commit, FileChange, File
 from .checkout import Checkout
 from .commits import Commits
 from .ssh_agent import SshAgentManager
@@ -87,12 +88,23 @@ class RepoProcessor:
         for repo in repos:
 
 
+            # FIXME: move this into a sub-function, and then yet more
+
             used_ssh = False
             print("repo: %s" % repo)
 
             if not repo.enabled:
                 print("(disabled, skipping)")
                 continue
+
+            if repo.force_nuclear_rescan:
+                repo.last_scanned = None
+                repo.last_rollup = None
+                repo.force_next_pull = True
+                Commit.objects.filter(repo=repo).delete()
+                FileChange.objects.filter(repo=repo).delete()
+                File.objects.filter(repo=repo).delete()
+                repo.save()
 
             # Calculate time difference based on last_pulled date
             today = datetime.datetime.now(tz=timezone.utc)
@@ -160,6 +172,12 @@ class RepoProcessor:
         work_dir = repo.organization.get_working_directory()
         work_dir = os.path.join(work_dir, repo.name)
 
+        if repo.force_nuclear_rescan and os.path.exists(work_dir):
+            shutil.rmtree(work_dir, ignore_errors=True)
+            repo.force_nuclear_rescan = False
+            repo.save()
+
+        # FIXME: use commands class
         os.system('mkdir -p ' + work_dir)
 
         ok = Checkout.clone_repo(repo, work_dir)

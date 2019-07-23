@@ -23,7 +23,7 @@ from django.db.models import Count, IntegerField, Sum
 from django.db.models.functions import Cast
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
-from source_optics.models import *
+from source_optics.models import Repository, Organization, Statistic, Commit, FileChange, File, Author
 
 intervals =  Statistic.INTERVALS
 
@@ -270,7 +270,7 @@ class Rollup:
                                 files_changed = Sum("files_changed"), author_total = Sum("author_total"))
 
             #Creates row for given interval
-            Creator.create_total_rollup(start_date=date_index, interval=interval[0], repo=repo, 
+            cls.create_total_rollup(start_date=date_index, interval=interval[0], repo=repo,
                 lines_added=data['lines_added'], 
                 lines_removed=data['lines_removed'],
                 lines_changed=data['lines_changed'], 

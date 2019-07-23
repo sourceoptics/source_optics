@@ -13,6 +13,7 @@
 # limitations under the License.
 #
 
+import os
 from django.utils.dateparse import parse_datetime
 
 from ..models import *
@@ -131,7 +132,7 @@ class Commits:
                 break
 
             if line.startswith(DEL):
-                (commit, created) = cls.handle_diff_information(repo, line)
+                commit, created = cls.handle_diff_information(repo, line)
                 last_commit = commit
                 if not created:
                     # we've seen this commit before, so we're done
@@ -252,17 +253,17 @@ class Commits:
         data = match.groupdict()
         email = data['author_email']
 
-        author_instance, created = Author.objects.get_or_create(email=email)
-        author_instance.repos.add(repo)
-        author_instance.save()
+        author, created = Author.objects.get_or_create(email=email)
+        author.repos.add(repo)
+        author.save()
 
         commit_date = parse_datetime(data['commit_date'])
         author_date = parse_datetime(data['author_date'])
         commit, created = Commit.objects.get_or_create(
-            sha=commit_sha,
+            sha=data['commit'],
             defaults=dict(
                 subject=data['subject'],
-                repo=repo_instance,
+                repo=repo,
                 author=author,
                 author_date=author_date,
                 commit_date=commit_date,
@@ -271,4 +272,4 @@ class Commits:
             )
         )
 
-        return commit
+        return commit, created

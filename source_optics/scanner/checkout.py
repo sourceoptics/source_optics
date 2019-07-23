@@ -17,6 +17,7 @@ import traceback
 
 from ..models import *
 from . import commands
+import os
 
 GIT_TYPES = ["https://", "http://"]
 

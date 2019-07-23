@@ -111,8 +111,9 @@ class Repository(models.Model):
     url = models.TextField(max_length=255, unique=True, blank=False, help_text='use a git ssh url for private repos, else http/s are ok')
     name = models.TextField(db_index=True, max_length=32, blank=False, null=False, validators=[validate_repo_name])
     color = models.CharField(max_length=10, null=True, blank=True)
-    force_next_pull = models.BooleanField(null=False, default=False)
-    webhook_token = models.CharField(max_length=255, null=True, blank=True)
+    force_next_pull = models.BooleanField(null=False, default=False, help_text='used by webhooks to signal the scanner')
+    webhook_token = models.CharField(max_length=255, null=True, blank=True, help_text='prevents against trivial webhook spam')
+    force_nuclear_rescan = models.BooleanField(null=False, default=False, help_text='on next scan loop, delete all commits/records and rescan everything')
 
     def __str__(self):
         return self.name

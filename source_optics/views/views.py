@@ -24,6 +24,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django_filters.rest_framework import DjangoFilterBackend
 from django_tables2 import RequestConfig
 from rest_framework import viewsets
+from django.contrib.auth.models import Group
 from ..models import *
 from ..serializers import (AuthorSerializer, CommitSerializer,
                            CredentialSerializer, GroupSerializer,
