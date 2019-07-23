@@ -15,7 +15,7 @@
 
 from django.urls import path, include
 
-from . views import views
+from . views import views # FIXME
 from rest_framework import routers
 
 api_router = router = routers.DefaultRouter()
@@ -37,6 +37,10 @@ urlpatterns = [
     # REST API
     path('api/', include(api_router.urls)),
     path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
+
+    # Webhooks
+    path('webhook', views.webhook_post, name='webhook_post'),
+    path('webhook/', views.webhook_post, name='webhook_post'),
 
     # UI
     path('repos/', views.attributes_by_repo, name='repos'),

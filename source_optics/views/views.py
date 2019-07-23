@@ -22,6 +22,8 @@ from django_tables2 import RequestConfig
 from django.db.models import Sum
 from datetime import datetime, timedelta
 from django.utils import timezone
+from django.views.decorators.csrf import csrf_exempt
+import traceback
 
 import decimal
 
@@ -40,6 +42,8 @@ from rest_framework import viewsets
 from .. serializers import UserSerializer, GroupSerializer, RepositorySerializer, CredentialSerializer, OrganizationSerializer, \
     AuthorSerializer, CommitSerializer, StatisticSerializer
 from django_filters.rest_framework import DjangoFilterBackend
+from urllib.parse import parse_qs
+from . webhooks import Webhooks
 
 class UserViewSet(viewsets.ReadOnlyModelViewSet):
     """
@@ -279,3 +283,26 @@ def attributes_by_repo(request):
         'repos': Repository.objects.all()
     }
     return render(request, 'repo_view.html', context=context)
+
+@csrf_exempt
+def webhook_post(request, *args, **kwargs):
+    """
+    Receive an incoming webhook and potentially trigger a build using
+    the code in webhooks.py
+    """
+
+    if request.method != 'POST':
+        return redirect('index')
+
+    try:
+        query = parse_qs(request.META['QUERY_STRING'])
+        token = query.get('token', None)
+        if token is not None:
+            token = token[0]
+        Webhooks(request, token).handle()
+    except Exception as e:
+        traceback.print_exc()
+        #LOG.error("error processing webhook: %s" % str(e))
+        return HttpResponseServerError("webhook processing error")
+
+    return HttpResponse("ok", content_type="text/plain")

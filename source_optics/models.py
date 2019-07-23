@@ -36,6 +36,8 @@ class Organization(models.Model):
     members = models.ManyToManyField(User, related_name='+', help_text='currently unused')
 
     credential = models.ForeignKey('Credential', on_delete=models.SET_NULL, null=True, help_text='used for repo imports and git checkouts')
+    webhook_enabled = models.BooleanField(default=False)
+    webhook_token = models.CharField(max_length=255, null=True, blank=True)
 
     def __str__(self):
         return self.name
@@ -114,10 +116,11 @@ class Repository(models.Model):
     earliest_commit = models.DateTimeField(blank=True, null=True)
     tags = models.ManyToManyField('Tag', related_name='tags', blank=True)
     last_pulled = models.DateTimeField(blank = True, null = True)
-    url = models.TextField(max_length=256, unique=True, blank=False, help_text='use a git ssh url for private repos, else http/s are ok')
+    url = models.TextField(max_length=255, unique=True, blank=False, help_text='use a git ssh url for private repos, else http/s are ok')
     name = models.TextField(db_index=True, max_length=32, blank=False, null=False)
     color = models.CharField(max_length=10, null=True, blank=True)
     force_next_pull = models.BooleanField(null=False, default=False)
+    webhook_token = models.CharField(max_length=255, null=True, blank=True)
 
     def __str__(self):
         return self.name
