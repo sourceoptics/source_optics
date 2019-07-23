@@ -69,105 +69,69 @@ class RepoProcessor:
     @classmethod
     def scan(cls, organization_filter=None):
 
+        # REFACTOR: this should use a context manager
         lock_handle = cls.lock()
 
         agent_manager = SshAgentManager()
 
         # FIXME: grab flock in case cron interval is too close
 
-        print("processing repos...")
+        print("scanning repos")
 
-        repos = None
+        repos = Repository.objects
         if organization_filter:
-            repos = Repository.objects.filter(organization__name__contains=organization_filter).all()
-        else:
-            repos = Repository.objects.all()
-
-        # Check through every repository
+            repos = repos.filter(organization__name__contains=organization_filter)
+        repos = repos.all()
 
         for repo in repos:
-
-
-            # FIXME: move this into a sub-function, and then yet more
-
-            used_ssh = False
-            print("repo: %s" % repo)
-
-            if not repo.enabled:
-                print("(disabled, skipping)")
-                continue
-
-            if repo.force_nuclear_rescan:
-                repo.last_scanned = None
-                repo.last_rollup = None
-                repo.force_next_pull = True
-                Commit.objects.filter(repo=repo).delete()
-                FileChange.objects.filter(repo=repo).delete()
-                File.objects.filter(repo=repo).delete()
-                repo.save()
-
-            # Calculate time difference based on last_pulled date
-            today = datetime.datetime.now(tz=timezone.utc)
-            if repo.last_pulled is not None:
-                timediff = (today - repo.last_pulled).total_seconds() / 60.0
-                if timediff < settings.PULL_THRESHOLD and not repo.force_next_pull:
-                    print("(recently processed, skipping)")
-                    continue
-
-
-            if "http://" not in repo.url and "https://" not in repo.url:
-                if repo.organization.credential and repo.organization.credential.ssh_private_key:
-                    print("ADDING KEY")
-                    agent_manager.add_key(repo, repo.organization.credential)
-                    used_ssh = True
-                else:
-                    raise Exception("repo checkout of %s requires SSH credentials" % repo.name)
-
-
-            # FIXME: better detection if a private repo
-            # FIXME: refactor into smaller functions
-
-            # Scan the repository and update the last pulled date
-            print("Scanning " + str(repo))
-            scan_time_start = time.clock()
-
-            # FIXME: this should only take "repo" as a parameter.
-            print("--- SCANNING: %s" % repo)
-
-            # this is where the logging of commit objects happens
-            ok = cls.scan_repo(repo)
-            if not ok:
-                print("problem scanning repo, skipping")
-                continue
-
-            # FIXME: refactor into smaller functions
-
-            scan_time_total = time.clock() - scan_time_start
-            print ("Scanning complete. Operation time for " + str(repo) + ": " + str(scan_time_total) + "s")
-            repo.last_pulled = datetime.datetime.now(tz=timezone.utc)
-            print("last_pulled: "  + str(repo.last_pulled))
-
-            repo.force_next_pull = False
-            repo.save()
-
-            if used_ssh:
-                # drop old keys
-                agent_manager.cleanup(repo)
-
-            # Generate the statistics for the repository
-            print ("Aggregating stats for " + str(repo))
-            stat_time_start = time.clock()
-            Rollup.rollup_repo(repo)
-            stat_time_total = time.clock() - stat_time_start
-            print ("Rollup complete. Operation time for " + str(repo) + ": " + str(stat_time_total) + "s")
+            cls.scan_repo(repo, agent_manager)
 
         cls.unlock(lock_handle)
 
     @classmethod
-    @transaction.atomic
-    def scan_repo(cls, repo):
-        # Calculate the work directory by translating up two directories from this file
-        #   eventually make this a settings variable so users can store it wherever
+    def scan_repo(cls, repo, agent_manager):
+        # FIXME: break into subfunctions
+
+        used_ssh = False
+        print("repo: %s" % repo)
+
+        if not repo.enabled:
+            print("(disabled, skipping)")
+            return
+
+        if repo.force_nuclear_rescan:
+            repo.last_scanned = None
+            repo.last_rollup = None
+            repo.force_next_pull = True
+            Commit.objects.filter(repo=repo).delete()
+            FileChange.objects.filter(repo=repo).delete()
+            File.objects.filter(repo=repo).delete()
+            repo.save()
+
+        # Calculate time difference based on last_pulled date
+        today = datetime.datetime.now(tz=timezone.utc)
+        if repo.last_pulled is not None:
+            timediff = (today - repo.last_pulled).total_seconds() / 60.0
+            if timediff < settings.PULL_THRESHOLD and not repo.force_next_pull:
+                print("(recently processed, skipping)")
+                return
+
+        if "http://" not in repo.url and "https://" not in repo.url:
+            if repo.organization.credential and repo.organization.credential.ssh_private_key:
+                # print("ADDING KEY")
+                agent_manager.add_key(repo, repo.organization.credential)
+                used_ssh = True
+            else:
+                raise Exception("repo checkout of %s requires SSH credentials" % repo.name)
+
+        # FIXME: better detection if a private repo
+        # FIXME: refactor into smaller functions
+
+        # Scan the repository and update the last pulled date
+        print("scanning " + str(repo))
+        scan_time_start = time.clock()
+
+        ok = False
 
         work_dir = repo.organization.get_working_directory()
         work_dir = os.path.join(work_dir, repo.name)
@@ -186,4 +150,29 @@ class RepoProcessor:
             return False
 
         ok = Commits.process_commits(repo, work_dir)
-        return ok
+        if not ok:
+            print("problem analyzing commits, skipping")
+            return
+
+        # FIXME: refactor into smaller functions
+
+        scan_time_total = time.clock() - scan_time_start
+        print("scanning complete. time: " + str(repo) + ": " + str(scan_time_total) + "s")
+        repo.last_pulled = datetime.datetime.now(tz=timezone.utc)
+        print("last_pulled: " + str(repo.last_pulled))
+
+        repo.force_next_pull = False
+        repo.save()
+
+        if used_ssh:
+            # drop old keys
+            agent_manager.cleanup(repo)
+
+        # Generate the statistics for the repository
+        print("aggregating stats for " + str(repo))
+        stat_time_start = time.clock()
+        Rollup.rollup_repo(repo)
+        stat_time_total = time.clock() - stat_time_start
+        print("aggregation complete. time: " + str(repo) + ": " + str(stat_time_total) + "s")
+
+
