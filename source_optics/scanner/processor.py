@@ -21,11 +21,11 @@
 import datetime
 import time
 import os
-
+import sys
+import fcntl
 from django.utils import timezone
 from django.db import transaction
 from django.conf import settings
-
 from source_optics.scanner.rollup import Rollup
 from .. models import Repository
 from . ssh_agent import SshAgentManager
@@ -42,9 +42,32 @@ class RepoProcessor:
     repo_sleep = 5
     thread_sleep = 5
 
+    @classmethod
+    def lock(cls):
+        """
+        this is designed so you can put the scanner on cron vs systemd and if the process isn't done, you don't
+        see a build-up of overzealous scanners all trying to do the same job
+        """
+        fname = settings.SCANNER_LOCK_FILE
+        fh = open(fname, 'w+')
+        try:
+            fcntl.flock(fh, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except IOError as e:
+            # raise on unrelated IOErrors
+            if e.errno != errno.EAGAIN:
+                raise
+            print("Another scanner process is using the lockfile: %s" % fname)
+            sys.exit(0)
+        return fh
+
+    @classmethod
+    def unlock(cls, handle):
+        fcntl.flock(handle, fcntl.LOCK_UN)
 
     @classmethod
     def scan(cls, organization_filter=None):
+
+        lock_handle = cls.lock()
 
         agent_manager = SshAgentManager()
 
@@ -125,6 +148,7 @@ class RepoProcessor:
             stat_time_total = time.clock() - stat_time_start
             print ("Rollup complete. Operation time for " + str(repo) + ": " + str(stat_time_total) + "s")
 
+        cls.unlock(lock_handle)
 
     @classmethod
     @transaction.atomic

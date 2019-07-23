@@ -70,7 +70,7 @@ python manage.py generate_secret
 python manage.py runserver 0:8000
 ```
 
-The generate_secret command generates a symetric key in /etc/sourceoptics/cred.key.  If you lose this
+The generate_secret command generates a symetric key in /etc/source_optics/cred.key.  If you lose this
 file you will need to run the command again and re-edit any credential objects in Django Admin to allow
 them to be re-encrypted with a new key.  There are no uses for this file outside the credential objects.
 This will be explained in more detail later.
@@ -135,6 +135,10 @@ machine.
 If parallelism is desired, process other organizations on a different machine.  Feature additions to
 enable parallel scans on the same machine may be added in the future.
 
+If you have problems with the scanner going interactive, make sure that you are using SSH URLs for repositories,
+that the process is wrapped with ssh-agent, and if any credentials have locked keys (SSH keys with passphrases)
+those are stored on the credential objects.
+
 Webhooks
 ========
 
@@ -194,7 +198,7 @@ Backups/Maintaince
 You should make database backups.  The 'work' directory inside the project is not important to save,
 as new checkouts will recreate the git clones.
 
-You should backup /etc/sourceoptics, not only for database configuration and settings, but also the
+You should backup /etc/source_optics, not only for database configuration and settings, but also the
 'cred.key' file, which is used to symetrically encrypt database contents.  The encryption key
 is not held within the database.  As previously mentioned, if you rewrite this key, you will need
 to set up new credentials in the admin system.

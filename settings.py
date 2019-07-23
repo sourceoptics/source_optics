@@ -183,6 +183,8 @@ PLUGIN_CONFIGURATION = dict(
     ),
 )
 
+SCANNER_LOCK_FILE = "/etc/source_optics/scanner.lock"
+
 # ===========================
 # APP PREFERENCES
 
