@@ -23,6 +23,7 @@ import time
 import os
 import sys
 import fcntl
+import errno
 from django.utils import timezone
 from django.db import transaction
 from django.conf import settings
@@ -53,10 +54,7 @@ class RepoProcessor:
         try:
             fcntl.flock(fh, fcntl.LOCK_EX | fcntl.LOCK_NB)
         except IOError as e:
-            # raise on unrelated IOErrors
-            if e.errno != errno.EAGAIN:
-                raise
-            print("Another scanner process is using the lockfile: %s" % fname)
+            print("Another scanner process is likely using the lockfile: %s" % fname)
             sys.exit(0)
         return fh
 
