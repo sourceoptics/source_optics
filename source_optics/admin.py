@@ -16,7 +16,7 @@
 from django.contrib import admin
 from django.forms import CharField, ModelForm, PasswordInput
 
-from .models import *
+from .models import Organization, Statistic, Repository, Author, Commit, FileChange, File, Tag, Credential
 
 
 def fast_delete(modeladmin, request, queryset):

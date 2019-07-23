@@ -1,12 +1,10 @@
-import os
-import subprocess
-from datetime import date, datetime
+from datetime import datetime
 
 from django.db.models import Sum
-from django.test import TestCase, TransactionTestCase
+from django.test import TransactionTestCase
 from django.utils import timezone
 
-from .models import *
+from .models import Repository, Statistic, Author, Credential, Organization
 from .scanner.git import Scanner
 from .stats.rollup import Rollup
 
@@ -23,7 +21,7 @@ class RollupTest(TransactionTestCase):
 
     def scan(self):
         # our test login information
-        cred = LoginCredential(name='demouser', username='srcoptics', password='bigbig2019')
+        cred = Credential(name='demouser', username='srcoptics', password='bigbig2019')
         cred.save()
         # Scan our demo repo
         Scanner.scan_repo(REPO, None, cred)

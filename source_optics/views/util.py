@@ -7,10 +7,10 @@ from datetime import datetime, timedelta
 from django.contrib.humanize.templatetags.humanize import intcomma
 from django.core import serializers
 from django.db.models import Sum
-from django.http import *
+from django.http import HttpResponse
 from django.utils import timezone
 
-from ..models import *
+from ..models import Repository, Tag, Statistic, File, Author, Commit
 
 
 """
@@ -18,7 +18,6 @@ Returns a JSON list of repositories by search query
 """
 def search(request, q):
     org = request.GET.get('org')
-
     repos = query(q, org)
     data = serializers.serialize('json',repos)
     return HttpResponse(data, content_type='application/json')
@@ -132,7 +131,6 @@ def get_query_strings(request):
         queries['attribute'] = request.GET.get('attr')
 
 
-    time_between = abs((queries['end'] - queries['start']).days)
     interval = request.GET.get('intr')
     if not interval:
         queries['interval'] = Statistic.INTERVALS[0][0]
@@ -241,9 +239,9 @@ def get_first_day(date_index, interval):
     if date_index is None:
         return None
 
-    if interval[0] is 'WK':
+    if interval[0] == 'WK':
         date_index -= datetime.timedelta(days=date_index.isoweekday() % 7)
-    elif interval[0] is 'MN':
+    elif interval[0] == 'MN':
         date_index = date_index.replace(day = 1)
     date_index = date_index.replace(hour=0, minute=0, second=0, microsecond=0)
     return date_index
@@ -251,9 +249,9 @@ def get_first_day(date_index, interval):
 #Gets the last day of the week or month depending on INTERVALS
 #Sets the time to 11:59 PM or 23:59 for the day
 def get_end_day(date_index, interval):
-    if interval[0] is 'WK':
+    if interval[0] == 'WK':
         date_index = date_index + datetime.timedelta(days=6)
-    elif interval[0] is 'MN':
+    elif interval[0] == 'MN':
         date_delta = date_index.replace(day = 28) + datetime.timedelta(days = 4)
         date_index = date_delta - datetime.timedelta(days=date_delta.day)
 

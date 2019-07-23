@@ -1,7 +1,11 @@
 # contributor note: the django UI will be eventually replaced by a new dynamic frontend speaking to the REST API, do not add features
 
-from .graphs.authors import *
+from .graphs.authors import AuthorGraph, AuthorContributeGraph
 from .graphs.repositories import RepositoryGraph
+from .. models import Repository, Statistic
+from . import util
+import plotly.graph_objs as go
+import plotly.offline as opy
 
 GRAPH_COLORS = (
     '#e6194b', '#3cb44b', '#ffe119', '#4363d8', '#f58231', '#911eb4', '#46f0f0', '#f032e6', '#bcf60c', '#fabebe', '#008080', '#e6beff', '#9a6324', '#fffac8', '#800000', '#aaffc3', '#808000', '#ffd8b1', '#000075', '#808080', '#000000'
@@ -15,6 +19,7 @@ View basic graph for a repo
 # Uses the provided parameters to generate a graph and returns it
 def generate_graph_data(**kwargs):
     # FIXME: this shouldn't use a loose kwargs
+    # FIXME: verify this is used, had some missing imports
 
     # Array for dates
     dates = []

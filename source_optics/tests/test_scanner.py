@@ -1,6 +1,6 @@
 from django.test import TestCase
 
-from .models import *
+from .models import Credential, Organization, Commit, File, Repository
 from .scanner.git import Scanner
 
 REPO_NAME='https://github.com/srcoptics/srcoptics_test'
@@ -12,7 +12,7 @@ class ScanTest(TestCase):
 
     def scan(self):
         # our test login information
-        cred = LoginCredential(name='demouser',username='srcoptics', password='bigbig2019')
+        cred = Credential(name='demouser',username='srcoptics', password='bigbig2019')
         cred.save()
         # run the end-to-end scanner
         Scanner.scan_repo(REPO_NAME, None, cred)

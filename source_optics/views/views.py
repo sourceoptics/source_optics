@@ -17,7 +17,6 @@
 
 import traceback
 from urllib.parse import parse_qs
-
 from django.http import *
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
@@ -31,7 +30,6 @@ from ..serializers import (AuthorSerializer, CommitSerializer,
                            OrganizationSerializer, RepositorySerializer,
                            StatisticSerializer, UserSerializer)
 from . import graph, util
-from .forms import RepositoryForm
 from .tables import *
 from .webhooks import Webhooks
 
@@ -244,22 +242,6 @@ def author_details(request, author_email):
     }
     return render(request, 'author_details.html', context=context)
 
-
-# Renders the add repository page, must retrieve the organizations and credentials
-# in the database.
-def add_repo(request):
-    if request.method == 'POST':
-        form = RepositoryForm(request.POST)
-        if form.is_valid():
-            fields = form.cleaned_data
-            repo = Creator.create_repo(org_name=fields['organization'].name, cred=fields['credential'], repo_url=fields['url'], repo_name=fields['name'])
-            repo.save()
-            return HttpResponseRedirect('/complete/')
-
-    else:
-        form = RepositoryForm()
-
-    return render(request, 'add_repo.html', {'form': form})
 
 def attributes_by_repo(request):
 
