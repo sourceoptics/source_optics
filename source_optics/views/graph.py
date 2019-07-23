@@ -1,24 +1,20 @@
 # contributor note: the django UI will be eventually replaced by a new dynamic frontend speaking to the REST API, do not add features
 
-from django.shortcuts import render
-from django.template import loader
+import math
 
-from django.db.models import Sum, Count
-
-from django.http import *
-from django_tables2 import RequestConfig
-
-from ..models import Repository, Commit, Statistic, Tag, Author
-
-from . import util
-
-from .graphs.authors import *
-from .graphs.repositories import RepositoryGraph
-
-from plotly import tools
 import plotly.graph_objs as go
 import plotly.offline as opy
-import math
+from django.db.models import Count, Sum
+from django.http import *
+from django.shortcuts import render
+from django.template import loader
+from django_tables2 import RequestConfig
+from plotly import tools
+
+from ..models import Author, Commit, Repository, Statistic, Tag
+from . import util
+from .graphs.authors import *
+from .graphs.repositories import RepositoryGraph
 
 GRAPH_COLORS = (
     '#e6194b', '#3cb44b', '#ffe119', '#4363d8', '#f58231', '#911eb4', '#46f0f0', '#f032e6', '#bcf60c', '#fabebe', '#008080', '#e6beff', '#9a6324', '#fffac8', '#800000', '#aaffc3', '#808000', '#ffd8b1', '#000075', '#808080', '#000000'

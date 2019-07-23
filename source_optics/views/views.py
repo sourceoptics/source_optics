@@ -15,35 +15,35 @@
 # limitations under the License.
 #
 
+import decimal
+import traceback
+from datetime import datetime, timedelta
+from random import randint
+from urllib.parse import parse_qs
+
+from django.contrib.auth.models import Group, User
+from django.contrib.humanize.templatetags.humanize import intcomma
+from django.db.models import Sum
+from django.http import *
 from django.shortcuts import render
 from django.template import loader
-from django.http import *
-from django_tables2 import RequestConfig
-from django.db.models import Sum
-from datetime import datetime, timedelta
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
-import traceback
-
-import decimal
-
-from . import graph, util
-
-from .forms import RepositoryForm
-from ..models import *
-from .tables import *
-from ..create import Creator
-from django.contrib.humanize.templatetags.humanize import intcomma
-
-from random import randint
-
-from django.contrib.auth.models import User, Group
-from rest_framework import viewsets
-from .. serializers import UserSerializer, GroupSerializer, RepositorySerializer, CredentialSerializer, OrganizationSerializer, \
-    AuthorSerializer, CommitSerializer, StatisticSerializer
 from django_filters.rest_framework import DjangoFilterBackend
-from urllib.parse import parse_qs
-from . webhooks import Webhooks
+from django_tables2 import RequestConfig
+from rest_framework import viewsets
+
+from ..create import Creator
+from ..models import *
+from ..serializers import (AuthorSerializer, CommitSerializer,
+                           CredentialSerializer, GroupSerializer,
+                           OrganizationSerializer, RepositorySerializer,
+                           StatisticSerializer, UserSerializer)
+from . import graph, util
+from .forms import RepositoryForm
+from .tables import *
+from .webhooks import Webhooks
+
 
 class UserViewSet(viewsets.ReadOnlyModelViewSet):
     """

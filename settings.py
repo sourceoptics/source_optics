@@ -10,10 +10,11 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/2.1/ref/settings/
 """
 
-import os, django
-
-from split_settings.tools import optional, include
+import os
 from collections import OrderedDict
+
+import django
+from split_settings.tools import include, optional
 
 include(
     '/etc/source_optics/conf.d/*.py',
@@ -165,7 +166,6 @@ DOTS_THRESHOLD = 1000
 DOTS_WIDTH = 10
 
 
-
 REST_FRAMEWORK = {
     'DEFAULT_FILTER_BACKENDS': (
         'django_filters.rest_framework.DjangoFilterBackend',
@@ -193,4 +193,3 @@ CHECKOUT_DIRECTORY = "/tmp/source_optics"
 
 # pull new code from repos if not pulled in N minutes, 0 = always pull
 PULL_THRESHOLD = 0
-

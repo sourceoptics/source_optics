@@ -1,14 +1,14 @@
-from django.test import TransactionTestCase, TestCase
-from . models import *
-from . scanner.git import Scanner
-from . stats.rollup import Rollup
+import os
+import subprocess
 from datetime import date, datetime
 
-from django.utils import timezone
 from django.db.models import Sum
+from django.test import TestCase, TransactionTestCase
+from django.utils import timezone
 
-import subprocess
-import os
+from .models import *
+from .scanner.git import Scanner
+from .stats.rollup import Rollup
 
 REPO ='https://github.com/srcoptics/demorepo'
 REPO_NAME = "demorepo"

@@ -7,7 +7,8 @@
 #  --------------------------------------------------------------------------
 
 import json
-from .. models import Repository
+
+from ..models import Repository
 
 # ===============================================================================================
 
@@ -50,4 +51,3 @@ class Webhooks(object):
             if repo.webhook_token is None or (repo.organization.webhook_token == self.token) or repo.webhook_token == self.token:
                 repo.force_next_pull = True
                 repo.save()
-

@@ -14,8 +14,10 @@
 #
 
 from django.contrib import admin
-from django.forms import ModelForm, PasswordInput, CharField
-from . models import *
+from django.forms import CharField, ModelForm, PasswordInput
+
+from .models import *
+
 
 def fast_delete(modeladmin, request, queryset):
     queryset.delete()

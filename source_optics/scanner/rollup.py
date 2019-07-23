@@ -13,17 +13,19 @@
 # limitations under the License.
 #
 
-from django.utils.dateparse import parse_datetime
-from django.db.models import Sum, Count, IntegerField
-from django.db.models.functions import Cast
-from django.conf import settings
-from django.utils import timezone
-from source_optics.models import *
-from source_optics.create import Creator # FIXME: eliminate this
 import concurrent.futures
 import datetime
 import json
+
+from django.conf import settings
 from django.db import transaction
+from django.db.models import Count, IntegerField, Sum
+from django.db.models.functions import Cast
+from django.utils import timezone
+from django.utils.dateparse import parse_datetime
+
+from source_optics.create import Creator  # FIXME: eliminate this
+from source_optics.models import *
 
 intervals =  Statistic.INTERVALS
 

@@ -7,11 +7,11 @@
 #  --------------------------------------------------------------------------
 
 import io
-import subprocess
-import tempfile
+import os
 import re
 import shutil
-import os
+import subprocess
+import tempfile
 
 TIMEOUT = -1  # name of timeout command
 

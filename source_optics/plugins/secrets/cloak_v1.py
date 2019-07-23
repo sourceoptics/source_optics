@@ -8,9 +8,11 @@
 #  when required.
 #  --------------------------------------------------------------------------
 
-from django.conf import settings
-from cryptography import fernet
 import binascii
+
+from cryptography import fernet
+from django.conf import settings
+
 
 class BasicV1(object):
 
@@ -68,4 +70,3 @@ class Plugin(object):
             # user didn't run 'make secrets' yet, so disable the plugin
             return False
         return msg.startswith(self.HEADER)
-

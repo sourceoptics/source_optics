@@ -13,10 +13,10 @@
 # limitations under the License.
 #
 
-from django.urls import path, include
-
-from . views import views # FIXME
+from django.urls import include, path
 from rest_framework import routers
+
+from .views import views  # FIXME
 
 api_router = router = routers.DefaultRouter()
 router.register(r'users', views.UserViewSet)

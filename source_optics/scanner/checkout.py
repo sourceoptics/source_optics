@@ -13,19 +13,20 @@
 # limitations under the License.
 #
 
-import os
-import subprocess
-import getpass
-import re
 import datetime
+import getpass
+import os
+import re
+import subprocess
 import traceback
 
-from django.utils.dateparse import parse_datetime
-from django.utils import timezone
 from django.conf import settings
-from .. models import *
-from .. create import Creator
 from django.db import transaction
+from django.utils import timezone
+from django.utils.dateparse import parse_datetime
+
+from ..create import Creator
+from ..models import *
 from . import commands
 
 GIT_TYPES = ["https://", "http://"]
@@ -109,5 +110,3 @@ class Checkout:
             commands.execute_command(repo, cmd, log=False, timeout=600, env=key_mgmt)
 
         return True
-
-

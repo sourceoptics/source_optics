@@ -1,6 +1,7 @@
 from django.test import TestCase
-from . models import *
-from . scanner.git import Scanner
+
+from .models import *
+from .scanner.git import Scanner
 
 REPO_NAME='https://github.com/srcoptics/srcoptics_test'
 

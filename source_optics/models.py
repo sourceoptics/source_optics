@@ -13,16 +13,16 @@
 # limitations under the License.
 #
 
-from django.db import models
-from django.contrib.auth.models import Group, User
+import os
+import re
 
 # FIXME: remove non-database behavior from this module
 from django.conf import settings
-import os
-import re
-from source_optics.scanner.encrypt import SecretsManager
-
+from django.contrib.auth.models import Group, User
 from django.core.exceptions import ValidationError
+from django.db import models
+
+from source_optics.scanner.encrypt import SecretsManager
 
 repo_validator = re.compile(r'[^a-zA-Z0-9._]')
 

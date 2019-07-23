@@ -4,7 +4,8 @@
 #  secrets.py - cloaks and decloaks secrets
 #  --------------------------------------------------------------------------
 
-from .. plugin_loader import PluginLoader
+from ..plugin_loader import PluginLoader
+
 
 class SecretsManager(object):
 

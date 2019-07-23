@@ -23,3 +23,6 @@ install:
 
 compilecss:
 	sass --update --sourcemap=none --style compressed srcOptics/static/_scss:srcOptics/static
+
+isort:
+	isort -rc .

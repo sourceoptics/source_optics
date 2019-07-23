@@ -16,8 +16,9 @@
 import re
 
 from django.utils.dateparse import parse_datetime
-from .. models import *
-from .. create import Creator
+
+from ..create import Creator
+from ..models import *
 from . import commands
 
 # The parser will use regex to grab the fields from the
@@ -198,7 +199,3 @@ class Commits:
         # if we have seen this commit before, causing it to
         # not be created
         return commit_instance, created
-
-
-
-

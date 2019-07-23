@@ -2,15 +2,15 @@
 # be moved away from a (utils) namespace
 #
 
-from django.http import *
-from django.core import serializers
 from datetime import datetime, timedelta
+
+from django.contrib.humanize.templatetags.humanize import intcomma
+from django.core import serializers
+from django.db.models import Sum
+from django.http import *
 from django.utils import timezone
 
-from django.db.models import Sum
-
 from ..models import *
-from django.contrib.humanize.templatetags.humanize import intcomma
 
 
 """

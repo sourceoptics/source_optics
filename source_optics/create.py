@@ -17,7 +17,7 @@
 #
 # Austin Shafer
 
-from . models import *
+from .models import *
 
 # FIXME: move these into class methods on the model objects
 
@@ -124,5 +124,3 @@ class Creator:
                             lines_changed, commit_total, files_changed, author_instances):
         author_instances.append(Statistic(start_date = start_date, interval = interval, repo = repo, author=author, lines_added = lines_added,
         lines_removed = lines_removed, lines_changed = lines_changed, commit_total = commit_total, files_changed = files_changed))
-
-

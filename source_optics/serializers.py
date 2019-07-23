@@ -13,9 +13,12 @@
 # limitations under the License.
 #
 
-from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import Group, User
 from rest_framework import serializers
-from . models import Repository, Organization, Credential, Author, Commit, Statistic
+
+from .models import (Author, Commit, Credential, Organization, Repository,
+                     Statistic)
+
 
 class UserSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
@@ -61,4 +64,3 @@ class StatisticSerializer(serializers.HyperlinkedModelSerializer):
         model = Statistic
         fields = ('start_date', 'interval', 'repo', 'author', 'lines_added',
                   'lines_removed', 'lines_changed', 'commit_total', 'author_total')
-

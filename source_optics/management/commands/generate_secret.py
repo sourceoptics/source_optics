@@ -12,10 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from django.core.management.base import BaseCommand
-from django.conf import settings
 import os
+
 from cryptography import fernet
+from django.conf import settings
+from django.core.management.base import BaseCommand
 
 # FIXME: always create secret if it does not exist
 # FIXME: only create the org if there are no organizations

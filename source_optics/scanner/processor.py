@@ -19,19 +19,23 @@
 # FIXME: you should be able to choose to run scans, aggregartions, or both, or pick a particular repo or list of repos by name
 
 import datetime
-import time
+import errno
+import fcntl
 import os
 import sys
-import fcntl
-import errno
-from django.utils import timezone
-from django.db import transaction
+import time
+
 from django.conf import settings
+from django.db import transaction
+from django.utils import timezone
+
 from source_optics.scanner.rollup import Rollup
-from .. models import Repository
-from . ssh_agent import SshAgentManager
-from . checkout import Checkout
-from . commits import Commits
+
+from ..models import Repository
+from .checkout import Checkout
+from .commits import Commits
+from .ssh_agent import SshAgentManager
+
 
 #
 # Daemon that checks for repositories that have been added and enabled to scan
