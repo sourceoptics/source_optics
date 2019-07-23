@@ -17,7 +17,7 @@ import re
 
 # FIXME: remove non-database behavior from this module
 from django.conf import settings
-from django.contrib.auth.models import Group, User
+from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.db import models
 
@@ -80,24 +80,6 @@ class Credential(models.Model):
         self.ssh_private_key = mgr.cloak(self.ssh_private_key)
         self.ssh_unlock_passphrase = mgr.cloak(self.ssh_unlock_passphrase)
         super().save(*args, **kwargs)
-
-    def is_password(self):
-        """
-        Is this credential password based?  Prefer the key if available.
-        """
-        if not self.ssh_private_key and password:
-            return True
-        return False
-
-    def is_keyfile(self):
-        """
-        Is this credential SSH-key based?  Prefer this over any password.
-        ssh_agent.py can handle unlock passphrases and SSH agent support.
-        See also INSTALL.md
-        """
-        if self.ssh_private_key:
-            return True
-        return False
 
     def unencrypt_password(self):
         mgr = SecretsManager()
