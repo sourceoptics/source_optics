@@ -26,7 +26,6 @@ import time
 import shutil
 
 from django.conf import settings
-from django.db import transaction
 from django.utils import timezone
 
 from source_optics.scanner.rollup import Rollup
@@ -36,10 +35,8 @@ from .checkout import Checkout
 from .commits import Commits
 from .ssh_agent import SshAgentManager
 
-
 #
-# Daemon that checks for repositories that have been added and enabled to scan
-# A repo that is scanned recently is scanned after threshold time has passed
+# Loop that checks for repositories that have been added and ready to scan
 #
 class RepoProcessor:
 
