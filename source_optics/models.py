@@ -13,18 +13,12 @@
 # limitations under the License.
 #
 
-from django.contrib.postgres.fields import JSONField
 from django.db import models
-from django.contrib.postgres.indexes import BrinIndex
 from django.contrib.auth.models import Group, User
-from django import forms
 
 # FIXME: remove non-database behavior from this module
-import binascii
 from django.conf import settings
-import tempfile
 import os
-import subprocess
 import re
 from source_optics.scanner.encrypt import SecretsManager
 
@@ -46,9 +40,18 @@ class Organization(models.Model):
     credential = models.ForeignKey('Credential', on_delete=models.SET_NULL, null=True, help_text='used for repo imports and git checkouts')
     webhook_enabled = models.BooleanField(default=False)
     webhook_token = models.CharField(max_length=255, null=True, blank=True)
+    checkout_path_override = models.CharField(max_length=512, null=True, blank=True)
 
     def __str__(self):
         return self.name
+
+    def get_working_directory(self):
+        path = settings.CHECKOUT_DIRECTORY
+
+        if self.checkout_path_override:
+            path = self.checkout_path_override
+
+        return path
 
 class Credential(models.Model):
 

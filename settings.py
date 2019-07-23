@@ -185,6 +185,9 @@ PLUGIN_CONFIGURATION = dict(
 
 SCANNER_LOCK_FILE = "/etc/source_optics/scanner.lock"
 
+# this is the default for git checkouts made by the program
+CHECKOUT_DIRECTORY = "/tmp/source_optics"
+
 # ===========================
 # APP PREFERENCES
 

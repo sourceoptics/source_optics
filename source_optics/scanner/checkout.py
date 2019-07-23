@@ -56,6 +56,7 @@ class Checkout:
     # ------------------------------------------------------------------
     # Clones the repo if it doesn't exist in the work folder and pulls if it does
 
+
     @classmethod
     def clone_repo(cls, repo, work_dir):
 
@@ -63,13 +64,11 @@ class Checkout:
         key_mgmt = None
         options = ""
         repo_name = repo.name
-        repo
         repo_url = repo.url # FIXME: remove these short variables
         cred = repo.organization.credential
         repo_name = repo.name
         repo_url = cls.fix_repo_url(repo)
-        dest_path = os.path.join(work_dir, repo_name)
-        dest_git = os.path.join(dest_path, ".git")
+        dest_git = os.path.join(work_dir, ".git")
 
         if repo_url.startswith("ssh://"):
             key_mgmt = {
@@ -79,10 +78,10 @@ class Checkout:
                 raise Exception(
                     "add one or more SSH keys to the repo's assigned credential object or use a http:// or https:// URL")
 
-        if os.path.isdir(dest_path) and os.path.exists(dest_path) and os.path.exists(dest_git):
+        if os.path.exists(dest_git):
 
             prev = os.getcwd()
-            os.chdir(dest_path)
+            os.chdir(work_dir)
             # FIXME: command wrapper should take an optional cwd
 
             try:
@@ -97,15 +96,15 @@ class Checkout:
 
         else:
 
-            print("CREATING: %s" % dest_path)
+            print("CREATING: %s" % work_dir)
             # os.makedirs can be a flakey in OS X, so shelling out
-            commands.execute_command(repo, "mkdir -p %s" % dest_path, log=True, timeout=5)
+            commands.execute_command(repo, "mkdir -p %s" % work_dir, log=True, timeout=5)
 
             # on-disk repo doesn't exist yet, need to clone
             # FIXME: refactor into smaller functions
 
             key_mgmt = None
-            cmd = f"git clone {repo_url} {dest_path} {options}"
+            cmd = f"git clone {repo_url} {work_dir} {options}"
 
             commands.execute_command(repo, cmd, log=False, timeout=600, env=key_mgmt)
 

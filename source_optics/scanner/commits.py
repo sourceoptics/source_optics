@@ -70,7 +70,7 @@ class Commits:
     """
 
     @classmethod
-    def process_commits(cls, repo, work_dir):
+    def process_commits(cls, repo, repo_dir):
 
         """
         Uses git log to gather the commit data for a repository
@@ -80,8 +80,6 @@ class Commits:
         # FIXME: remove all of these variables that are just instance.foo
 
         repo_name = repo.name
-
-        repo_dir = os.path.join(work_dir, repo_name)
 
         # python subprocess iteration doesn't have an EOF indicator that I can find.
         # We echo "EOF" to the end of the log output so we can tell when we are done

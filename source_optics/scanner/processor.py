@@ -154,8 +154,9 @@ class RepoProcessor:
         # Calculate the work directory by translating up two directories from this file
         #   eventually make this a settings variable so users can store it wherever
 
-        base_path = os.path.abspath(os.path.dirname(__file__).rsplit("/", 2)[0])
-        work_dir = os.path.join(base_path, 'work')
+        work_dir = repo.organization.get_working_directory()
+        work_dir = os.path.join(work_dir, repo.name)
+
         os.system('mkdir -p ' + work_dir)
 
         ok = Checkout.clone_repo(repo, work_dir)

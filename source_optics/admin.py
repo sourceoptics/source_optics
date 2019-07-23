@@ -14,7 +14,7 @@
 #
 
 from django.contrib import admin
-from django.forms import ModelForm, PasswordInput
+from django.forms import ModelForm, PasswordInput, CharField
 from . models import *
 
 def fast_delete(modeladmin, request, queryset):
@@ -35,8 +35,8 @@ class StatAdmin(admin.ModelAdmin):
     actions = [fast_delete]
 
 class CredentialForm(ModelForm):
-    password = forms.CharField(widget=PasswordInput(), required=False)
-    ssh_unlock_passphrase = forms.CharField(widget=PasswordInput(), required=False)
+    password = CharField(widget=PasswordInput(), required=False)
+    ssh_unlock_passphrase = CharField(widget=PasswordInput(), required=False)
     class Meta:
         model = Credential
         fields = '__all__'
