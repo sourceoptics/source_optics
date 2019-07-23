@@ -23,8 +23,6 @@ from django.db.models import Count, IntegerField, Sum
 from django.db.models.functions import Cast
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
-
-from source_optics.create import Creator  # FIXME: eliminate this
 from source_optics.models import *
 
 intervals =  Statistic.INTERVALS
@@ -91,6 +89,23 @@ class Rollup:
 
         return date_index
 
+    # FIXME: eliminate this function
+    @classmethod
+    def create_total_rollup(cls, start_date=None, interval=None, repo=None, lines_added=None, lines_removed=None,
+                            lines_changed=None, commit_total=None, files_changed=None, author_total=None,
+                            total_instances=None):
+        total_instances.append(Statistic(start_date=start_date, interval=interval, repo=repo, lines_added=lines_added,
+                                     lines_removed=lines_removed, lines_changed=lines_changed,
+                                     commit_total=commit_total, files_changed=files_changed,
+                                     author_total=author_total))
+
+    # FIXME: eliminate this function / this should all use keyword arguments
+    @classmethod
+    def create_author_rollup(cls, start_date, interval, repo, author, lines_added, lines_removed,
+                            lines_changed, commit_total, files_changed, author_instances):
+        author_instances.append(Statistic(start_date = start_date, interval = interval, repo = repo, author=author, lines_added = lines_added,
+        lines_removed = lines_removed, lines_changed = lines_changed, commit_total = commit_total, files_changed = files_changed))
+
     @classmethod
     def aggregate_day_rollup_internal(cls, repo, total_instances, date_index):
 
@@ -123,7 +138,7 @@ class Rollup:
         data['lines_changed'] = int(data['lines_added']) + int(data['lines_removed'])
 
         # Create total rollup row for the day
-        Creator.create_total_rollup(start_date=date_index, interval=intervals[0][0], repo=repo, 
+        cls.create_total_rollup(start_date=date_index, interval=intervals[0][0], repo=repo,
             lines_added=data['lines_added'], 
             lines_removed=data['lines_removed'],
             lines_changed=data['lines_changed'], 
@@ -182,7 +197,7 @@ class Rollup:
             data['lines_changed'] = int(data['lines_added']) + int(data['lines_removed'])
 
             # Create author rollup row for the day
-            Creator.create_author_rollup(date_index, intervals[0][0], repo, author, data['lines_added'], data['lines_removed'],
+            cls.create_author_rollup(date_index, intervals[0][0], repo, author, data['lines_added'], data['lines_removed'],
             data['lines_changed'], data['commit_total'], data['files_changed'], author_instances)
 
             #Increment date_index to the next day
@@ -223,7 +238,7 @@ class Rollup:
             for d in days:
                 author = Author.objects.get(pk=d['author_id'])
                 # FIXME: these should use keyword arguments
-                Creator.create_author_rollup(date_index, interval[0], repo, author, d['lines_added_total'], d['lines_removed_total'],
+                cls.create_author_rollup(date_index, interval[0], repo, author, d['lines_added_total'], d['lines_removed_total'],
                 d['lines_changed_total'], d['commit_total_total'], d['files_changed_total'], author_instances)
 
             #Increment to next week or month

@@ -15,7 +15,6 @@
 
 from django.utils.dateparse import parse_datetime
 
-from ..create import Creator
 from ..models import *
 from . import commands
 
@@ -142,6 +141,73 @@ class Commits:
 
         return True
 
+    # This assumes that commits (and their effect on files) will not be processed
+    # more than once. It is on the scanner (the caller) to never scan commits
+    # more than once.
+    # ------------------------------------------------------------------
+    @classmethod
+    def create_file(cls, path, commit, la, lr, binary):
+        file_instance = {}
+        #get the file name
+        fArray = os.path.basename(path)
+
+        fName = ""
+        if len(fArray) > 1:
+            fName = fArray[1]
+        else:
+            fName = fArray[0]
+
+        # find the extension
+        (root, ext) = os.path.splitext(path)
+
+        # update the global file object with the line counts
+        file_instance,created = File.objects.get_or_create(path=path, defaults={
+                    "lines_added":int(la),
+                    "lines_removed":int(lr),
+                    "name":fName,
+                    "commit":commit,
+                    "repo":commit.repo,
+                    "binary":binary,
+                    "ext":ext})
+
+        # update the la/lr if we found the file
+        if not created:
+                file_instance.lines_added += int(la)
+                file_instance.lines_removed += int(lr)
+                file_instance.save()
+
+        # add the la/lr to the commit for its total count
+        commit.lines_added += int(la)
+        commit.lines_removed += int(lr)
+        commit.files.add(file_instance)
+        commit.save()
+        return file_instance
+
+    @classmethod
+    def create_filechange(cls, path, commit, la, lr, binary):
+        # find the extension
+        (root, ext) = os.path.splitext(path)
+
+        # get the file name
+        fArray = os.path.basename(path)
+
+        fName = ""
+        if len(fArray) > 1:
+            fName = fArray[1]
+        else:
+            fName = fArray[0]
+
+        filechange_instance = FileChange.objects.create(name=fName, path=path, ext=ext, commit=commit,
+                                                            repo=commit.repo, lines_added=la, lines_removed=lr,
+                                                            binary=binary)
+
+        # add the file change to the global file object
+        file_instance = File.objects.get(name=fName, path=path)
+        file_instance.changes.add(filechange_instance)
+        file_instance.save()
+
+        return filechange_instance
+
     @classmethod
     def handle_file_information(cls, repo, line, last_commit):
 
@@ -163,12 +229,12 @@ class Commits:
             fields[0] = 0
 
         # increment the files lines added/removed
-        Creator.create_file(fields[2], last_commit, fields[0], fields[1], binary)
+        cls.create_file(fields[2], last_commit, fields[0], fields[1], binary)
 
         # WARNING: this will record a huge amount of data
         if settings.RECORD_FILE_CHANGES:
             #                   name       commit       lines add  lines rm
-            Creator.create_filechange(fields[2], last_commit, fields[0], fields[1], binary)
+            cls.create_filechange(fields[2], last_commit, fields[0], fields[1], binary)
 
     @classmethod
     def handle_diff_information(cls, repo, line):
@@ -184,16 +250,25 @@ class Commits:
             raise Exception("DOESN'T MATCH? %s" % line)
 
         data = match.groupdict()
+        email = data['author_email']
 
-        # FIXME: merge with models file and obsolete these 'creator' methods
-        author = Creator.create_author(data['author_email'], repo)
-        commit_instance, created = Creator.create_commit(repo,
-                                                         data["subject"],
-                                                         author,
-                                                         data['commit'],
-                                                         parse_datetime(data['commit_date']),
-                                                         parse_datetime(data['author_date']), 0, 0)
+        author_instance, created = Author.objects.get_or_create(email=email)
+        author_instance.repos.add(repo)
+        author_instance.save()
 
-        # if we have seen this commit before, causing it to
-        # not be created
-        return commit_instance, created
+        commit_date = parse_datetime(data['commit_date'])
+        author_date = parse_datetime(data['author_date'])
+        commit, created = Commit.objects.get_or_create(
+            sha=commit_sha,
+            defaults=dict(
+                subject=data['subject'],
+                repo=repo_instance,
+                author=author,
+                author_date=author_date,
+                commit_date=commit_date,
+                lines_added=0,
+                lines_removed=0
+            )
+        )
+
+        return commit

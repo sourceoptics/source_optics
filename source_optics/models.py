@@ -130,6 +130,8 @@ class Author(models.Model):
     def __str__(self):
         return self.email
 
+
+
 class Tag(models.Model):
     name = models.TextField(max_length=64, db_index=True, blank=True, null=True)
     repos = models.ManyToManyField(Repository, related_name='+', blank=True)
