@@ -15,19 +15,10 @@
 # limitations under the License.
 #
 
-import decimal
 import traceback
-from datetime import datetime, timedelta
-from random import randint
 from urllib.parse import parse_qs
-
-from django.contrib.auth.models import Group, User
-from django.contrib.humanize.templatetags.humanize import intcomma
-from django.db.models import Sum
 from django.http import *
 from django.shortcuts import render
-from django.template import loader
-from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from django_filters.rest_framework import DjangoFilterBackend
 from django_tables2 import RequestConfig

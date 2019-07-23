@@ -13,8 +13,6 @@
 # limitations under the License.
 #
 
-import re
-
 from django.utils.dateparse import parse_datetime
 
 from ..create import Creator

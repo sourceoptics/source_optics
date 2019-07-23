@@ -17,8 +17,6 @@ TIMEOUT = -1  # name of timeout command
 
 ansi_escape = re.compile(r'(\x9B|\x1B\[)[0-?]*[ -/]*[@-~]')
 
-#LOG = Logger()
-
 def get_timeout():
     global TIMEOUT
     if TIMEOUT != -1:

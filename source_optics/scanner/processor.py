@@ -19,7 +19,6 @@
 # FIXME: you should be able to choose to run scans, aggregartions, or both, or pick a particular repo or list of repos by name
 
 import datetime
-import errno
 import fcntl
 import os
 import sys

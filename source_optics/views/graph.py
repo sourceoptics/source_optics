@@ -1,18 +1,5 @@
 # contributor note: the django UI will be eventually replaced by a new dynamic frontend speaking to the REST API, do not add features
 
-import math
-
-import plotly.graph_objs as go
-import plotly.offline as opy
-from django.db.models import Count, Sum
-from django.http import *
-from django.shortcuts import render
-from django.template import loader
-from django_tables2 import RequestConfig
-from plotly import tools
-
-from ..models import Author, Commit, Repository, Statistic, Tag
-from . import util
 from .graphs.authors import *
 from .graphs.repositories import RepositoryGraph
 
