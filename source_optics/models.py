@@ -25,8 +25,16 @@ from django.conf import settings
 import tempfile
 import os
 import subprocess
+import re
 from source_optics.scanner.encrypt import SecretsManager
 
+from django.core.exceptions import ValidationError
+
+repo_validator = re.compile(r'[^a-zA-Z0-9._]')
+
+def validate_repo_name(value):
+    if re.search(repo_validator, value):
+        raise ValidationError("%s is not a valid repo name" % value)
 
 class Organization(models.Model):
 
@@ -117,7 +125,7 @@ class Repository(models.Model):
     tags = models.ManyToManyField('Tag', related_name='tags', blank=True)
     last_pulled = models.DateTimeField(blank = True, null = True)
     url = models.TextField(max_length=255, unique=True, blank=False, help_text='use a git ssh url for private repos, else http/s are ok')
-    name = models.TextField(db_index=True, max_length=32, blank=False, null=False)
+    name = models.TextField(db_index=True, max_length=32, blank=False, null=False, validators=[validate_repo_name])
     color = models.CharField(max_length=10, null=True, blank=True)
     force_next_pull = models.BooleanField(null=False, default=False)
     webhook_token = models.CharField(max_length=255, null=True, blank=True)

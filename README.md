@@ -52,7 +52,7 @@ For those wishing to try out Source Optics, it should run happily from a laptop.
 Installation
 ============
 
-For install as well as basic operations instructions, see INSTALL.md
+For install as well as basic operations instructions, backups, and upgrades, see INSTALL.md
 
 Roadmap
 =======
