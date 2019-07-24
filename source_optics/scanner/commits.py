@@ -176,6 +176,16 @@ class Commits:
         return filechange_instance
 
     @classmethod
+    def should_process_path(cls, repo, line):
+        # TODO: this is where we use the allowlist/denylist parts of Repo -- doing this NEXT
+        # scanner_directory_allow_list
+        # scanner_directory_deny_list
+        # scanner_extension_allow_list
+        # scanner_extension_deny_list
+
+        return True
+
+    @classmethod
     def handle_file_information(cls, repo, line, last_commit):
 
         """
@@ -193,6 +203,9 @@ class Commits:
         if removed == '-':
             binary = True
             removed = 0
+
+        if not cls.should_process_path(repo, path):
+            return None
 
         # increment the files lines added/removed
         cls.create_file(path, last_commit, added, removed, binary)

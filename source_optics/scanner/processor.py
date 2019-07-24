@@ -78,7 +78,7 @@ class RepoProcessor:
         if repository_filter:
             repos = repos.filter(name__contains=repository_filter)
 
-        repos = repos.all()
+        repos = repos.select_related('organization').all()
 
         for repo in repos:
             cls.process_repo(repo, agent_manager, force_nuclear_rescan)

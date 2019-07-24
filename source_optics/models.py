@@ -76,9 +76,6 @@ class Credential(models.Model):
     def __str__(self):
         return self.name
 
-    # encrypt the password when we save this
-    #  (password needs to be unencrypted when saved)
-
     def save(self, *args, **kwargs):
         mgr = SecretsManager()
         self.password = mgr.cloak(self.password)
