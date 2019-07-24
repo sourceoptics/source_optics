@@ -60,6 +60,10 @@ class Commits:
         # We echo "EOF" to the end of the log output so we can tell when we are done
         cmd_string = ('git log --all --numstat --date=iso-strict-local --pretty=format:'
                       + PRETTY_STRING + '; echo "\nEOF"')
+
+        # print("DEBUG: COMMAND = %s" % cmd_string)
+        # raise Exception("STOP")
+
         # FIXME: as with above note, make command wrapper understand chdir
         prev = os.getcwd()
         os.chdir(repo_dir)
@@ -108,10 +112,9 @@ class Commits:
                 break
 
             if line.startswith(DEL):
-                commit, created = cls.handle_diff_information(repo, line)
-                last_commit = commit
+                last_commit, created = cls.handle_diff_information(repo, line)
                 if not created:
-                    # we've seen this commit before, so we're done
+                    # we've seen this commit before, so we don't need to do any more scanning
                     break
             else:
                 cls.handle_file_information(repo, line, last_commit)
@@ -125,14 +128,7 @@ class Commits:
     @classmethod
     def create_file(cls, path, commit, la, lr, binary):
         file_instance = {}
-        #get the file name
-        fArray = os.path.basename(path)
-
-        fName = ""
-        if len(fArray) > 1:
-            fName = fArray[1]
-        else:
-            fName = fArray[0]
+        fName = os.path.basename(path)
 
         # find the extension
         (root, ext) = os.path.splitext(path)
@@ -165,14 +161,8 @@ class Commits:
         # find the extension
         (root, ext) = os.path.splitext(path)
 
-        # get the file name
-        fArray = os.path.basename(path)
+        fName = os.path.basename(path)
 
-        fName = ""
-        if len(fArray) > 1:
-            fName = fArray[1]
-        else:
-            fName = fArray[0]
 
         filechange_instance = FileChange.objects.create(name=fName, path=path, ext=ext, commit=commit,
                                                             repo=commit.repo, lines_added=la, lines_removed=lr,
@@ -192,26 +182,25 @@ class Commits:
         process the list of file changes in this commit
         """
 
-
-        # FIXME: give all these fields names
-        fields = line.split()
-        binary = False
+        tokens = line.split()
+        (added, removed, path) = (tokens[0], tokens[1], ''.join(tokens[2:]))
 
         # binary files will have '-' in their field changes. Set these to 0
-        if fields[1] == '-':
+        binary = False
+        if added == '-':
             binary = True
-            fields[1] = 0
-        if fields[0] == '-':
+            added = 0
+        if removed == '-':
             binary = True
-            fields[0] = 0
+            removed = 0
 
         # increment the files lines added/removed
-        cls.create_file(fields[2], last_commit, fields[0], fields[1], binary)
+        cls.create_file(path, last_commit, added, removed, binary)
 
         # WARNING: this will record a huge amount of data
         if settings.RECORD_FILE_CHANGES:
             #                   name       commit       lines add  lines rm
-            cls.create_filechange(fields[2], last_commit, fields[0], fields[1], binary)
+            cls.create_filechange(path, last_commit, added, removed, binary)
 
     @classmethod
     def handle_diff_information(cls, repo, line):

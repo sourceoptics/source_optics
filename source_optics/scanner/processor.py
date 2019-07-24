@@ -64,7 +64,7 @@ class RepoProcessor:
         fcntl.flock(handle, fcntl.LOCK_UN)
 
     @classmethod
-    def scan(cls, organization_filter=None):
+    def scan(cls, organization_filter=None, repository_filter=None, force_nuclear_rescan=False):
 
         # REFACTOR: this lock should be a context manager (aka 'with')
         lock_handle = cls.lock()
@@ -75,10 +75,13 @@ class RepoProcessor:
         repos = Repository.objects
         if organization_filter:
             repos = repos.filter(organization__name__contains=organization_filter)
+        if repository_filter:
+            repos = repos.filter(name__contains=repository_filter)
+
         repos = repos.all()
 
         for repo in repos:
-            cls.process_repo(repo, agent_manager)
+            cls.process_repo(repo, agent_manager, force_nuclear_rescan)
 
         cls.unlock(lock_handle)
 
@@ -146,9 +149,9 @@ class RepoProcessor:
         return True
 
     @classmethod
-    def process_repo(cls, repo, agent_manager):
+    def process_repo(cls, repo, agent_manager, force_nuclear_rescan):
 
-        if repo.force_nuclear_rescan:
+        if force_nuclear_rescan or repo.force_nuclear_rescan:
             cls.force_nuclear_rescan(repo)
         if not cls.needs_rescan(repo):
             print("(updated enough, skipping)")

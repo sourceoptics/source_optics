@@ -28,9 +28,28 @@ class Command(BaseCommand):
     help = 'Scans one or more repositories'
 
     def add_arguments(self, parser):
-        parser.add_argument('-o', '--organization_pattern', dest='org', type=str, help='Only process organizations with this substring', default=None)
+
+        parser.add_argument('-o', '--organization_pattern',
+                            dest='org',
+                            type=str,
+                            help='Only process organizations with this substring',
+                            default=None)
+        parser.add_argument('-r', '--repo_pattern',
+                            dest='repo',
+                            type=str,
+                            help='Only process repositories with this substring',
+                            default=None)
+        parser.add_argument('-F', '--force-nuclear-rescan',
+                            dest='force_nuclear_rescan',
+                            action='store_true',
+                            help='DANGER: Delete all selected repos and do a full rescan')
 
     def handle(self, *args, **kwargs):
 
         organization_filter = kwargs['org']
-        RepoProcessor.scan(organization_filter=organization_filter)
+        repository_filter = kwargs['repo']
+        force_nuclear_rescan = kwargs['force_nuclear_rescan']
+
+        RepoProcessor.scan(organization_filter=organization_filter,
+                           repository_filter=repository_filter,
+                           force_nuclear_rescan=force_nuclear_rescan)
