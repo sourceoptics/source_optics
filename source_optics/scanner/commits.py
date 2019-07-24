@@ -177,7 +177,7 @@ class Commits:
 
     @classmethod
     def should_process_path(cls, repo, line):
-        # TODO: this is where we use the allowlist/denylist parts of Repo -- doing this NEXT
+        # TODO: this is where we use the allowlist/denylist parts of Org/Repo -- doing this NEXT
         # scanner_directory_allow_list
         # scanner_directory_deny_list
         # scanner_extension_allow_list

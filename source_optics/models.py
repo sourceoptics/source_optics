@@ -117,6 +117,15 @@ class Repository(models.Model):
     webhook_token = models.CharField(max_length=255, null=True, blank=True, help_text='prevents against trivial webhook spam')
     force_nuclear_rescan = models.BooleanField(null=False, default=False, help_text='on next scan loop, delete all commits/records and rescan everything')
 
+    scanner_directory_allow_list = models.TextField(null=True, blank=True,
+                                                    help_text='if set, fnmatch patterns of directories to require, one per line')
+    scanner_directory_deny_list = models.TextField(null=True, blank=True,
+                                                   help_text='fnmatch patterns or prefixes of directories to exclude, one per line')
+    scanner_extension_allow_list = models.TextField(null=True, blank=True,
+                                                    help_text='if set, fnmatch patterns of extensions to require, one per line')
+    scanner_extension_deny_list = models.TextField(null=True, blank=True,
+                                                   help_text='fnmatch patterns or prefixes of extensions to exclude, one per line ')
+
     def __str__(self):
         return self.name
 
