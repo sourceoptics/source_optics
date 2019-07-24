@@ -15,7 +15,7 @@
 
 import os
 from django.utils.dateparse import parse_datetime
-
+import fnmatch
 from ..models import File, FileChange, Commit, Author
 from . import commands
 import re
@@ -56,18 +56,12 @@ class Commits:
         """
         Uses git log to gather the commit data for a repository
         """
-        # python subprocess iteration doesn't have an EOF indicator that I can find.
-        # We echo "EOF" to the end of the log output so we can tell when we are done
         cmd_string = ('git log --all --numstat --date=iso-strict-local --pretty=format:'
-                      + PRETTY_STRING + '; echo "\nEOF"')
-
-        # print("DEBUG: COMMAND = %s" % cmd_string)
-        # raise Exception("STOP")
+                      + PRETTY_STRING)
 
         # FIXME: as with above note, make command wrapper understand chdir
         prev = os.getcwd()
         os.chdir(repo_dir)
-
 
         out = commands.execute_command(repo, cmd_string, log=False, timeout=600)
         os.chdir(prev)
@@ -106,10 +100,6 @@ class Commits:
             # ignore empty lines
             if not line or line == "\n":
                 continue
-
-            # we are at the end of all output (FIXME: why do we need this?)
-            if line.split(maxsplit=1)[0] == 'EOF':
-                break
 
             if line.startswith(DEL):
                 last_commit, created = cls.handle_diff_information(repo, line)
@@ -176,12 +166,91 @@ class Commits:
         return filechange_instance
 
     @classmethod
-    def should_process_path(cls, repo, line):
-        # TODO: this is where we use the allowlist/denylist parts of Org/Repo -- doing this NEXT
-        # scanner_directory_allow_list
-        # scanner_directory_deny_list
-        # scanner_extension_allow_list
-        # scanner_extension_deny_list
+    def matches(self, needle, haystack, exact=False, trim_dot=False):
+
+        #  user input may be inconsistent about trailing slashes so be flexible
+        if haystack.endswith("/"):
+            haystack = haystack[:-1]
+        if needle.endswith("/"):
+            needle = needle[:-1]
+
+
+
+        if trim_dot:
+            # for extension checking, do not require the user input to be ".mp4" to mean "mp4"
+            haystack = haystack.replace(".","")
+            needle = needle.replace(".", "")
+
+        if "?" in needle or "*" in needle or "[" in needle:
+            # this looks like a fnmatch pattern
+            return fnmatch.fnmatch(haystack, needle)
+        elif exact:
+            # we are processing an extension, require an exact match
+            return haystack == needle
+        else:
+            # we are processing paths, not extensions, so just require it to start with the substring
+            return haystack.startswith(needle)
+
+    @classmethod
+    def has_matches(cls, needles, haystack, exact=False, trim_dot=False):
+
+        for needle in needles:
+            if cls.matches(needle, haystack, exact=exact, trim_dot=trim_dot):
+                return True
+        return False
+
+    @classmethod
+    def has_no_matches(cls, needles, haystack, exact=False, trim_dot=False):
+        return not cls.has_matches(needles, haystack, exact=exact, trim_dot=trim_dot)
+
+    @classmethod
+    def repair_move_path(cls, path):
+        # handle details about moves in source control by fixing path elements like /{org=>com}/
+        if "{" in path:
+            # DO STUFF
+            # FIXME: IMPLEMENT THIS!!!
+            pass
+        return path
+
+    @classmethod
+    def should_process_path(cls, repo, path):
+
+        org = repo.organization
+        directory_allow = repo.scanner_directory_allow_list or org.scanner_directory_allow_list
+        directory_deny  = repo.scanner_directory_deny_list or org.scanner_directory_deny_list
+
+        extension_allow = repo.scanner_extension_allow_list or org.scanner_extension_allow_list
+        extension_deny = repo.scanner_extension_deny_list or org.scanner_extension_deny_list
+
+        dirname = os.path.dirname(path)
+        split_ext = os.path.splitext(path)
+
+        extension = None
+        if len(split_ext) > 1:
+            extension = split_ext[-1]
+
+        if directory_allow:
+            directory_allow = directory_allow.split("\n")
+        if directory_deny:
+            directory_deny = directory_deny.split("\n")
+        if extension_allow:
+            extension_allow = extension_allow.split("\n")
+        if extension_deny:
+            extension_deny = extension_deny.split("\n")
+
+
+        if directory_allow and cls.has_no_matches(directory_allow, dirname):
+            return False
+
+        if directory_deny and cls.has_matches(directory_deny, dirname):
+            return False
+
+        if extension:
+            if extension_allow and cls.has_no_matches(extension_allow, extension, exact=True, trim_dot=True):
+                return False
+
+            if extension_deny and cls.has_matches(extension_deny, extension, exact=True, trim_dot=True):
+                return False
 
         return True
 
@@ -203,6 +272,9 @@ class Commits:
         if removed == '-':
             binary = True
             removed = 0
+
+        # FIXME: implement!
+        path = cls.repair_move_path(path)
 
         if not cls.should_process_path(repo, path):
             return None

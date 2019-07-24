@@ -24,7 +24,10 @@ def fast_delete(modeladmin, request, queryset):
 
 class RepoAdmin(admin.ModelAdmin):
     list_display = ('name','last_pulled', 'last_scanned', 'enabled')
-    fields = ['organization', 'enabled', 'tags', 'name', 'url', 'webhook_token', 'force_next_pull', 'force_nuclear_rescan' ]
+    fields = ['organization', 'enabled', 'tags', 'name', 'url', 'webhook_token',
+              'force_next_pull', 'force_nuclear_rescan',
+              'scanner_directory_allow_list', 'scanner_directory_deny_list',
+              'scanner_extension_allow_list', 'scanner_extension_deny_list' ]
     actions = [fast_delete]
 
 class CommitAdmin(admin.ModelAdmin):
