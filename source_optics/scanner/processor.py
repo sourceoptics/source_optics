@@ -176,14 +176,6 @@ class RepoProcessor:
         if not cls.checkout_and_read_commit_logs(repo, work_dir):
             return False
 
-        if not Checkout.clone_repo(repo, work_dir):
-            print("problem with checkout, skipping")
-            return False
-
-        if not Commits.process_commits(repo, work_dir):
-            print("problem analyzing commits, skipping")
-            return False
-
         cls.finalize_commit_scan_info(repo, scan_time_start)
 
         if added_ssh_key:
