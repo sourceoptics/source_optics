@@ -31,15 +31,20 @@ def validate_repo_name(value):
 
 class Organization(models.Model):
 
-    # parent = models.ForeignKey('self', on_delete=models.SET_NULL, null=True)
     name = models.TextField(max_length=32, blank=False, unique=True)
     admins = models.ManyToManyField(User, related_name='+', help_text='currently unused')
     members = models.ManyToManyField(User, related_name='+', help_text='currently unused')
-
     credential = models.ForeignKey('Credential', on_delete=models.SET_NULL, null=True, help_text='used for repo imports and git checkouts')
+
     webhook_enabled = models.BooleanField(default=False)
     webhook_token = models.CharField(max_length=255, null=True, blank=True)
-    checkout_path_override = models.CharField(max_length=512, null=True, blank=True)
+
+    checkout_path_override = models.CharField(max_length=512, null=True, blank=True, help_text='if set, override the default checkout location')
+
+    scanner_directory_allow_list = models.TextField(null=True, blank=True, help_text='if set, fnmatch patterns of directories to require, one per line')
+    scanner_directory_deny_list = models.TextField(null=True, blank=True, help_text='fnmatch patterns or prefixes of directories to exclude, one per line')
+    scanner_extension_allow_list = models.TextField(null=True, blank=True, help_text='if set, fnmatch patterns of extensions to require, one per line')
+    scanner_extension_deny_list = models.TextField(null=True, blank=True, help_text='fnmatch patterns or prefixes of extensions to exclude, one per line ')
 
     def __str__(self):
         return self.name
