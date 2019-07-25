@@ -102,9 +102,10 @@ class Commits:
                 continue
 
             if line.startswith(DEL):
+
                 commit, created = cls.handle_diff_information(repo, line)
-                if commit != last_commit and last_commit:
-                    last_commit.save()
+                last_commit = commit
+
                 if not created:
                     # we've seen this commit before, so we don't need to do any more scanning
                     break
@@ -119,30 +120,26 @@ class Commits:
     # ------------------------------------------------------------------
     @classmethod
     def create_file(cls, full_path, commit, la, lr, binary):
-        file_instance = {}
+
         fname = os.path.basename(full_path)
+
+        # assert full_path is not None
+        # assert commit is not None
+        # assert type(la) is int
+        # assert type(lr) is int
+        # assert type(binary) is bool
 
         # find the extension
         (_, ext) = os.path.splitext(full_path)
         path = os.path.dirname(full_path)
 
         # update the global file object with the line counts
-        file, created = File.objects.get_or_create(commit=commit, path=path, name=fname, ext=ext, defaults=dict(
+        file, created = File.objects.get_or_create(repo=commit.repo, path=path, name=fname, ext=ext, defaults=dict(
             binary=binary
         ))
 
-        # update the la/lr if we found the file
-        if created:
-            commit.files.add(file)
-
-
-        file_change, created = FileChange.objects.get_or_create(file=file, commit=commit,
+        _, _ = FileChange.objects.get_or_create(file=file, commit=commit,
                 defaults = dict(lines_added=la, lines_removed=lr))
-
-        # add the file change to the global file object
-        if created:
-            file.changes.add(file_change)
-            file.save()
 
         return file
 
@@ -196,12 +193,11 @@ class Commits:
             for token in tokens:
                 if token.startswith("{") and token.endswith("}") and "=>" in token:
                     correct = token[1:-1].split("=>")[-1]
-                    print("corrected path segment=%s" % correct)
-                    results.push(correct)
+                    results.append(correct)
                 else:
-                    results.push(token)
+                    results.append(token)
 
-            return os.path.join(results)
+            return os.path.sep.join(results)
         return path
 
     @classmethod
@@ -256,6 +252,7 @@ class Commits:
         tokens = line.split()
         (added, removed, path) = (tokens[0], tokens[1], ''.join(tokens[2:]))
 
+
         # binary files will have '-' in their field changes. Set these to 0
         binary = False
         if added == '-':
@@ -264,8 +261,9 @@ class Commits:
         if removed == '-':
             binary = True
             removed = 0
+        added = int(added)
+        removed = int(removed)
 
-        # FIXME: implement!
         path = cls.repair_move_path(path)
 
         if not cls.should_process_path(repo, path):
@@ -291,11 +289,10 @@ class Commits:
         email = data['author_email']
 
         author, created = Author.objects.get_or_create(email=email)
-        author.repos.add(repo)
-        author.save()
 
         commit_date = parse_datetime(data['commit_date'])
         author_date = parse_datetime(data['author_date'])
+
         commit, created = Commit.objects.get_or_create(
             sha=data['commit'],
             defaults=dict(
@@ -304,8 +301,6 @@ class Commits:
                 author=author,
                 author_date=author_date,
                 commit_date=commit_date,
-                lines_added=0,
-                lines_removed=0
             )
         )
 

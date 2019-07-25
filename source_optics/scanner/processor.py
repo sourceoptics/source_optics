@@ -90,9 +90,7 @@ class RepoProcessor:
         repo.last_scanned = None
         repo.last_rollup = None
         repo.force_next_pull = True
-        Commit.objects.filter(repo=repo).delete()
-        FileChange.objects.filter(repo=repo).delete()
-        File.objects.filter(repo=repo).delete()
+        Commit.objects.filter(repo=repo).delete() # cascade everything else
         repo.save()
 
     @classmethod
@@ -132,7 +130,12 @@ class RepoProcessor:
          # Generate the statistics for the repository
          print("aggregating stats for " + str(repo))
          stat_time_start = time.clock()
-         Rollup.rollup_repo(repo)
+
+
+         # ROLLUPS TEMPORARILY DISABLED
+         # Rollup.rollup_repo(repo)
+
+
          stat_time_total = time.clock() - stat_time_start
          print("aggregation complete. time: " + str(repo) + ": " + str(stat_time_total) + "s")
 
