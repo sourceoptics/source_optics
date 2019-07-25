@@ -102,13 +102,15 @@ class Commits:
                 continue
 
             if line.startswith(DEL):
-                last_commit, created = cls.handle_diff_information(repo, line)
+                commit, created = cls.handle_diff_information(repo, line)
+                if commit != last_commit and last_commit:
+                    last_commit.save()
                 if not created:
                     # we've seen this commit before, so we don't need to do any more scanning
                     break
             else:
                 cls.handle_file_information(repo, line, last_commit)
-
+        last_commit.save()
         return True
 
     # This assumes that commits (and their effect on files) will not be processed
@@ -116,54 +118,33 @@ class Commits:
     # more than once.
     # ------------------------------------------------------------------
     @classmethod
-    def create_file(cls, path, commit, la, lr, binary):
+    def create_file(cls, full_path, commit, la, lr, binary):
         file_instance = {}
-        fName = os.path.basename(path)
+        fname = os.path.basename(full_path)
 
         # find the extension
-        (root, ext) = os.path.splitext(path)
+        (_, ext) = os.path.splitext(full_path)
+        path = os.path.dirname(full_path)
 
         # update the global file object with the line counts
-        file_instance,created = File.objects.get_or_create(path=path, defaults={
-                    "lines_added":int(la),
-                    "lines_removed":int(lr),
-                    "name":fName,
-                    "commit":commit,
-                    "repo":commit.repo,
-                    "binary":binary,
-                    "ext":ext})
+        file, created = File.objects.get_or_create(commit=commit, path=path, name=fname, ext=ext, defaults=dict(
+            binary=binary
+        ))
 
         # update the la/lr if we found the file
-        if not created:
-                file_instance.lines_added += int(la)
-                file_instance.lines_removed += int(lr)
-                file_instance.save()
-
-        # add the la/lr to the commit for its total count
-        commit.lines_added += int(la)
-        commit.lines_removed += int(lr)
-        commit.files.add(file_instance)
-        commit.save()
-        return file_instance
-
-    @classmethod
-    def create_filechange(cls, path, commit, la, lr, binary):
-        # find the extension
-        (root, ext) = os.path.splitext(path)
-
-        fName = os.path.basename(path)
+        if created:
+            commit.files.add(file)
 
 
-        filechange_instance = FileChange.objects.create(name=fName, path=path, ext=ext, commit=commit,
-                                                            repo=commit.repo, lines_added=la, lines_removed=lr,
-                                                            binary=binary)
+        file_change, created = FileChange.objects.get_or_create(file=file, commit=commit,
+                defaults = dict(lines_added=la, lines_removed=lr))
 
         # add the file change to the global file object
-        file_instance = File.objects.get(name=fName, path=path)
-        file_instance.changes.add(filechange_instance)
-        file_instance.save()
+        if created:
+            file.changes.add(file_change)
+            file.save()
 
-        return filechange_instance
+        return file
 
     @classmethod
     def matches(self, needle, haystack, exact=False, trim_dot=False):
@@ -205,11 +186,22 @@ class Commits:
 
     @classmethod
     def repair_move_path(cls, path):
-        # handle details about moves in source control by fixing path elements like /{org=>com}/
+        # handle details about moves in git log by fixing path elements like /{org=>com}/
+        # to just log the file in the final path. This will possibly give users credit for
+        # aspects of a move but this something we can explore later. Not sure if it does - MPD.
         if "{" in path:
             # DO STUFF
-            # FIXME: IMPLEMENT THIS!!!
-            pass
+            tokens = os.path.split(path)
+            results = []
+            for token in tokens:
+                if token.startswith("{") and token.endswith("}") and "=>" in token:
+                    correct = token[1:-1].split("=>")[-1]
+                    print("corrected path segment=%s" % correct)
+                    results.push(correct)
+                else:
+                    results.push(token)
+
+            return os.path.join(results)
         return path
 
     @classmethod
@@ -280,12 +272,7 @@ class Commits:
             return None
 
         # increment the files lines added/removed
-        cls.create_file(path, last_commit, added, removed, binary)
-
-        # WARNING: this will record a huge amount of data
-        if settings.RECORD_FILE_CHANGES:
-            #                   name       commit       lines add  lines rm
-            cls.create_filechange(path, last_commit, added, removed, binary)
+        file = cls.create_file(path, last_commit, added, removed, binary)
 
     @classmethod
     def handle_diff_information(cls, repo, line):

@@ -31,7 +31,7 @@ def validate_repo_name(value):
 
 class Organization(models.Model):
 
-    name = models.TextField(max_length=32, blank=False, unique=True)
+    name = models.TextField(max_length=32, db_index=True, blank=False, unique=True)
     admins = models.ManyToManyField(User, related_name='+', help_text='currently unused')
     members = models.ManyToManyField(User, related_name='+', help_text='currently unused')
     credential = models.ForeignKey('Credential', on_delete=models.SET_NULL, null=True, help_text='used for repo imports and git checkouts')
@@ -59,7 +59,7 @@ class Organization(models.Model):
 
 class Credential(models.Model):
 
-    name = models.TextField(max_length=64, blank=False)
+    name = models.TextField(max_length=64, blank=False, db_index=True)
     username = models.TextField(max_length=32, blank=True, help_text='for github/gitlab username')
     password = models.TextField(max_length=128,  blank=True, null=True, help_text='for github/gitlab imports')
     ssh_private_key = models.TextField(blank=True, null=True, help_text='for cloning private repos')
@@ -98,19 +98,16 @@ class Credential(models.Model):
 
 class Repository(models.Model):
 
-    class Meta:
-        verbose_name_plural = "repositories"
-        unique_together = [
-            [ 'name', 'organization' ]
-        ]
-    organization = models.ForeignKey(Organization, on_delete=models.SET_NULL, null=True)
+
+
+    organization = models.ForeignKey(Organization, db_index=True, on_delete=models.SET_NULL, null=True)
     enabled = models.BooleanField(default=True, help_text='if false, disable scanning')
     last_scanned = models.DateTimeField(blank=True, null=True)
     last_rollup = models.DateTimeField(blank=True, null=True)
     earliest_commit = models.DateTimeField(blank=True, null=True)
     tags = models.ManyToManyField('Tag', related_name='tags', blank=True)
     last_pulled = models.DateTimeField(blank = True, null = True)
-    url = models.TextField(max_length=255, unique=True, blank=False, help_text='use a git ssh url for private repos, else http/s are ok')
+    url = models.TextField(max_length=255, db_index=True, blank=False, help_text='use a git ssh url for private repos, else http/s are ok')
     name = models.TextField(db_index=True, max_length=32, blank=False, null=False, validators=[validate_repo_name])
     color = models.CharField(max_length=10, null=True, blank=True)
     force_next_pull = models.BooleanField(null=False, default=False, help_text='used by webhooks to signal the scanner')
@@ -126,6 +123,12 @@ class Repository(models.Model):
     scanner_extension_deny_list = models.TextField(null=True, blank=True,
                                                    help_text='fnmatch patterns or prefixes of extensions to exclude, one per line ')
 
+    class Meta:
+        unique_together = [ 'name', 'organization' ]
+        indexes = [
+            models.Index(fields=[ 'name', 'organization' ])
+        ]
+
     def __str__(self):
         return self.name
 
@@ -137,10 +140,14 @@ class Repository(models.Model):
 
 class Author(models.Model):
     email = models.TextField(db_index=True, max_length=64, unique=True, blank=False, null=True)
-    repos = models.ManyToManyField(Repository, related_name='+')
+
+    class Meta:
+        indexes = [
+            models.Index(fields=[ 'email' ])
+        ]
 
     def __str__(self):
-        return self.email
+        return f"Author: {self.email}"
 
 
 
@@ -149,58 +156,56 @@ class Tag(models.Model):
     repos = models.ManyToManyField(Repository, related_name='+', blank=True)
 
     def __str__(self):
-        return self.name
+        return f"Tag: {self.name}"
 
 
 class Commit(models.Model):
+
     repo = models.ForeignKey(Repository, db_index=True, on_delete=models.CASCADE, related_name='commits')
     author = models.ForeignKey(Author, db_index=True, on_delete=models.CASCADE, blank=False, null=True, related_name='commits')
     sha = models.TextField(db_index=True, max_length=256, blank=False)
-    files = models.ManyToManyField('File')
     commit_date = models.DateTimeField(db_index=True,blank=False, null=True)
     author_date = models.DateTimeField(blank=False, null=True)
     subject = models.TextField(db_index=True, max_length=256, blank=False)
-    lines_added = models.IntegerField(default=0)
-    lines_removed = models.IntegerField(default=0)
 
     class Meta:
+        unique_together = [ 'repo', 'sha' ]
         indexes = [
             models.Index(fields=['commit_date', 'author', 'repo']),
+            models.Index(fields=['author_date', 'author', 'repo']),
+
         ]
 
     def __str__(self):
-        return self.subject
-
-class FileChange(models.Model):
-    name = models.TextField(db_index=True, max_length=256, blank=False, null=True)
-    path = models.TextField(db_index=True, max_length=256, blank=False, null=True)
-    ext = models.TextField(max_length=32, blank=False)
-    binary = models.BooleanField(default=False)
-    commit = models.ForeignKey(Commit, db_index=True, on_delete=models.CASCADE, related_name='commit')
-    repo = models.ForeignKey(Repository, on_delete=models.CASCADE, related_name='+', null=True)
-    lines_added = models.IntegerField(default=0)
-    lines_removed = models.IntegerField(default=0)
-
-    def __str__(self):
-        return self.path
+        return f"Commit: {self.sha} (r:{self.repo.name})"
 
 class File(models.Model):
+
     repo = models.ForeignKey(Repository, db_index=True, on_delete=models.CASCADE, related_name='+', null=True)
     name = models.TextField(db_index=True, max_length=256, blank=False, null=True)
     path = models.TextField(db_index=True, max_length=256, blank=False, null=True)
     ext = models.TextField(max_length=32, blank=False, null=True)
     binary = models.BooleanField(default=False)
-    changes = models.ManyToManyField(FileChange, related_name='+')
+
+    class Meta:
+        unique_together = [ 'repo', 'name', 'path', 'ext' ]
+
+    def __str__(self):
+        return f"File: {self.path} (r:{self.repo.sha})"
+
+class FileChange(models.Model):
+
+    file = models.ForeignKey(File, db_index=True, on_delete=models.CASCADE, related_name='+', null=False)
+    commit = models.ForeignKey(Commit, db_index=True, on_delete=models.CASCADE, related_name='commit')
     lines_added = models.IntegerField(default=0)
     lines_removed = models.IntegerField(default=0)
 
-
-    indexes = [
-        models.Index(fields=['repo', 'name', 'path', 'ext'], name='file_index'),
-    ]
+    class Meta:
+        unique_together = [ 'file', 'commit' ]
 
     def __str__(self):
-        return self.path
+        return f"FileChange: {self.file.path} (c:{commit.sha})"
+
 
 # if author = null && file = null, entry represents total stats for interval
 # if author = null && file = X, entry represents X's file stats for the given interval
@@ -236,9 +241,9 @@ class Statistic(models.Model):
 
     def __str__(self):
         if self.author is None:
-            return "TOTAL " + str(self.interval[0]) + " " + str(self.start_date.date())
+            return "Stat(Total): " + str(self.interval[0]) + " " + str(self.start_date.date())
         else:
-            return "AUTHOR: " + str(self.author) + " " + str(self.interval[0]) + " " + str(self.start_date.date())
+            return "Stat(Author): " + str(self.author) + " " + str(self.interval[0]) + " " + str(self.start_date.date())
 
     class Meta:
 

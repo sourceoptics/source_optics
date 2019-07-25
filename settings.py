@@ -135,13 +135,6 @@ USE_TZ = True
 
 STATIC_URL = '/source_optics/static/'
 
-# should we record changes for all files in each commit?
-#
-# This is useful for more advanced file trend analysis,
-# but will add A LOT more data and require more scan time
-# disabled by default
-RECORD_FILE_CHANGES = False
-
 # The location of the symmetric key for password encryption
 # should be created in init
 SYMMETRIC_SECRET_KEY = '/etc/source_optics/cred.key'
