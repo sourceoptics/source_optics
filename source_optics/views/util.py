@@ -168,6 +168,7 @@ def get_lifetime_stats_author(author):
 
 #Calculate the lifetime statistics of a repository
 def get_lifetime_stats(repo):
+
     #Summary Statistics
     earliest_commit = repo.earliest_commit_date()
     today = datetime.now(tz=timezone.utc)
@@ -200,7 +201,7 @@ def get_lifetime_stats(repo):
     summary_stats['avg_commits_day'] = avg_commits_day
 
     summary_stats['commits'] = intcomma(summary_stats['commits'])
-    summary_stats['authors'] = intcomma(summary_stats['authors'])
+    summary_stats['authors'] = Commit.objects.filter(repo=repo).values_list('author', flat=True).distinct().count()
     summary_stats['lines_added'] = intcomma(summary_stats['lines_added'])
     summary_stats['lines_removed'] = intcomma(summary_stats['lines_removed'])
     summary_stats['file_count'] = intcomma(summary_stats['file_count'])
