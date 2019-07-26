@@ -51,7 +51,7 @@ and given date range
 def aggregate_stats(repo, author, start, end):
 
     # Get statistics objects in the appropriate interval
-    days = Statistic.objects.filter(interval='DY', repo=repo, author=author, file=None, start_date__range=(start, end))
+    days = Statistic.objects.filter(interval='DY', repo=repo, author=author, start_date__range=(start, end))
 
     # Calculate sums from statistics objects into an object
     totals = days.aggregate(lines_added=Sum("lines_added"), lines_removed=Sum("lines_removed"),
@@ -169,13 +169,13 @@ def get_lifetime_stats_author(author):
 #Calculate the lifetime statistics of a repository
 def get_lifetime_stats(repo):
     #Summary Statistics
-    earliest_commit = repo.earliest_commit
+    earliest_commit = repo.earliest_commit_date()
     today = datetime.now(tz=timezone.utc)
 
     start_range = get_first_day(earliest_commit, ('MN', "Month"))
 
     lifetime = Statistic.objects.filter(interval='MN', repo=repo,
-                                        author=None, file=None,
+                                        author=None,
                                         start_date__range=(start_range, today))
 
 
@@ -190,6 +190,7 @@ def get_lifetime_stats(repo):
     #Age of repository & avg of commits per day
     if start_range is not None:
         age = abs(today - earliest_commit).days
+        print("STATS=%s" % summary_stats)
         avg_commits_day = "%0.2f" % (summary_stats['commits']/age)
     else:
         avg_commits_day = 0

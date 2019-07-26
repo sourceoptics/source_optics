@@ -127,6 +127,7 @@ class Repository(models.Model):
         indexes = [
             models.Index(fields=[ 'name', 'organization' ])
         ]
+        verbose_name_plural = "repositories"
 
     def __str__(self):
         return self.name
@@ -135,6 +136,15 @@ class Repository(models.Model):
         if self.color:
             return self.color
         return "#000000"
+
+    def earliest_commit_date(self, author=None):
+
+        commits = Commit.objects.filter(repo=self)
+        if author:
+            commits.filter(author=author)
+        if commits.count():
+            return commits.earliest("commit_date").commit_date
+        return None
 
 
 class Author(models.Model):
@@ -195,7 +205,7 @@ class File(models.Model):
 class FileChange(models.Model):
 
     file = models.ForeignKey(File, db_index=True, on_delete=models.CASCADE, related_name='+', null=False)
-    commit = models.ForeignKey(Commit, db_index=True, on_delete=models.CASCADE, related_name='commit')
+    commit = models.ForeignKey(Commit, db_index=True, on_delete=models.CASCADE, related_name='file_changes')
     lines_added = models.IntegerField(default=0)
     lines_removed = models.IntegerField(default=0)
 
@@ -206,9 +216,8 @@ class FileChange(models.Model):
         return f"FileChange: {self.file.path} (c:{commit.sha})"
 
 
-# if author = null && file = null, entry represents total stats for interval
-# if author = null && file = X, entry represents X's file stats for the given interval
-# if author = X && file = null, entry represent X's author stats for the given interval
+# if author = null, entry represents total stats for interval
+# if author = X, entry represent X's author stats for the given interval
 
 class Statistic(models.Model):
 
@@ -230,7 +239,6 @@ class Statistic(models.Model):
     interval = models.TextField(db_index=True, max_length=5, choices=INTERVALS)
     repo = models.ForeignKey(Repository, db_index=True, on_delete=models.CASCADE, null=True, related_name='repo')
     author = models.ForeignKey(Author, db_index=True, on_delete=models.CASCADE, blank=True, null=True, related_name='author')
-    file = models.ForeignKey(File, on_delete=models.CASCADE, blank=True, null=True, related_name='file')
     lines_added = models.IntegerField(blank = True, null = True)
     lines_removed = models.IntegerField(blank = True, null = True)
     lines_changed = models.IntegerField(blank = True, null = True)
@@ -240,18 +248,17 @@ class Statistic(models.Model):
 
     def __str__(self):
         if self.author is None:
-            return "Stat(Total): " + str(self.interval[0]) + " " + str(self.start_date.date())
+            return "Stat(Total): I=" + str(self.interval[0]) + " D=" + str(self.start_date)
         else:
-            return "Stat(Author): " + str(self.author) + " " + str(self.interval[0]) + " " + str(self.start_date.date())
+            return "Stat(Author): " + str(self.author) + " I=" + str(self.interval[0]) + " D=" + str(self.start_date)
 
     class Meta:
 
         unique_together = [
-            [ 'start_date', 'interval', 'repo', 'author', 'file' ]
+            [ 'start_date', 'interval', 'repo', 'author' ]
         ]
 
         indexes = [
-            models.Index(fields=['interval', 'author', 'repo', 'file', 'start_date'], name="rollup1"),
             models.Index(fields=['start_date', 'interval', 'repo', 'author'], name='author_rollup'),
         ]
 

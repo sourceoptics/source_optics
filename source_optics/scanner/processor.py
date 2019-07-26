@@ -27,10 +27,11 @@ import shutil
 
 from django.conf import settings
 from django.utils import timezone
+from django.db import transaction
 
 from source_optics.scanner.rollup import Rollup
 
-from ..models import Repository, Commit, FileChange, File
+from ..models import Repository, Commit, Statistic
 from .checkout import Checkout
 from .commits import Commits
 from .ssh_agent import SshAgentManager
@@ -88,9 +89,9 @@ class RepoProcessor:
     @classmethod
     def force_nuclear_rescan(cls, repo):
         repo.last_scanned = None
-        repo.last_rollup = None
         repo.force_next_pull = True
         Commit.objects.filter(repo=repo).delete() # cascade everything else
+        Statistic.objects.filter(repo=repo).delete()
         repo.save()
 
     @classmethod
@@ -151,10 +152,14 @@ class RepoProcessor:
         return True
 
     @classmethod
+    @transaction.atomic
     def process_repo(cls, repo, agent_manager, force_nuclear_rescan):
 
         if force_nuclear_rescan or repo.force_nuclear_rescan:
+            print("*** RESCAN WAS FORCED **")
             cls.force_nuclear_rescan(repo)
+
+
         if not cls.needs_rescan(repo):
             print("(updated enough, skipping)")
             return False
