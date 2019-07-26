@@ -132,8 +132,7 @@ class RepoProcessor:
          stat_time_start = time.clock()
 
 
-         # ROLLUPS TEMPORARILY DISABLED
-         # Rollup.rollup_repo(repo)
+         Rollup.rollup_repo(repo)
 
 
          stat_time_total = time.clock() - stat_time_start

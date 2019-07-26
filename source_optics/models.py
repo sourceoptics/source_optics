@@ -103,8 +103,7 @@ class Repository(models.Model):
     organization = models.ForeignKey(Organization, db_index=True, on_delete=models.SET_NULL, null=True)
     enabled = models.BooleanField(default=True, help_text='if false, disable scanning')
     last_scanned = models.DateTimeField(blank=True, null=True)
-    last_rollup = models.DateTimeField(blank=True, null=True)
-    earliest_commit = models.DateTimeField(blank=True, null=True)
+
     tags = models.ManyToManyField('Tag', related_name='tags', blank=True)
     last_pulled = models.DateTimeField(blank = True, null = True)
     url = models.TextField(max_length=255, db_index=True, blank=False, help_text='use a git ssh url for private repos, else http/s are ok')
