@@ -61,30 +61,18 @@ class Rollup:
         This code detects whether the rollup is in the current interval.
         """
 
-        assert repo is not None
-        assert start_day is not None
-        assert interval in [ DAY, WEEK, MONTH ]
-        assert stat is not None
-        assert type(total_instances) is list
-
         update = False
         if interval == DAY:
-            print("TODAY=%s" % cls.today)
-            print("START_DAY=%s" % start_day)
             if cls.today == start_day:
-                print("N1")
                 update = True
         elif interval == WEEK:
             today_week = cls.today.isocalendar()[1]
             start_week = start_day.isocalendar()[1]
             if cls.today.year == start_day.year and today_week == start_week:
-                print("N2")
                 update = True
         elif interval == MONTH:
             if cls.today.year == start_day.year and cls.today.year == start_day.year:
-                print("N3")
                 update = True
-
 
         if update:
             # a rather expensive update of the current month if statistic already exists
@@ -113,8 +101,6 @@ class Rollup:
         if not update:
             total_instances.append(stat)
 
-
-
     @classmethod
     def compute_daily_rollup(cls, repo=None, author=None, start_day=None, total_instances=None):
 
@@ -122,23 +108,16 @@ class Rollup:
         Generate rollup stats for everything the team did on a given day
         """
 
-        assert repo is not None
-        assert start_day is not None
-        assert type(total_instances) is list
-
         file_changes = FileChange.objects.select_related('commit', 'author').filter(
             commit__commit_date__year=start_day.year,
             commit__commit_date__month=start_day.month,
             commit__commit_date__day=start_day.day,
         )
         if file_changes.count() == 0:
-            print("NO FILE CHANGES FOR TODAY: %s" % start_day)
             return
 
-        #print("GOT FILE CHANGES: %s" % file_changes.count())
         if author:
             file_changes.filter(commit__author=author)
-            #print("GOT FILE CHANGES (AUTHOR): %s" % file_changes.count())
 
         # FIXME: probably not the most efficient way to do this
         commits = file_changes.values_list('commit', flat=True).distinct().all()
@@ -153,13 +132,6 @@ class Rollup:
         lines_added = data['lines_added']
         lines_removed = data['lines_removed']
         lines_changed = lines_added + lines_removed
-
-        #print(commits_total)
-        #print(files_changed)
-        #print(authors_count)
-        #print(lines_added)
-        #print(lines_removed)
-        #print(lines_changed)
 
         # FIXME: if start_day is today, we need to delete the current stat
 
@@ -177,10 +149,7 @@ class Rollup:
             author_total=authors_count
         )
 
-        #print("*** SBU-DAY")
         cls.smart_bulk_update(repo=repo, start_day=start_day, author=author, interval=DAY, stat=stat, total_instances=total_instances)
-
-
 
     @classmethod
     def compute_interval_rollup(cls, repo=None, author=None, interval=None, start_day=None, total_instances=None):
@@ -191,10 +160,6 @@ class Rollup:
 
         # IF in weekly mode, and start_day is this week, we need to delete the current stat
         # IF in monthly mode, and start_day is this month, we need to delete the current stat
-
-        assert repo is not None
-        assert start_day is not None
-        assert type(total_instances) is list
 
         end_date = cls.get_end_day(start_day, interval)
         days = Statistic.objects.filter(
@@ -217,8 +182,6 @@ class Rollup:
             author_total=Sum("author_total")
         )
 
-        print("AUTHOR=%s" % author)
-
         stat = Statistic(
             start_date=start_day,
             interval=interval,
@@ -232,8 +195,6 @@ class Rollup:
             author_total=data['author_total']
         )
 
-
-        #print("*** SBU-INTERVAL=%s" % interval)
         cls.smart_bulk_update(repo=repo, start_day=start_day, author=author, interval=interval, stat=stat, total_instances=total_instances)
 
 
@@ -265,8 +226,6 @@ class Rollup:
         commits = None
         stats = None
         if author:
-            print("AUTHOR=%s" % author)
-            print("REPO=%s" % repo)
             commits = Commit.objects.filter(author=author, repo=repo)
             stats = Statistic.objects.filter(author=author, repo=repo, interval=interval)
         else:
@@ -295,7 +254,6 @@ class Rollup:
             rollup_dates.add(cls.today.date())
             rollup_dates = sorted([x for x in rollup_dates])
             for x in rollup_dates:
-                print("YIELD %s" % x)
                 yield clear(x)
 
         elif interval == WEEK:
@@ -315,15 +273,11 @@ class Rollup:
     def bulk_create(cls, total_instances):
         # by not ignoring conflicts, we can test whether our scanner "overwork" code is correct
         # use -F to try a full test from scratch
-        print("TOTAL_INSTANCES=")
-        for x in total_instances:
-            print(x)
         Statistic.objects.bulk_create(total_instances, 5000, ignore_conflicts=False)
         del total_instances[:]
 
     @classmethod
     def finalize_scan(cls, repo):
-        assert repo is not None
         repo.last_scanned = cls.today.date()
         repo.save()
 
