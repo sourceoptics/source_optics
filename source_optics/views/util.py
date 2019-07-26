@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 
 from django.contrib.humanize.templatetags.humanize import intcomma
 from django.core import serializers
-from django.db.models import Sum
+from django.db.models import Sum, Max
 from django.http import HttpResponse
 from django.utils import timezone
 
@@ -56,7 +56,7 @@ def aggregate_stats(repo, author, start, end):
     # Calculate sums from statistics objects into an object
     totals = days.aggregate(lines_added=Sum("lines_added"), lines_removed=Sum("lines_removed"),
                     lines_changed=Sum("lines_changed"), commit_total=Sum("commit_total"),
-                    files_changed=Sum("files_changed"), author_total=Sum("author_total"))
+                    files_changed=Sum("files_changed"), author_total=Max("author_total"))
 
     # append to stats list
     totals['repo_last_scanned'] = repo.last_scanned

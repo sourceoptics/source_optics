@@ -15,7 +15,7 @@
 
 import datetime
 import calendar
-from django.db.models import Sum
+from django.db.models import Sum, Max
 from django.utils import timezone
 from source_optics.models import Statistic, Commit, FileChange, Author
 from dateutil import rrule
@@ -179,7 +179,7 @@ class Rollup:
             lines_changed=Sum("lines_changed"),
             commit_total=Sum("commit_total"),
             files_changed=Sum("files_changed"),
-            author_total=Sum("author_total")
+            author_total=Max("author_total")
         )
 
         stat = Statistic(
