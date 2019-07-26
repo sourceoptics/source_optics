@@ -13,13 +13,13 @@
 # limitations under the License.
 #
 
-import datetime
 import calendar
 from django.db.models import Sum, Max
 from django.utils import timezone
 from source_optics.models import Statistic, Commit, FileChange, Author
 from dateutil import rrule
 import datetime
+CURRENT_TZ = timezone.get_current_timezone()
 
 intervals =  Statistic.INTERVALS
 
@@ -36,6 +36,13 @@ class Rollup:
 
     # FIXME: this should be called 'now', not 'today' and really should be a function
     today = datetime.datetime.now(tz=timezone.utc)
+
+    @classmethod
+    def aware(cls, date):
+        try:
+            return timezone.make_aware(date, CURRENT_TZ)
+        except:
+            return date
 
     @classmethod
     def get_end_day(cls, date, interval):
@@ -77,7 +84,7 @@ class Rollup:
         if update:
             # a rather expensive update of the current month if statistic already exists
             # that normally doesn't happen on most records.
-            stats = Statistic.objects.filter(repo=repo, interval=interval, start_date=start_day)
+            stats = Statistic.objects.filter(repo=repo, interval=interval, start_date=cls.aware(start_day))
             if author:
                 stats = stats.filter(author=author)
             else:
@@ -137,7 +144,7 @@ class Rollup:
 
         # Create total rollup row for the day
         stat = Statistic(
-            start_date=start_day,
+            start_date=cls.aware(start_day),
             interval=DAY,
             repo=repo,
             author=author,
@@ -165,7 +172,10 @@ class Rollup:
         days = Statistic.objects.filter(
             interval=DAY,
             repo=repo,
-            start_date__range=(start_day, end_date)
+            start_date__range=(
+                cls.aware(start_day),
+                cls.aware(end_date)
+            )
         )
         if author:
             days.filter(author__isnull=True)
@@ -183,7 +193,7 @@ class Rollup:
         )
 
         stat = Statistic(
-            start_date=start_day,
+            start_date=cls.aware(start_day),
             interval=interval,
             repo=repo,
             author=author,
@@ -211,65 +221,6 @@ class Rollup:
         return repo.earliest_commit_date(author)
 
     @classmethod
-    def get_commit_days(cls, repo, author, interval):
-        """
-        Get every day we need to compute a rollup for within the time range.
-        Daily rollups are optimized to ignore days without commits.
-        Currently weekly/monthly ones are *not*, which might be nice, but make sure the graph code is cool w/ it.
-        If a project is 20 years old, this could return a maximum of 7300 dates, which isn't horrific.
-        It will return less if there is existing scan data.
-        """
-
-        assert repo is not None
-        assert interval in [ DAY, MONTH, WEEK ]
-
-        commits = None
-        stats = None
-        if author:
-            commits = Commit.objects.filter(author=author, repo=repo)
-            stats = Statistic.objects.filter(author=author, repo=repo, interval=interval)
-        else:
-            commits = Commit.objects.filter(repo=repo)
-            stats = Statistic.objects.filter(author__isnull=True, repo=repo, interval=interval)
-
-        scan_start = None
-        if repo.last_scanned:
-            scan_start = repo.last_scanned.date()
-        else:
-            scan_start = cls.get_earliest_commit_date(repo, author)
-            if scan_start is None:
-                print("no commits!")
-                return
-
-        def clear(d):
-            return datetime.datetime(d.year, d.month, d.day)
-
-        if interval == DAY:
-            # we need to scan all days that DO have a commit and DONT have a daily rollup
-            # and we also need to rescan today
-            commit_dates = set([ x.date() for x in commits.values_list('commit_date', flat=True).all() ])
-            stat_dates = set([ x.date() for x in stats.values_list('start_date', flat=True).all() ])
-
-            rollup_dates = set([ x for x in commit_dates if x not in stat_dates ])
-            rollup_dates.add(cls.today.date())
-            rollup_dates = sorted([x for x in rollup_dates])
-            for x in rollup_dates:
-                yield clear(x)
-
-        elif interval == WEEK:
-            # just return the first of every week inside the time range
-            # this may return periods where there are no commits, which is ok for now
-            for dt in rrule.rrule(rrule.WEEKLY, dtstart=scan_start, until=cls.today):
-                yield clear(dt)
-        elif interval == MONTH:
-            # just return the first of every month inside the time range
-            # this may return periods where there are no commits, which is ok for now
-            for dt in rrule.rrule(rrule.MONTHLY, dtstart=scan_start, until=cls.today):
-                yield clear(dt)
-        else:
-            raise Exception('unknown interval')
-
-    @classmethod
     def bulk_create(cls, total_instances):
         # by not ignoring conflicts, we can test whether our scanner "overwork" code is correct
         # use -F to try a full test from scratch
@@ -278,27 +229,45 @@ class Rollup:
 
     @classmethod
     def finalize_scan(cls, repo):
-        repo.last_scanned = cls.today.date()
+        repo.last_scanned = cls.today
         repo.save()
 
     @classmethod
     def rollup_team_stats(cls, repo):
 
+        commits = Commit.objects.filter(repo=repo)
+
+        commit_days = commits.datetimes('commit_date', 'day', order='ASC')
+
         total_instances = []
-        for start_day in cls.get_commit_days(repo=repo, author=None, interval=DAY):
-            print("RD: %s" % start_day)
+        for start_day in commit_days:
+            if repo.last_scanned and start_day < repo.last_scanned:
+                break
+            # FIXME: if after the last_scanned date
+            print("compiling team stats: day=%s" % start_day)
             cls.compute_daily_rollup(repo=repo, start_day=start_day, total_instances=total_instances)
 
         cls.bulk_create(total_instances)
 
+        commit_weeks = commits.datetimes('commit_date', 'week', order='ASC')
 
-        for start_day in cls.get_commit_days(repo=repo, author=None, interval=WEEK):
-            print("RW: %s" % start_day)
+        for start_day in commit_weeks:
+            if repo.last_scanned and start_day < repo.last_scanned:
+                break
+            # FIXME: if after the last_scanned date
+
+            print("compiling team stats: week=%s" % start_day)
             cls.compute_interval_rollup(repo=repo, start_day=start_day, interval=WEEK, total_instances=total_instances)
         cls.bulk_create(total_instances)
 
-        for start_day in cls.get_commit_days(repo=repo, author=None, interval=MONTH):
-            print("RM: %s" % start_day)
+        commit_months = commits.datetimes('commit_date', 'month', order='ASC')
+
+        for start_day in commit_months:
+            # FIXME: if after the last_scanned date
+            if repo.last_scanned and start_day < repo.last_scanned:
+                break
+
+            print("compiling team stats: month=%s" % start_day)
             cls.compute_interval_rollup(repo=repo, start_day=start_day, interval=MONTH, total_instances=total_instances)
         cls.bulk_create(total_instances)
 
@@ -306,22 +275,48 @@ class Rollup:
     def rollup_author_stats(cls, repo):
 
         total_instances = []
-        for author in cls.get_authors_for_repo(repo):
-            print("A: %s" % author)
 
-            for start_day in cls.get_commit_days(repo=repo, author=author, interval=DAY):
-                print("RD: %s/%s" % (author, start_day))
+        authors = cls.get_authors_for_repo(repo)
+        author_count = 0
+        author_total = len(authors)
+
+
+        for author in authors:
+            commits = Commit.objects.filter(repo=repo, author=author)
+            author_count = author_count + 1
+
+            print("compiling contributor stats: %s/%s" % (author_count, author_total))
+
+            commit_days = commits.datetimes('commit_date', 'day', order='ASC')
+
+            for start_day in commit_days:
+                if repo.last_scanned and start_day < repo.last_scanned:
+                    break
+                # FIXME: if after the last_scanned date
+
                 cls.compute_daily_rollup(repo=repo, author=author, start_day=start_day, total_instances=total_instances)
             cls.bulk_create(total_instances)
 
-            for start_day in cls.get_commit_days(repo=repo, author=author, interval=WEEK):
-                print("RW: %s/%s" % (author, start_day))
+            commit_weeks = commits.datetimes('commit_date', 'week', order='ASC')
+
+            for start_day in commit_weeks:
+                if repo.last_scanned and start_day < repo.last_scanned:
+                    break
+                # FIXME: if after the last_scanned date
+
+                print("compiling contributor stats: %s/%s (week=%s)" % (author_count, author_total, start_day))
                 cls.compute_interval_rollup(repo=repo, author=author, interval=WEEK, start_day=start_day, total_instances=total_instances)
             cls.bulk_create(total_instances)
 
-            for start_day in cls.get_commit_days(repo=repo, author=author, interval=MONTH):
-                print("RM: %s/%s" % (author, start_day))
+            commit_months = commits.datetimes('commit_date', 'month', order='ASC')
+
+            for start_day in commit_months:
+                # FIXME: if after the last_scanned date
+                if repo.last_scanned and start_day < repo.last_scanned:
+                    break
+                print("compiling contributor stats: %s/%s (month=%s)" % (author_count, author_total, start_day))
                 cls.compute_interval_rollup(repo=repo, author=author, interval=MONTH, start_day=start_day, total_instances=total_instances)
+
             cls.bulk_create(total_instances)
 
     @classmethod

@@ -12,6 +12,7 @@ import re
 import shutil
 import subprocess
 import tempfile
+import signal
 
 TIMEOUT = -1  # name of timeout command
 
@@ -32,11 +33,17 @@ def get_timeout():
     return TIMEOUT
 
 
-def execute_command(repo, command, input_text=None, env=None, log=True, timeout=None):
+def execute_command(repo, command, input_text=None, env=None, log=True, timeout=None, chdir=None, capture=False, handler=None):
     """
     Execute a command (a list or string) with input_text as input, appending
     the output of all commands to the build log.
     """
+
+
+    prev = None
+    if chdir:
+        prev = os.getcwd()
+        os.chdir(chdir)
 
     # FIXME: standard logging
     print("(%s): %s" % (repo.name, command))
@@ -86,17 +93,36 @@ def execute_command(repo, command, input_text=None, env=None, log=True, timeout=
         if log:
             print(line)
 
+        if capture:
+            out = out + line
 
-        out = out + line
-
+        if handler:
+            # print('calling handler')
+            rc = handler(line)
+            if not rc:
+                # we signalled and exit, so no more handling
+                if chdir:
+                    os.chdir(prev)
+                # may want some options to terminate early later
+                process.wait()
+                os.killpg(os.getpgid(process.pid), signal.SIGTERM)
+                if collect:
+                    return out
+                return None
 
     process.wait()
+
+    if chdir:
+        os.chdir(prev)
 
     if process.returncode != 0:
         raise Exception("command failed: rc=%s" % process.returncode)
 
-    return out
 
+    if capture:
+        return out
+
+    return None
 
 def answer_file(answer):
     (_, fname) = tempfile.mkstemp()

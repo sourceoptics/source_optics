@@ -120,8 +120,6 @@ class RepoProcessor:
     def finalize_commit_scan_info(cls, repo, scan_time_start):
          scan_time_total = time.clock() - scan_time_start
          print("scanning complete. time: " + str(repo) + ": " + str(scan_time_total) + "s")
-         repo.last_pulled = datetime.datetime.now(tz=timezone.utc)
-         print("last_pulled: " + str(repo.last_pulled))
          repo.force_next_pull = False
          repo.save()
 
@@ -146,9 +144,12 @@ class RepoProcessor:
         if not Checkout.clone_repo(repo, work_dir):
             print("problem with checkout, skipping")
             return False
-        if not Commits.process_commits(repo, work_dir):
+        if not Commits.process_commits(repo, work_dir, mode='Commit'):
             print("problem analyzing commits, skipping")
             return False
+        Commits.process_commits(repo, work_dir, mode='File')
+        Commits.process_commits(repo, work_dir, mode='FileChange')
+
         return True
 
     @classmethod

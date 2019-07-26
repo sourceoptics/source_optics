@@ -146,6 +146,14 @@ class Repository(models.Model):
             return commits.earliest("commit_date").commit_date
         return None
 
+    def latest_commit_date(self, author=None):
+
+        commits = Commit.objects.filter(repo=self)
+        if author:
+            commits.filter(author=author)
+        if commits.count():
+            return commits.latest("commit_date").commit_date
+        return None
 
 class Author(models.Model):
     email = models.TextField(db_index=True, max_length=64, unique=True, blank=False, null=True)
@@ -197,10 +205,10 @@ class File(models.Model):
     binary = models.BooleanField(default=False)
 
     class Meta:
-        unique_together = [ 'repo', 'name', 'path', 'ext' ]
+        unique_together = [ 'repo', 'name', 'path' ]
 
     def __str__(self):
-        return f"File: {self.path} (r:{self.repo.sha})"
+        return f"File: ({self.repo}) {self.path}/{self.name})"
 
 class FileChange(models.Model):
 

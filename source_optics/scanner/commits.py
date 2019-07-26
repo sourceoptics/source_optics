@@ -42,6 +42,9 @@ PARSER_RE_STRING = f"{DEL}(?P<commit>.*){DEL}(?P<author_name>.*){DEL}(?P<author_
 
 PARSER_RE = re.compile(PARSER_RE_STRING, re.VERBOSE)
 
+FILES_HACK_REPO = None
+FILES_HACK = dict()
+
 
 class Commits:
 
@@ -51,67 +54,96 @@ class Commits:
     """
 
     @classmethod
-    def process_commits(cls, repo, repo_dir):
+    def get_file(cls, repo, path, filename):
+        global FILES_HACK_REPO
+        global FILES_HACK
+        if FILES_HACK_REPO != repo.name:
+            FILES_HACK = dict()
+            FILES_HACK_REPO = repo.name
+            files = File.objects.filter(repo=repo).all()
+            for fobj in files:
+                key = os.path.join(fobj.path, fobj.name)
+                FILES_HACK[key] = fobj
+        else:
+            original = os.path.join(path, filename)
+            return FILES_HACK[original]
+
+    @classmethod
+    def bulk_create(cls, total_commits, total_files, total_file_changes):
+        # by not ignoring conflicts, we can test whether our scanner "overwork" code is correct
+        # use -F to try a full test from scratch
+        Commit.objects.bulk_create(total_commits, 5000, ignore_conflicts=True)
+        del total_commits[:]
+        File.objects.bulk_create(total_files, 5000, ignore_conflicts=True)
+        del total_files[:]
+        FileChange.objects.bulk_create(total_file_changes, 5000, ignore_conflicts=True)
+        del total_file_changes[:]
+
+    @classmethod
+    def process_commits(cls, repo, repo_dir, mode='Commit'):
 
         """
         Uses git log to gather the commit data for a repository
         """
+
+        cmd_string = 'git rev-list --all --count'
+        commit_total = commands.execute_command(repo, cmd_string, log=False, timeout=600, chdir=repo_dir, capture=True)
+
+        try:
+            commit_total = int(commit_total)
+        except TypeError:
+            print("no commits yet")
+            return
+
         cmd_string = ('git log --all --numstat --date=iso-strict-local --pretty=format:'
                       + PRETTY_STRING)
 
-        # FIXME: as with above note, make command wrapper understand chdir
-        prev = os.getcwd()
-        os.chdir(repo_dir)
-
-        out = commands.execute_command(repo, cmd_string, log=False, timeout=600)
-        os.chdir(prev)
-
-        # Parsing happens in two stages for each commit.
-        #
-        # The first stage is a pretty string containing easily parsed fields for
-        # the commit and author objects. The second stage processes lines added and removed for the current
-        # commit. Pretty string is parsed using the regex PARSER_RE
-        #
-        # First stage:
-        # DEL%HDEL%anDEL...
-        #
-        # Second Stage (lines added  lines removed     filename):
-        # 2       0       README.md
-        # ...
-        #
-        # Because files will point to their
-        # commit, we keep a record of the "last" commit for when we are in files mode
 
         last_commit = None
+        count = 0
+        total_commits = []
+        total_file_changes = []
+        total_files = []
 
+        global GLITCH_COUNT
 
-        # FYI: this doesn't really "stream" the output but in practice should not matter, if it does, revisit
-        # later and add some new features to the commands wrapper
-        # FIXME: consider alternative approaches to delimiter parsing?
+        def handler(line):
 
-        if "does not have any commits yet" in out:
-            print("skipping, no commits yet")
-            return False
+            nonlocal last_commit
+            nonlocal count
 
-        lines = out.split("\n")
+            if count % 50 == 0:
+                print("scanning (repo:%s) (mode:%s): %s/%s" % (repo, mode, count, commit_total))
+            if count % 500 == 0:
+                cls.bulk_create(total_commits, total_files, total_file_changes)
 
-        for line in lines:
-
-            # ignore empty lines
             if not line or line == "\n":
-                continue
+                #print("F1")
+                return True # continue
 
-            if line.startswith(DEL):
 
-                commit, created = cls.handle_diff_information(repo, line)
-                last_commit = commit
+            elif line.startswith(DEL):
 
-                if not created:
-                    # we've seen this commit before, so we don't need to do any more scanning
-                    break
+                commit = cls.handle_diff_information(repo, line, mode)
+                if last_commit != commit:
+                    count = count + 1
+                    last_commit = commit
+                    total_commits.append(commit)
+                return True
+
+            elif "does not have any commits yet" in line:
+                #print("skipping, no commits yet")
+                return False
+
             else:
-                cls.handle_file_information(repo, line, last_commit)
-        last_commit.save()
+                if mode != 'Commit':
+                    cls.handle_file_information(repo, line, last_commit, mode, total_files, total_file_changes)
+                return True
+
+
+        commands.execute_command(repo, cmd_string, log=False, timeout=1200, chdir=repo_dir, handler=handler)
+        cls.bulk_create(total_commits, total_files, total_file_changes)
+
         return True
 
     # This assumes that commits (and their effect on files) will not be processed
@@ -119,29 +151,46 @@ class Commits:
     # more than once.
     # ------------------------------------------------------------------
     @classmethod
-    def create_file(cls, full_path, commit, la, lr, binary):
+    def create_file(cls, full_path, commit, la, lr, binary, mode, total_files, total_file_changes):
 
         fname = os.path.basename(full_path)
-
-        # assert full_path is not None
-        # assert commit is not None
-        # assert type(la) is int
-        # assert type(lr) is int
-        # assert type(binary) is bool
 
         # find the extension
         (_, ext) = os.path.splitext(full_path)
         path = os.path.dirname(full_path)
 
-        # update the global file object with the line counts
-        file, created = File.objects.get_or_create(repo=commit.repo, path=path, name=fname, ext=ext, defaults=dict(
-            binary=binary
-        ))
+        if mode == 'File':
 
-        _, _ = FileChange.objects.get_or_create(file=file, commit=commit,
-                defaults = dict(lines_added=la, lines_removed=lr))
+            # update the global file object with the line counts
 
-        return file
+            f = File(
+                repo=commit.repo,
+                path=path,
+                name=fname,
+                ext=ext,
+                binary=binary
+            )
+            total_files.append(f)
+
+            # BOOKMARK
+
+        elif mode == 'FileChange':
+
+            file = cls.get_file(commit.repo, path, fname)
+
+            # FIXME: I think this is because of the fix_path function and moves, so a temporary hack only!
+            if file is None:
+                print("********************* GLITCH: %s/%s" % (path, fname))
+                return
+
+            fc = FileChange(
+                    commit=commit,
+                    lines_added=la,
+                    lines_removed=lr,
+                    file=file
+            )
+            total_file_changes.append(fc)
+
 
     @classmethod
     def matches(self, needle, haystack, exact=False, trim_dot=False):
@@ -183,6 +232,10 @@ class Commits:
 
     @classmethod
     def repair_move_path(cls, path):
+
+        # FIXME: this doesn't work because more than just one path segment can appear here
+        # like /{/foo/bar=>baz/blorp}/ so this code still needs upgrades!
+
         # handle details about moves in git log by fixing path elements like /{org=>com}/
         # to just log the file in the final path. This will possibly give users credit for
         # aspects of a move but this something we can explore later. Not sure if it does - MPD.
@@ -243,7 +296,7 @@ class Commits:
         return True
 
     @classmethod
-    def handle_file_information(cls, repo, line, last_commit):
+    def handle_file_information(cls, repo, line, last_commit, mode, total_files, total_file_changes):
 
         """
         process the list of file changes in this commit
@@ -269,11 +322,10 @@ class Commits:
         if not cls.should_process_path(repo, path):
             return None
 
-        # increment the files lines added/removed
-        file = cls.create_file(path, last_commit, added, removed, binary)
+        cls.create_file(path, last_commit, added, removed, binary, mode, total_files, total_file_changes)
 
     @classmethod
-    def handle_diff_information(cls, repo, line):
+    def handle_diff_information(cls, repo, line, mode):
 
         """
         process the amount of lines changed in this commit
@@ -286,6 +338,11 @@ class Commits:
             raise Exception("DOESN'T MATCH? %s" % line)
 
         data = match.groupdict()
+        if mode != 'Commit':
+            # running back through the logs to set up the file changes
+            commit = Commit.objects.get(sha=data['commit'])
+            return commit
+
         email = data['author_email']
 
         author, created = Author.objects.get_or_create(email=email)
@@ -293,15 +350,12 @@ class Commits:
         commit_date = parse_datetime(data['commit_date'])
         author_date = parse_datetime(data['author_date'])
 
-        commit, created = Commit.objects.get_or_create(
+        # will pass on to bulk_create
+        return Commit(
             sha=data['commit'],
-            defaults=dict(
-                subject=data['subject'],
-                repo=repo,
-                author=author,
-                author_date=author_date,
-                commit_date=commit_date,
-            )
+            subject=data['subject'],
+            repo=repo,
+            author=author,
+            author_date=author_date,
+            commit_date=commit_date
         )
-
-        return commit, created
