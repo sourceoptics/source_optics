@@ -139,29 +139,28 @@ class Repository(models.Model):
 
     def earliest_commit_date(self, author=None):
 
-        commits = Commit.objects.filter(repo=self)
+        commits = Commit.objects
         if author:
-            commits.filter(author=author)
+            commits = commits.filter(author=author)
+        else:
+            commits = commits.filter(author=author, repo=self)
         if commits.count():
             return commits.earliest("commit_date").commit_date
         return None
 
     def latest_commit_date(self, author=None):
 
-        commits = Commit.objects.filter(repo=self)
+        commits = Commit.objects
         if author:
-            commits.filter(author=author)
+            commits = commits.filter(author=author)
+        else:
+            commits = commits.filter(author=author, repo=self)
         if commits.count():
             return commits.latest("commit_date").commit_date
         return None
 
 class Author(models.Model):
     email = models.TextField(db_index=True, max_length=64, unique=True, blank=False, null=True)
-
-    class Meta:
-        indexes = [
-            models.Index(fields=[ 'email' ])
-        ]
 
     def __str__(self):
         return f"Author: {self.email}"
@@ -243,10 +242,10 @@ class Statistic(models.Model):
         ('author_total', "Total Authors"),
         )
         
-    start_date = models.DateTimeField(db_index=True, blank=False, null=True)
-    interval = models.TextField(db_index=True, max_length=5, choices=INTERVALS)
-    repo = models.ForeignKey(Repository, db_index=True, on_delete=models.CASCADE, null=True, related_name='repo')
-    author = models.ForeignKey(Author, db_index=True, on_delete=models.CASCADE, blank=True, null=True, related_name='author')
+    start_date = models.DateTimeField(blank=False, null=True)
+    interval = models.TextField(max_length=5, choices=INTERVALS)
+    repo = models.ForeignKey(Repository, on_delete=models.CASCADE, null=True, related_name='repo')
+    author = models.ForeignKey(Author, on_delete=models.CASCADE, blank=True, null=True, related_name='author')
     lines_added = models.IntegerField(blank = True, null = True)
     lines_removed = models.IntegerField(blank = True, null = True)
     lines_changed = models.IntegerField(blank = True, null = True)

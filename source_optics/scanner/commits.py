@@ -112,9 +112,9 @@ class Commits:
             nonlocal last_commit
             nonlocal count
 
-            if count % 50 == 0:
+            if count % 200 == 0:
                 print("scanning (repo:%s) (mode:%s): %s/%s" % (repo, mode, count, commit_total))
-            if count % 500 == 0:
+            if count % 2000 == 0:
                 cls.bulk_create(total_commits, total_files, total_file_changes)
 
             if not line or line == "\n":
@@ -163,14 +163,13 @@ class Commits:
 
             # update the global file object with the line counts
 
-            f = File(
+            total_files.append(File(
                 repo=commit.repo,
                 path=path,
                 name=fname,
                 ext=ext,
                 binary=binary
-            )
-            total_files.append(f)
+            ))
 
             # BOOKMARK
 
@@ -183,13 +182,12 @@ class Commits:
                 print("********************* GLITCH: %s/%s" % (path, fname))
                 return
 
-            fc = FileChange(
+            total_file_changes.append(FileChange(
                     commit=commit,
                     lines_added=la,
                     lines_removed=lr,
                     file=file
-            )
-            total_file_changes.append(fc)
+            ))
 
 
     @classmethod

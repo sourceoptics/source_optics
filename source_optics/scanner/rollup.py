@@ -114,17 +114,23 @@ class Rollup:
         """
         Generate rollup stats for everything the team did on a given day
         """
+        file_changes = None
+        if not author:
+            file_changes = FileChange.objects.select_related('commit', 'author').filter(
+                commit__commit_date__year=start_day.year,
+                commit__commit_date__month=start_day.month,
+                commit__commit_date__day=start_day.day,
+            )
+        else:
+            file_changes = FileChange.objects.select_related('commit', 'author').filter(
+                commit__commit_date__year=start_day.year,
+                commit__commit_date__month=start_day.month,
+                commit__commit_date__day=start_day.day,
+                commit__author=author
+            )
 
-        file_changes = FileChange.objects.select_related('commit', 'author').filter(
-            commit__commit_date__year=start_day.year,
-            commit__commit_date__month=start_day.month,
-            commit__commit_date__day=start_day.day,
-        )
         if file_changes.count() == 0:
             return
-
-        if author:
-            file_changes.filter(commit__author=author)
 
         # FIXME: probably not the most efficient way to do this
         commits = file_changes.values_list('commit', flat=True).distinct().all()
@@ -169,18 +175,29 @@ class Rollup:
         # IF in monthly mode, and start_day is this month, we need to delete the current stat
 
         end_date = cls.get_end_day(start_day, interval)
-        days = Statistic.objects.filter(
-            interval=DAY,
-            repo=repo,
-            start_date__range=(
-                cls.aware(start_day),
-                cls.aware(end_date)
+
+        days = None
+        if not author:
+            days = Statistic.objects.filter(
+                author__isnull=True,
+                interval=DAY,
+                repo=repo,
+                start_date__range=(
+                    cls.aware(start_day),
+                    cls.aware(end_date)
+                )
             )
-        )
-        if author:
-            days.filter(author__isnull=True)
         else:
-            days.filter(author=author)
+            days = Statistic.objects.filter(
+                author=author,
+                interval=DAY,
+                repo=repo,
+                start_date__range=(
+                    cls.aware(start_day),
+                    cls.aware(end_date)
+                )
+            )
+
 
         # aggregates total stats for the interval
         data = days.aggregate(
@@ -280,7 +297,6 @@ class Rollup:
         author_count = 0
         author_total = len(authors)
 
-
         for author in authors:
             commits = Commit.objects.filter(repo=repo, author=author)
             author_count = author_count + 1
@@ -295,7 +311,9 @@ class Rollup:
                 # FIXME: if after the last_scanned date
 
                 cls.compute_daily_rollup(repo=repo, author=author, start_day=start_day, total_instances=total_instances)
-            cls.bulk_create(total_instances)
+
+            if len(total_instances) > 2000:
+                cls.bulk_create(total_instances)
 
             commit_weeks = commits.datetimes('commit_date', 'week', order='ASC')
 
@@ -306,7 +324,6 @@ class Rollup:
 
                 print("compiling contributor stats: %s/%s (week=%s)" % (author_count, author_total, start_day))
                 cls.compute_interval_rollup(repo=repo, author=author, interval=WEEK, start_day=start_day, total_instances=total_instances)
-            cls.bulk_create(total_instances)
 
             commit_months = commits.datetimes('commit_date', 'month', order='ASC')
 
@@ -317,7 +334,11 @@ class Rollup:
                 print("compiling contributor stats: %s/%s (month=%s)" % (author_count, author_total, start_day))
                 cls.compute_interval_rollup(repo=repo, author=author, interval=MONTH, start_day=start_day, total_instances=total_instances)
 
-            cls.bulk_create(total_instances)
+            if len(total_instances) > 2000:
+                cls.bulk_create(total_instances)
+
+        cls.bulk_create(total_instances)
+
 
     @classmethod
     def rollup_repo(cls, repo):
