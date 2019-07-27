@@ -241,7 +241,7 @@ class Rollup:
     def bulk_create(cls, total_instances):
         # by not ignoring conflicts, we can test whether our scanner "overwork" code is correct
         # use -F to try a full test from scratch
-        Statistic.objects.bulk_create(total_instances, 5000, ignore_conflicts=False)
+        Statistic.objects.bulk_create(total_instances, 100, ignore_conflicts=False)
         del total_instances[:]
 
     @classmethod

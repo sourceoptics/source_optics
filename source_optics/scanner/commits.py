@@ -72,12 +72,15 @@ class Commits:
     def bulk_create(cls, total_commits, total_files, total_file_changes):
         # by not ignoring conflicts, we can test whether our scanner "overwork" code is correct
         # use -F to try a full test from scratch
-        Commit.objects.bulk_create(total_commits, 5000, ignore_conflicts=True)
-        del total_commits[:]
-        File.objects.bulk_create(total_files, 5000, ignore_conflicts=True)
-        del total_files[:]
-        FileChange.objects.bulk_create(total_file_changes, 5000, ignore_conflicts=True)
-        del total_file_changes[:]
+        if len(total_commits):
+            Commit.objects.bulk_create(total_commits, 100, ignore_conflicts=True)
+            del total_commits[:]
+        if len(total_files):
+            File.objects.bulk_create(total_files, 100, ignore_conflicts=True)
+            del total_files[:]
+        if len(total_file_changes):
+            FileChange.objects.bulk_create(total_file_changes, 100, ignore_conflicts=True)
+            del total_file_changes[:]
 
     @classmethod
     def process_commits(cls, repo, repo_dir, mode='Commit'):

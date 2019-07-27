@@ -22,6 +22,7 @@ from django.core.exceptions import ValidationError
 from django.db import models
 
 from source_optics.scanner.encrypt import SecretsManager
+from django.contrib.postgres.indexes import BrinIndex
 
 repo_validator = re.compile(r'[^a-zA-Z0-9._]')
 
@@ -187,9 +188,8 @@ class Commit(models.Model):
     class Meta:
         unique_together = [ 'repo', 'sha' ]
         indexes = [
-            models.Index(fields=['commit_date', 'author', 'repo']),
-            models.Index(fields=['author_date', 'author', 'repo']),
-
+            BrinIndex(fields=['commit_date', 'author', 'repo'], name='commit1'),
+            BrinIndex(fields=['author_date', 'author', 'repo'], name='commit2'),
         ]
 
     def __str__(self):
@@ -205,6 +205,9 @@ class File(models.Model):
 
     class Meta:
         unique_together = [ 'repo', 'name', 'path' ]
+        indexes = [
+            BrinIndex(fields=[ 'repo', 'name', 'path' ], name='file1')
+        ]
 
     def __str__(self):
         return f"File: ({self.repo}) {self.path}/{self.name})"
@@ -218,6 +221,9 @@ class FileChange(models.Model):
 
     class Meta:
         unique_together = [ 'file', 'commit' ]
+        indexes = [
+            BrinIndex(fields=[ 'file', 'commit' ], name='file_change1')
+        ]
 
     def __str__(self):
         return f"FileChange: {self.file.path} (c:{commit.sha})"
@@ -266,7 +272,7 @@ class Statistic(models.Model):
         ]
 
         indexes = [
-            models.Index(fields=['start_date', 'interval', 'repo', 'author'], name='author_rollup'),
+            BrinIndex(fields=['start_date', 'interval', 'repo', 'author'], name='author_rollup2'),
         ]
 
     @classmethod
