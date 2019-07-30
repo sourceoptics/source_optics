@@ -1,9 +1,9 @@
 # contributor note: the django UI will be eventually replaced by a new dynamic frontend speaking to the REST API, do not add features
 
-from .graphs.authors import AuthorGraph, AuthorContributeGraph
-from .graphs.repositories import RepositoryGraph
+from .graphs.v1_authors import AuthorGraph, AuthorContributeGraph
+from .graphs.v1_repositories import RepositoryGraph
 from .. models import Repository, Statistic
-from . import util
+from . import v1_util
 import plotly.graph_objs as go
 import plotly.offline as opy
 
@@ -41,13 +41,13 @@ def generate_graph_data(**kwargs):
             interval=interval,
             repo=kwargs['repo'],
             author=author,
-            start_date__range=(util.get_first_day(kwargs['start'], interval), kwargs['end'])
+            start_date__range=(v1_util.get_first_day(kwargs['start'], interval), kwargs['end'])
         ).order_by('start_date')
     else:
         stats_set = Statistic.objects.filter(
             interval=interval,
             author=author,
-            start_date__range=(util.get_first_day(kwargs['start'], interval), kwargs['end'])
+            start_date__range=(v1_util.get_first_day(kwargs['start'], interval), kwargs['end'])
         ).order_by('start_date')
 
     # sort the dates first so we don't add artifacts to the graph
@@ -82,10 +82,10 @@ def attributes_by_repo(request):
 
     org = request.GET.get('org')
     # Query for repos based on the request (filter)
-    repos = util.query(request.GET.get('filter'), org)
+    repos = v1_util.query(request.GET.get('filter'), org)
 
     # Get start and end date for date range
-    queries = util.get_query_strings(request)
+    queries = v1_util.get_query_strings(request)
 
     graph = RepositoryGraph(q=queries, repos=repos).attributes_by_repo()
 
@@ -102,7 +102,7 @@ def attribute_graphs(request, slug):
     repo = Repository.objects.get(name=slug)
 
     # Get start and end date of date range
-    queries = util.get_query_strings(request)
+    queries = v1_util.get_query_strings(request)
 
     # Generate a graph for displayed repository based on selected attribute
     figure = generate_graph_data(repo=repo, interval=queries['interval'], name=repo.name, start=queries['start'], end=queries['end'], attribute=queries['attribute'], row=1, col=1)
@@ -118,7 +118,7 @@ def attribute_author_graphs(request, slug):
     repo = Repository.objects.get(name=slug)
 
     # Get start and end date of date range
-    queries = util.get_query_strings(request)
+    queries = v1_util.get_query_strings(request)
 
     graph = AuthorGraph(q=queries, repo=repo).top_graphs()
     return graph
@@ -126,7 +126,7 @@ def attribute_author_graphs(request, slug):
 def attribute_author_contributions(request, author):
 
     # Get start and end date of date range
-    queries = util.get_query_strings(request)
+    queries = v1_util.get_query_strings(request)
 
     graph = AuthorContributeGraph(author=author, attribute=queries['attribute'],
                                   interval=queries['interval'], start=queries['start'],
@@ -140,7 +140,7 @@ Generates a line graph for an author details page
 def attribute_summary_graph_author(request, author):
 
     # Get start and end date of date range
-    queries = util.get_query_strings(request)
+    queries = v1_util.get_query_strings(request)
 
     # Generate a graph for displayed repository based on selected attribute
     figure = generate_graph_data(author=author, interval=queries['interval'], name=author.email,

@@ -24,13 +24,17 @@ from django_filters.rest_framework import DjangoFilterBackend
 from django_tables2 import RequestConfig
 from rest_framework import viewsets
 from django.contrib.auth.models import User, Group
+from rest_framework import status
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from . graphs.generate import GraphGenerator
 from ..models import Repository, Organization, Credential, Commit, Author, Statistic
 from ..serializers import (AuthorSerializer, CommitSerializer,
                            CredentialSerializer, GroupSerializer,
                            OrganizationSerializer, RepositorySerializer,
                            StatisticSerializer, UserSerializer)
-from . import graph, util
-from .tables import StatTable, AuthorStatTable
+from . import v1_graph, v1_util
+from .v1_tables import StatTable, AuthorStatTable
 from .webhooks import Webhooks
 
 
@@ -101,11 +105,11 @@ def index(request):
     """
 
     org = request.GET.get('org')
-    repos = util.query(request.GET.get('filter'), org)
-    queries = util.get_query_strings(request)
+    repos = v1_util.query(request.GET.get('filter'), org)
+    queries = v1_util.get_query_strings(request)
 
     # aggregates statistics for repositories based on start and end date
-    stats = util.get_all_repo_stats(repos=repos, start=queries['start'], end=queries['end'])
+    stats = v1_util.get_all_repo_stats(repos=repos, start=queries['start'], end=queries['end'])
     stat_table = StatTable(stats)
 
     # FIXME: make pagination configurable
@@ -140,21 +144,21 @@ def _repo_details(request, repo_name, template=None):
     #Gets repo name from url slug
     repo = Repository.objects.get(name=repo_name)
 
-    queries = util.get_query_strings(request)
+    queries = v1_util.get_query_strings(request)
 
-    stats = util.get_all_repo_stats(repos=[repo], start=queries['start'], end=queries['end'])
+    stats = v1_util.get_all_repo_stats(repos=[repo], start=queries['start'], end=queries['end'])
 
     stat_table = StatTable(stats)
     RequestConfig(request, paginate={'per_page': 10}).configure(stat_table)
 
     #Generates line graphs based on attribute query param
     # FIXME: take the object, not the name
-    line_elements = graph.attribute_graphs(request, repo_name)
+    line_elements = v1_graph.attribute_graphs(request, repo_name)
 
     #Generates line graph of an attribute for the top contributors
     # to that attribute within the specified time period
     # FIXME: take the object, not the name
-    author_elements = graph.attribute_author_graphs(request, repo_name)
+    author_elements = v1_graph.attribute_author_graphs(request, repo_name)
 
     #possible attribute values to filter by
     attributes = Statistic.ATTRIBUTES
@@ -169,12 +173,12 @@ def _repo_details(request, repo_name, template=None):
         attribute = attributes[0][0]
 
     # Generate a table of the top contributors statistics
-    authors = util.get_top_authors(repo=repo, start=queries['start'], end=queries['end'], attribute=queries['attribute'])
-    author_stats = util.get_all_author_stats(authors=authors, repo=repo, start=queries['start'], end=queries['end'])
+    authors = v1_util.get_top_authors(repo=repo, start=queries['start'], end=queries['end'], attribute=queries['attribute'])
+    author_stats = v1_util.get_all_author_stats(authors=authors, repo=repo, start=queries['start'], end=queries['end'])
     author_table = AuthorStatTable(author_stats)
     RequestConfig(request, paginate={'per_page': 6}).configure(author_table)
 
-    summary_stats = util.get_lifetime_stats(repo)
+    summary_stats = v1_util.get_lifetime_stats(repo)
 
     #Context variable being passed to template
     context = {
@@ -197,18 +201,18 @@ def author_details(request, author_email):
     #Gets repo name from url slug
     auth = Author.objects.get(email=author_email)
 
-    queries = util.get_query_strings(request)
+    queries = v1_util.get_query_strings(request)
 
-    stats = util.get_total_author_stats(author=auth, start=queries['start'], end=queries['end'])
+    stats = v1_util.get_total_author_stats(author=auth, start=queries['start'], end=queries['end'])
 
     stat_table = StatTable(stats)
     RequestConfig(request, paginate={'per_page': 5}).configure(stat_table)
 
     #Generates line graphs based on attribute query param
-    line_elements = graph.attribute_summary_graph_author(request, auth)
+    line_elements = v1_graph.attribute_summary_graph_author(request, auth)
 
     # get the top repositories the author commits to
-    author_elements = graph.attribute_author_contributions(request, auth)
+    author_elements = v1_graph.attribute_author_contributions(request, auth)
 
     #possible attribute values to filter by
     attributes = Statistic.ATTRIBUTES
@@ -228,7 +232,7 @@ def author_details(request, author_email):
     #author_table = AuthorStatTable(author_stats)
     #RequestConfig(request, paginate={'per_page': 10}).configure(author_table)
 
-    summary_stats = util.get_lifetime_stats_author(auth)
+    summary_stats = v1_util.get_lifetime_stats_author(auth)
 
     #Context variable being passed to template
     context = {
@@ -246,7 +250,7 @@ def author_details(request, author_email):
 def attributes_by_repo(request):
 
     
-    data = graph.attributes_by_repo(request)
+    data = v1_graph.attributes_by_repo(request)
     context = {
         'title': 'Repo Statistics Over Time',
         'organizations': Organization.objects.all(),
@@ -279,3 +283,15 @@ def webhook_post(request, *args, **kwargs):
         return HttpResponseServerError("webhook processing error")
 
     return HttpResponse("ok", content_type="text/plain")
+
+@api_view(['POST'])
+def generate_graph(request):
+    """
+    List all code snippets, or create a new snippet.
+    """
+    data = request.data
+    if 'error' not in data:
+        data = GraphGenerator.graph(data)
+        return Response(data, status=status.HTTP_200_OK)
+    else:
+        return Response(data, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

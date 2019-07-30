@@ -5,7 +5,7 @@ import math
 import plotly.offline as opy
 from plotly import tools
 
-from .. import graph, util
+from .. import v1_graph, v1_util
 
 
 class AuthorGraph:
@@ -22,7 +22,7 @@ class AuthorGraph:
     def top_graphs(self):
 
         # Get the top contributors to be graphed
-        authors = util.get_top_authors(repo=self.repo, start=self.start, end=self.end, attribute=self.attribute)
+        authors = v1_util.get_top_authors(repo=self.repo, start=self.start, end=self.end, attribute=self.attribute)
 
         p_start = (self.page-1) * self.range
         if len(authors) < self.range * self.page:
@@ -43,7 +43,7 @@ class AuthorGraph:
         )
         figure['layout'].update(height=800)
         for i in range(p_start, p_end):
-            figure = graph.generate_graph_data(
+            figure = v1_graph.generate_graph_data(
                 figure=figure,
                 repo=self.repo,
                 interval=self.interval,
@@ -91,7 +91,7 @@ class AuthorContributeGraph:
 
         # list 4 repos
         for i in range(min(len(repos), 6)):
-            figure = graph.generate_graph_data(
+            figure = v1_graph.generate_graph_data(
                 figure=figure,
                 repo=repos[i],
                 interval=self.interval,

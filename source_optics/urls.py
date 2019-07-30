@@ -38,6 +38,8 @@ urlpatterns = [
     path('api/', include(api_router.urls)),
     path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
 
+    path('api/graph/', views.generate_graph),
+
     # Webhooks
     path('webhook', views.webhook_post, name='webhook_post'),
     path('webhook/', views.webhook_post, name='webhook_post'),

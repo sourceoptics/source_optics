@@ -2,7 +2,7 @@
 
 import plotly.offline as opy
 from plotly import tools
-from .. import graph
+from .. import v1_graph
 
 
 class RepositoryGraph:
@@ -48,7 +48,7 @@ class RepositoryGraph:
         # Iterate over repo queryset, generating attribute graph for each
         print(p_start, p_end)
         for i in range(p_start, p_end):
-            figure = graph.generate_graph_data(
+            figure = v1_graph.generate_graph_data(
                 figure=figure,
                 repo=self.repos[i],
                 name=self.repos[i].name,

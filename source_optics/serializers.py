@@ -64,3 +64,4 @@ class StatisticSerializer(serializers.HyperlinkedModelSerializer):
         model = Statistic
         fields = ('start_date', 'interval', 'repo', 'author', 'lines_added',
                   'lines_removed', 'lines_changed', 'commit_total', 'author_total')
+
