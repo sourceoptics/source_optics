@@ -291,7 +291,7 @@ def generate_graph(request):
     """
     data = request.data
     if 'error' not in data:
-        data = GraphGenerator.graph(data)
+        data = GraphGenerator(data).graph()
         return Response(data, status=status.HTTP_200_OK)
     else:
         return Response(data, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
