@@ -61,7 +61,7 @@ class RepositoryViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Repository.objects.all()
     serializer_class = RepositorySerializer
     filter_backends = (DjangoFilterBackend,)
-    filterset_fields = ('name', 'url', 'cred', 'tags', 'earliest_commit', 'last_scanned', 'enabled', 'organization')
+    filterset_fields = ('name', 'url', 'tags', 'last_scanned', 'enabled', 'organization')
 
 class OrganizationViewSet(viewsets.ReadOnlyModelViewSet):
 
@@ -292,11 +292,12 @@ def generate_graph(request):
     #data = request.data
 
     data = dict(
-        end = "2004-10-06 10:00:00",
-        days = 14,
+        end = "2019-10-31 10:00:00",
+        days = 1000,
         interval = "WK",
         organization_id = 1,
-        repo_pattern = "%",
+        # repo_pattern = "%",
+        repo_id = 1,
         plugin = "repo_summary"
     )
 

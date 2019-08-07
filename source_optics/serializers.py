@@ -33,7 +33,7 @@ class GroupSerializer(serializers.HyperlinkedModelSerializer):
 class RepositorySerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Repository
-        fields = ('organization', 'enabled', 'last_scanned', 'last_rollup', 'earliest_commit', 'tags', 'last_pulled', 'cred', 'url', 'name', 'color')
+        fields = ('organization', 'enabled', 'last_scanned', 'tags', 'last_pulled', 'url', 'name', 'color')
 
 class CredentialSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
@@ -71,7 +71,7 @@ class ReportParameters(serializers.Serializer):
     end = serializers.DateTimeField(default=None)
     days = serializers.IntegerField(default=None)
     interval = serializers.ChoiceField(choices=['DY','WK','MN'], default='DY')
-    repo_pattern = serializers.CharField(max_length=512)
+    repo_pattern = serializers.CharField(max_length=512, default=None)
     author_pattern = serializers.CharField(max_length=512, default=None)
     author_id = serializers.IntegerField(default=None)
     repo_id = serializers.IntegerField(default=None)
