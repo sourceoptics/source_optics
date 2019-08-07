@@ -32,7 +32,7 @@ def validate_repo_name(value):
 
 class Organization(models.Model):
 
-    name = models.TextField(max_length=32, db_index=True, blank=False, unique=True)
+    name = models.CharField(max_length=255, db_index=True, blank=False, unique=True)
     admins = models.ManyToManyField(User, related_name='+', help_text='currently unused')
     members = models.ManyToManyField(User, related_name='+', help_text='currently unused')
     credential = models.ForeignKey('Credential', on_delete=models.SET_NULL, null=True, help_text='used for repo imports and git checkouts')
@@ -60,15 +60,15 @@ class Organization(models.Model):
 
 class Credential(models.Model):
 
-    name = models.TextField(max_length=64, blank=False, db_index=True)
-    username = models.TextField(max_length=32, blank=True, help_text='for github/gitlab username')
-    password = models.TextField(max_length=128,  blank=True, null=True, help_text='for github/gitlab imports')
+    name = models.CharField(max_length=255, blank=False, db_index=True)
+    username = models.CharField(max_length=64, blank=True, help_text='for github/gitlab username')
+    password = models.CharField(max_length=255,  blank=True, null=True, help_text='for github/gitlab imports')
     ssh_private_key = models.TextField(blank=True, null=True, help_text='for cloning private repos')
-    ssh_unlock_passphrase = models.TextField(blank=True, null=True, help_text='for cloning private repos')
-    description = models.TextField(max_length=128, blank=True, null=True)
+    ssh_unlock_passphrase = models.CharField(max_length=255, blank=True, null=True, help_text='for cloning private repos')
+    description = models.TextField(max_length=1024, blank=True, null=True)
     organization_identifier = models.CharField(max_length=256, blank=True, null=True, help_text='for github/gitlab imports')
-    import_filter = models.CharField(max_length=256, blank=True, null=True, help_text='if set, only import repos matching this fnmatch pattern')
-    api_endpoint = models.TextField(blank=True, null=True, help_text="for github/gitlab imports off private instances")
+    import_filter = models.CharField(max_length=255, blank=True, null=True, help_text='if set, only import repos matching this fnmatch pattern')
+    api_endpoint = models.CharField(max_length=1024, blank=True, null=True, help_text="for github/gitlab imports off private instances")
 
     class Meta:
         verbose_name = 'Credential'
@@ -99,7 +99,7 @@ class Credential(models.Model):
 
 class Repository(models.Model):
 
-
+    name = models.CharField(db_index=True, max_length=64, blank=False, null=False, validators=[validate_repo_name])
 
     organization = models.ForeignKey(Organization, db_index=True, on_delete=models.SET_NULL, null=True)
     enabled = models.BooleanField(default=True, help_text='if false, disable scanning')
@@ -107,8 +107,7 @@ class Repository(models.Model):
 
     tags = models.ManyToManyField('Tag', related_name='tags', blank=True)
     last_pulled = models.DateTimeField(blank = True, null = True)
-    url = models.TextField(max_length=255, db_index=True, blank=False, help_text='use a git ssh url for private repos, else http/s are ok')
-    name = models.TextField(db_index=True, max_length=32, blank=False, null=False, validators=[validate_repo_name])
+    url = models.CharField(max_length=255, db_index=True, blank=False, help_text='use a git ssh url for private repos, else http/s are ok')
     color = models.CharField(max_length=10, null=True, blank=True)
     force_next_pull = models.BooleanField(null=False, default=False, help_text='used by webhooks to signal the scanner')
     webhook_token = models.CharField(max_length=255, null=True, blank=True, help_text='prevents against trivial webhook spam')
@@ -161,7 +160,7 @@ class Repository(models.Model):
         return None
 
 class Author(models.Model):
-    email = models.TextField(db_index=True, max_length=64, unique=True, blank=False, null=True)
+    email = models.CharField(db_index=True, max_length=255, unique=True, blank=False, null=True)
 
     def __str__(self):
         return f"Author: {self.email}"
@@ -169,7 +168,7 @@ class Author(models.Model):
 
 
 class Tag(models.Model):
-    name = models.TextField(max_length=64, db_index=True, blank=True, null=True)
+    name = models.CharField(max_length=64, db_index=True, blank=True, null=True)
     repos = models.ManyToManyField(Repository, related_name='+', blank=True)
 
     def __str__(self):
@@ -180,10 +179,10 @@ class Commit(models.Model):
 
     repo = models.ForeignKey(Repository, db_index=True, on_delete=models.CASCADE, related_name='commits')
     author = models.ForeignKey(Author, db_index=True, on_delete=models.CASCADE, blank=False, null=True, related_name='commits')
-    sha = models.TextField(db_index=True, max_length=256, blank=False)
+    sha = models.CharField(db_index=True, max_length=255, blank=False)
     commit_date = models.DateTimeField(db_index=True,blank=False, null=True)
     author_date = models.DateTimeField(blank=False, null=True)
-    subject = models.TextField(db_index=True, max_length=256, blank=False)
+    subject = models.CharField(db_index=True, max_length=255, blank=False)
 
     class Meta:
         unique_together = [ 'repo', 'sha' ]

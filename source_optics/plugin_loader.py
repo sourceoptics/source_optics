@@ -54,3 +54,8 @@ class PluginLoader(object):
 
     def get_secrets_plugins(self):
         return self.generic_load('secrets', as_list=True)
+
+    def get_report_api_plugins(self):
+        return self.generic_load('report_api')
+
+

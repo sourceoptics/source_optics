@@ -289,7 +289,17 @@ def generate_graph(request):
     """
     List all code snippets, or create a new snippet.
     """
-    data = request.data
+    #data = request.data
+
+    data = dict(
+        end = "2004-10-06 10:00:00",
+        days = 14,
+        interval = "WK",
+        organization_id = 1,
+        repo_pattern = "%",
+        plugin = "repo_summary"
+    )
+
     if 'error' not in data:
         data = GraphGenerator(data).graph()
         return Response(data, status=status.HTTP_200_OK)

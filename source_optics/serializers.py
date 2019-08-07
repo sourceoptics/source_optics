@@ -65,3 +65,17 @@ class StatisticSerializer(serializers.HyperlinkedModelSerializer):
         fields = ('start_date', 'interval', 'repo', 'author', 'lines_added',
                   'lines_removed', 'lines_changed', 'commit_total', 'author_total')
 
+
+class ReportParameters(serializers.Serializer):
+
+    end = serializers.DateTimeField(default=None)
+    days = serializers.IntegerField(default=None)
+    interval = serializers.ChoiceField(choices=['DY','WK','MN'], default='DY')
+    repo_pattern = serializers.CharField(max_length=512)
+    author_pattern = serializers.CharField(max_length=512, default=None)
+    author_id = serializers.IntegerField(default=None)
+    repo_id = serializers.IntegerField(default=None)
+    organization_id = serializers.IntegerField(default=None)
+    plugin = serializers.CharField(max_length=512, default='repo_summary')
+    arguments = serializers.JSONField(default=None)
+

@@ -18,176 +18,215 @@
 # on all repos, if we change this behavior in the UI, we also need to pass in request.user
 # for filtering here.
 
+from datetime import timedelta
+from ... serializers import ReportParameters
+from ... plugin_loader import PluginLoader
+from ... models import Organization, Repository, Author
+
+import dateutil.parser
+
+OLD = """
+
+class ReportParameters(object):
+
+    def __init__(self, data):
+
+        # input parameters
+        self._end = data.get('start', None)
+        self._days = data.get('days', 365)
+        self._interval = data.get('interval', 'DY')
+        self._author_ids = data.get('author_ids', None)
+        self._repo_ids = data.get('repo_ids', None)
+        self._organization = data.get('organization', None)
+        self._plugin = data.get('plugins', None)
+        self.arguments = data.get('arguments', None)
+
+        self.get_defaults()
+
+    def get_defaults(cls, data):
+
+        self.end = dateutil.parser.parse(self._end)
+        self.start = self.end - -datetime.timedelta(days=self._days)
+
+        self.authors = Author.objects
+        self.repos = Repo.objects
+
+        if self._author_ids:
+            self.authors = self.authors.filter(pk__in=self._author_ids)
+        if self._repo_ids:
+            self.repos = self.repos.filter(pk__in=self._repo_ids)
+
+        self.organization = Organization.objects.get(pk=self._organization)
+
+        self.plugins = PluginLoader().get_report_api_plugins()
+        self.plugin = self.plugins[data['plugin']]
+
+
+"""
+
 class GraphGenerator(object):
 
+    def __init__(self, data):
+
+        self.data = data
+
+        self.serializer = ReportParameters(data=data)
+
+
+
+
     """
-    The GraphGenerator class provides flexible data sufficient to render most pages in the
-    application in a single response.
-
-    The input is a parameter structure, that looks like this:
-     {
-           'end'  : ISO 8601 time string or omit
-           'history' : number of days from 'end' to look back for stats
-           'interval': 'DY',
-           'author_filter': [ 'michael@michaeldehaan.net', 'foo@example.org' ], # or omit
-           'repo_filter' : [ 'asdf1', 'asdf2' ], # or omit
-           'organization' : '2019-fall-csc201-001',  # required!
-           'aspects' : [ 'totals', 'author_info', 'repo_info', 'commit_graph', 'lines_added_graph', 'lines_removed_graph' ]
+    The GraphGenerator class provides flexible data sufficient to fill in most pages in the
+    application in a single response.  parameters are described in serializers.py under ReportParameters
+    
+    Input
+    =====
+    
+    Generally:
+    
+    {
+        end: 2004-10-16 08:10:15,
+        days: 365,
+        repo_filter: csc201-project4%,
+        plugin: repo_summary
+    }
+    
+    OR:
+    
+    {
+        end: 2004-10-16 08:10:15,
+        days: 14,
+        repo_id: 27,
+        author_filter: "%ncsu.edu",
+        plugin: line_graph
+    }
+    
+    Note these use database wildcards, not fnmatch patterns or regexes.   
+     
+          
+    Output
+    ======
+     
+    This structure is POSTED to /report_api and response formats come back like this:
+          
+     meta: {
+        plugin_type: 'line_graph'
+     }
+     
+     repos: {
+        name1: data_member1,
+        name2: data_member2
      }
 
-     If any parameter is not supplied, it has the following effect:
-
-     end - assumes today
-     interval - assumes 'WK', valid also are 'DY' and 'MN'
-     history - assumes 365 (1 year)
-     author_filter - assumes no filter, includes data for all authors rather than selected authors
-     repo_filter - assumes no filter, includes data for all repos in the organization rather than selected repos
-     organization - this is required, include an organization name or get an error!
-     aspects - assumes just ['totals'] which is the result from the REPORT_totals function
-
-     The most interesting paramter by far is 'aspects', as each of these names corresponds with a function
-     name below and will include results from calling that function.
-
-     A author_filter of [] does not mean all authors, but it means give *NO AUTHORS*, in other words, it just
-     returns the repo totals ("*ALL*").
-
-     The response looks like this:
-
-     {
-           parameters: { ... }
-           authors: {
-               # each author matched and their database IDs
-               'email@example.com': { pk: 1 }
-           }
-           aspects: {
-               # a dictionary of each repo...
-               repo_name: {
-                   # database ID of the repo
-                   pk: 1
-                   # each one of these are aspects ...
-                   lines_added: <RESULT FROM ASPECT_lines_added> ,
-                   lines_removed: <RESULT FROM ASPECT lines_removed>,
-                   commits: <RESULT FROM ASPECT commits>
-               }, ...
-           }
-     }
-
-     Asking for too many repos or aspects could possibly result in a very long response time.
-
-     For aspects that represent a line graph, the response looks like this:
-
-            lines_added: {
-                'hint': 'line',
-                meta: {
-                    description: "Lines Added"
-                }
-                data: {
-                    'axes' : {
-                        x: 'Date',
-                        y: 'Lines Added'
-                    },
-                    'labels' : {
-                        x: [ <list of date strings> ],
-                    },
-                    'data_by_author' : {
-\                       'user1@example.com' : [ 1, 2, 3, 4, 5, 6, ... ]
-                        'user2@example.com' : [ 1, 2, 3, 4, 5, 6, ... ]
-                    },
-                    'annotate_series' : {
-                        3: 'Start of Semester'
-                        15: 'Superbowl'
-                    }
-                    'data_overall' : [ 1, 2, 3, 4, 5, 6 ]
-                }
+     
+     Each data item per repository varies based on plugin type.
+     
+     line_graphs
+     -----------
+     
+     For each repo:
+     
+        series_name1: {
+            meta: {
+                name: '...'
+                description: '...'
             }
+            data: [
+                [0,0], [1,1], ...
+            ]
+        }
+        series_name2: { ... }
+   
+    report
+    ------
+    
+    Repo reports return unstructured JSON but generally should look like this:
+    
+      
+        title: '...'
+        total: {
+            lines_added: 50
+            lines_removed: 100
+            lines_changed: 150
+            commits: 86
+        }
+        authors: {
+            user1@example.com : {
+                lines_added: 50
+                lines_removed: 100
+                lines_changed: 150
+                 commits: 99
+             }
+        }
+        
+    pie_chart
+    ---------
 
-    Annotations of specific points of a data can be considered in the future.
-
-    For aspects that represent a report (and thus are not time series related), the format is like this:
-
-            basic_report: {
-                hint: 'table'
-                meta: {
-                    description: "Summary Statistics"
-                }
-                data: {
-                    overall: {
-                        lines_added: 50
-                        lines_removed: 100
-                        lines_changed: 150
-                        commits: 86
-                    }
-                    by_author: {
-                        'user1@example.com' : {
-                             lines_added: 50
-                             lines_removed: 100
-                             lines_changed: 150
-                            commits: 99
-                      }
-                 }
+        lines_added: {
+            meta: {
+               name: 'Lines Added'
+               description: '...'
             }
-
-    For aspects that represent pie chart information:
-
-            pie_contribution: {
-                hint' : 'pie'
-                meta: {
-                    commits: {
-                        description: "Commits Per Team Member"
-                    }
-                    lines_added: {
-                        description: "Lines Added Per Team Member
-                    }
-                }
-                data: {
-                    commits': {
-                        'user1@example.com': 219,
-                        'user2@example.com': 456,
-                    }
-                    lines_added': {
-                        ...
-                    }
-                }
+            data: {
+                'user1@example.com': 219,
+                'user2@example.com': 456,
             }
+        }
+        other_metric: { ... }
+        
 
     Other format types may be added later.
 
     If the repo has a very large number of authors, pagination may be required and should be implemented client
     side for now and server side later.
 
-
-
     """
 
 
-    def __init__(self, data):
 
-        # input parameters
-        self._start = data.get('start', None)
-        self._end = data.get('end', None)
-        self._interval = data.get('interval', 'DY')
-        self._authors = data.get('authors', None)
-        self._repos = data.get('repos', None)
-        self._organization = data.get('organization', 'default')
-        self._aspects = data.get('aspects', None)
+    def graph(self):
 
-        self.get_defaults()
+        if not self.serializer.is_valid():
+            raise Exception(self.serializer.errors)
 
-    def get_defaults(cls, data):
+        self.data = self.serializer.validated_data
 
-        self.organization = Organization.objects.filter(name=self._organization)
+        self.plugins = PluginLoader().get_report_api_plugins()
+        self.plugin = self.plugins[self.data['plugin']]
 
-        self.repos = Repos.objects.filter(self.organization)
-        if self._repos:
-            self.repos.filter(pk__in=self._repos)
-        self.repos = self.repos.all()
 
-        if self._aspects is not None:
-            self.aspects = self._aspects
+        if self.data['organization_id']:
+            self.organization = Organization.objects.get(pk=self.data['organization_id'])
         else:
-            self.aspects = [ 'repo_summary' ]
+            raise Exception("organization_id is required")
+
+        if self.data['author_id']:
+            self.authors = Author.objects.filter(pk=self.data['author_id'])
+        elif self.data['author_pattern']:
+            self.authors = Author.objects.filter(email__contains=self.data['author_pattern'])
+        else:
+            self.authors = Author.objects
+
+        if self.data['repo_id']:
+            self.repos = Repository.objects.filter(pk=self.data['repo_id'])
+        elif self.data['repo_pattern']:
+            self.repos = Repository.objects.filter(name__contains=self.data['repo_pattern'])
+        else:
+            self.repos = Repository.objects
 
 
-    def graph(self, data):
-        pass
+        self.end = self.data['end']
+        self.days = self.data['days']
+        self.start = self.end - timedelta(days=self.days)
 
+        self.interval = self.data['interval']
+
+
+        return self.plugin.generate(
+            start = self.start,
+            end = self.end,
+            days = self.days,
+            interval = self.interval,
+            repos = self.repos,
+            authors = self.authors
+        )
