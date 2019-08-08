@@ -136,6 +136,9 @@ class Rollup:
         commits = file_changes.values_list('commit', flat=True).distinct().all()
         files = file_changes.values_list('file', flat=True).distinct().all()
         authors = Commit.objects.filter(pk__in=commits).values_list('author', flat=True).distinct().all()
+
+        # FIXME: this may still be incorrect?
+
         authors_count = len(authors)
 
         # Aggregate values from query set for rollup
