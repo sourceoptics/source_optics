@@ -298,7 +298,7 @@ def generate_graph(request):
         organization_id = 1,
         # repo_pattern = "%",
         repo_id = 1,
-        plugin = "repo_summary"
+        plugin = "pie_graph"
     )
 
     if 'error' not in data:

@@ -73,16 +73,15 @@ class GraphGenerator(object):
         self.serializer = ReportParameters(data=data)
 
 
-
-
     """
-    The GraphGenerator class provides flexible data sufficient to fill in most pages in the
+    
+    The GraphGenerator class intends to return data to fill in most pages in the
     application in a single response.  parameters are described in serializers.py under ReportParameters
     
     Input
     =====
     
-    Generally:
+    POST /report_api with JSON BODY:
     
     {
         end: 2004-10-16 08:10:15,
@@ -91,7 +90,7 @@ class GraphGenerator(object):
         plugin: repo_summary
     }
     
-    OR:
+    OR (another example):
     
     {
         end: 2004-10-16 08:10:15,
@@ -110,7 +109,7 @@ class GraphGenerator(object):
     This structure is POSTED to /report_api and response formats come back like this:
           
      meta: {
-        plugin_type: 'line_graph'
+        format: 'line_graph'
      }
      
      repos: {
@@ -119,67 +118,10 @@ class GraphGenerator(object):
      }
 
      
-     Each data item per repository varies based on plugin type.
+     Each data item per repository varies based on plugin type.  It is easiest to
+     just run the plugin to see the format as they should be self explanatory. When building
+     new plugin types, follow the standard of other plugins of the same type/format.
      
-     line_graphs
-     -----------
-     
-     For each repo:
-     
-        series_name1: {
-            meta: {
-                name: '...'
-                description: '...'
-            }
-            data: [
-                [0,0], [1,1], ...
-            ]
-        }
-        series_name2: { ... }
-   
-    report
-    ------
-    
-    Repo reports return unstructured JSON but generally should look like this:
-    
-      
-        title: '...'
-        total: {
-            lines_added: 50
-            lines_removed: 100
-            lines_changed: 150
-            commits: 86
-        }
-        authors: {
-            user1@example.com : {
-                lines_added: 50
-                lines_removed: 100
-                lines_changed: 150
-                 commits: 99
-             }
-        }
-        
-    pie_chart
-    ---------
-
-        lines_added: {
-            meta: {
-               name: 'Lines Added'
-               description: '...'
-            }
-            data: {
-                'user1@example.com': 219,
-                'user2@example.com': 456,
-            }
-        }
-        other_metric: { ... }
-        
-
-    Other format types may be added later.
-
-    If the repo has a very large number of authors, pagination may be required and should be implemented client
-    side for now and server side later.
-
     """
 
 

@@ -80,7 +80,6 @@ class Plugin(object):
         # add information about this plugin
 
         data['meta'] = dict(
-            title = 'Repo Summary',
             format = 'report'
         )
 
@@ -94,6 +93,7 @@ class Plugin(object):
             item['overall'] = self._get_aggregation(repo=repo, start=start, end=end, days=days, interval=interval, author=None)
 
             # add per-author info...
+            # FIXME: this gets all authors, not just those in the time range, we may wish to change this
 
             by_author = item['by_author'] = dict()
             author_ids = Commit.objects.filter(repo=repo).values_list('author__pk', flat=True).distinct().all()
