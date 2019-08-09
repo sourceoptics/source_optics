@@ -162,7 +162,6 @@ PLUGIN_CONFIGURATION = dict(
         basic="source_optics.plugins.secrets.cloak_v1"
     ),
     report_api=OrderedDict(
-        commits_list="source_optics.plugins.report_api.commits_list",
         line_graph="source_optics.plugins.report_api.line_graph",
         pie_graph="source_optics.plugins.report_api.pie_graph",
         repo_summary="source_optics.plugins.report_api.repo_summary"
