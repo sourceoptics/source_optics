@@ -153,7 +153,7 @@ class RepoProcessor:
         return True
 
     @classmethod
-    @transaction.atomic
+    # @transaction.atomic
     def process_repo(cls, repo, agent_manager, force_nuclear_rescan):
 
         if force_nuclear_rescan or repo.force_nuclear_rescan:

@@ -9,7 +9,7 @@ class Command(BaseCommand):
     help = 'dumps raw aggregated statistics from the database, mostly for debug purposes'
 
 # EX: python manage.py check_stat -o root -r opsmop -i WK -a 'michael@michaeldehaan.net'
-    
+
     def add_arguments(self, parser):
         parser.add_argument('-o', '--organization', dest='organization', type=str, help='report stats on repos in this org name', default=None)
         parser.add_argument('-r', '--repo', dest='repo', type=str, help='report stats on this repo name', default=None)
@@ -31,6 +31,7 @@ class Command(BaseCommand):
         stats = None
         if author:
             stats = Statistic.objects.filter(repo=repo, author__email=author, interval=interval)
+
         else:
             stats = Statistic.objects.filter(repo=repo, author__isnull=True, interval=interval)
 

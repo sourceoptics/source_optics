@@ -39,10 +39,11 @@ class Rollup:
 
     @classmethod
     def aware(cls, date):
-        try:
-            return timezone.make_aware(date, CURRENT_TZ)
-        except:
-            return date
+        # we previously had timezones turned on but they just cause trouble...
+        # try:
+        #    return timezone.make_aware(date, timezone.utc)
+        #except:
+        return date
 
     @classmethod
     def get_end_day(cls, date, interval):
@@ -116,7 +117,7 @@ class Rollup:
         """
         file_changes = None
         if not author:
-            file_changes = FileChange.objects.select_related('commit', 'author').filter(
+            file_changes = FileChange.objects.select_related('commit').filter(
                 commit__commit_date__year=start_day.year,
                 commit__commit_date__month=start_day.month,
                 commit__commit_date__day=start_day.day,
@@ -130,6 +131,9 @@ class Rollup:
             )
 
         if file_changes.count() == 0:
+            # FIXME: this occurs because we don't track git move paths perfectly and lose edits
+            # that happen at the same time.  Fixing the rename code will fix this.
+            print("***************** GLITCH ******************* ")
             return
 
         # FIXME: probably not the most efficient way to do this
@@ -177,30 +181,37 @@ class Rollup:
         # IF in weekly mode, and start_day is this week, we need to delete the current stat
         # IF in monthly mode, and start_day is this month, we need to delete the current stat
 
+        assert repo is not None
+        assert interval in [ 'WK', 'MN']
+        assert start_day is not None
+
+        start_day = start_day.replace(tzinfo=None)
         end_date = cls.get_end_day(start_day, interval)
 
         days = None
-        if not author:
+        if author is None:
             days = Statistic.objects.filter(
                 author__isnull=True,
                 interval=DAY,
                 repo=repo,
-                start_date__range=(
-                    cls.aware(start_day),
-                    cls.aware(end_date)
-                )
+                start_date__gte=start_day,
+                start_date__lte=end_date
             )
         else:
             days = Statistic.objects.filter(
-                author=author,
+                author=author.pk,
                 interval=DAY,
                 repo=repo,
-                start_date__range=(
-                    cls.aware(start_day),
-                    cls.aware(end_date)
-                )
+                start_date__gte=start_day,
+                start_date__lte=end_date
             )
-
+            if days.count() == 0:
+                print("WARNING: NO HITS: SHOULDN'T BE HERE!: ", author, DAY, repo, cls.aware(start_day), cls.aware(end_date))
+                # FIXME: temporary workaround bc of the file move code, this should probably be fatal
+                # this can happen because the file move support is not quite smart about paths yet and seemingly
+                # does not write FileChange records in those cases, which results in Statistic objects for days being
+                # missing if all edits involved a move.  But we need to verify this.  The opsmop repo has a few examples.
+                return
 
         # aggregates total stats for the interval
         data = days.aggregate(
@@ -224,6 +235,7 @@ class Rollup:
             files_changed=data['files_changed'],
             author_total=data['author_total']
         )
+
 
         cls.smart_bulk_update(repo=repo, start_day=start_day, author=author, interval=interval, stat=stat, total_instances=total_instances)
 
@@ -264,7 +276,7 @@ class Rollup:
             if repo.last_scanned and start_day < repo.last_scanned:
                 break
             # FIXME: if after the last_scanned date
-            print("compiling team stats: day=%s" % start_day)
+            print("(RTS1) compiling team stats: day=%s" % start_day)
             cls.compute_daily_rollup(repo=repo, start_day=start_day, total_instances=total_instances)
 
         cls.bulk_create(total_instances)
@@ -276,7 +288,7 @@ class Rollup:
                 break
             # FIXME: if after the last_scanned date
 
-            print("compiling team stats: week=%s" % start_day)
+            print("(RTS2) compiling team stats: week=%s" % start_day)
             cls.compute_interval_rollup(repo=repo, start_day=start_day, interval=WEEK, total_instances=total_instances)
         cls.bulk_create(total_instances)
 
@@ -287,7 +299,7 @@ class Rollup:
             if repo.last_scanned and start_day < repo.last_scanned:
                 break
 
-            print("compiling team stats: month=%s" % start_day)
+            print("(RTS3) compiling team stats: month=%s" % start_day)
             cls.compute_interval_rollup(repo=repo, start_day=start_day, interval=MONTH, total_instances=total_instances)
         cls.bulk_create(total_instances)
 
@@ -301,40 +313,51 @@ class Rollup:
         author_total = len(authors)
 
         for author in authors:
+
             commits = Commit.objects.filter(repo=repo, author=author)
             author_count = author_count + 1
 
-            print("compiling contributor stats: %s/%s" % (author_count, author_total))
+            print("(RAS1) compiling contributor stats: %s/%s" % (author_count, author_total))
 
             commit_days = commits.datetimes('commit_date', 'day', order='ASC')
+            # print("author commit days: ", author, commit_days)
 
             for start_day in commit_days:
                 if repo.last_scanned and start_day < repo.last_scanned:
                     break
-                # FIXME: if after the last_scanned date
-
+                # FIXME: if after the last_scanned date (is this still a FIXME?)
                 cls.compute_daily_rollup(repo=repo, author=author, start_day=start_day, total_instances=total_instances)
 
             if len(total_instances) > 2000:
                 cls.bulk_create(total_instances)
+
+        cls.bulk_create(total_instances)
+
+
+
+        for author in authors:
+
+            commits = Commit.objects.filter(repo=repo, author=author)
+
+            cls.bulk_create(total_instances)
 
             commit_weeks = commits.datetimes('commit_date', 'week', order='ASC')
 
             for start_day in commit_weeks:
                 if repo.last_scanned and start_day < repo.last_scanned:
                     break
-                # FIXME: if after the last_scanned date
+                # FIXME: if after the last_scanned date (is this still a FIXME?)
 
-                print("compiling contributor stats: %s/%s (week=%s)" % (author_count, author_total, start_day))
+                print("(RAS2) compiling contributor stats: %s/%s (week=%s)" % (author_count, author_total, start_day))
                 cls.compute_interval_rollup(repo=repo, author=author, interval=WEEK, start_day=start_day, total_instances=total_instances)
 
             commit_months = commits.datetimes('commit_date', 'month', order='ASC')
 
             for start_day in commit_months:
-                # FIXME: if after the last_scanned date
+                # FIXME: if after the last_scanned date (is this still a FIXME?)
                 if repo.last_scanned and start_day < repo.last_scanned:
                     break
-                print("compiling contributor stats: %s/%s (month=%s)" % (author_count, author_total, start_day))
+                print("(RAS3) compiling contributor stats: %s/%s (month=%s)" % (author_count, author_total, start_day))
                 cls.compute_interval_rollup(repo=repo, author=author, interval=MONTH, start_day=start_day, total_instances=total_instances)
 
             if len(total_instances) > 2000:
