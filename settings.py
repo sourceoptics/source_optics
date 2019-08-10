@@ -164,7 +164,8 @@ PLUGIN_CONFIGURATION = dict(
     report_api=OrderedDict(
         line_graph="source_optics.plugins.report_api.line_graph",
         pie_graph="source_optics.plugins.report_api.pie_graph",
-        repo_summary="source_optics.plugins.report_api.repo_summary"
+        repo_summary="source_optics.plugins.report_api.repo_summary",
+        comm_health="source_optics.plugins.report_api.comm_health"
     )
 )
 

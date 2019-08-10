@@ -291,15 +291,15 @@ def generate_graph(request):
     """
     data = request.data
 
-    #data = dict(
+    data = dict(
     #    end = "2019-10-31 10:00:00",
     #    days = 1000,
     #    interval = "WK",
-    #    organization_id = 1,
+        organization_id = 1,
     #    # repo_pattern = "%",
-    #    repo_id = 1,
-    #    plugin = "line_graph"
-    #)
+        repo_id = 1,
+        plugin = "comm_health"
+    )
 
     if 'error' not in data:
         data = GraphGenerator(data).graph()

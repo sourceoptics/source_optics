@@ -159,7 +159,9 @@ class GraphGenerator(object):
 
         self.end = self.data['end']
         self.days = self.data['days']
-        self.start = self.end - timedelta(days=self.days)
+        self.start = None
+        if self.days:
+            self.start = self.end - timedelta(days=self.days)
 
         self.interval = self.data['interval']
 
