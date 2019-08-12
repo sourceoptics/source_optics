@@ -65,6 +65,7 @@ def execute_command(repo, command, input_text=None, env=None, log=True, timeout=
         env['SSH_AUTH_SOCK'] = sock
 
 
+    print(command)
     process = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                                shell=shell, env=env)
 
@@ -76,15 +77,19 @@ def execute_command(repo, command, input_text=None, env=None, log=True, timeout=
         process.stdin,
         encoding='utf-8',
         line_buffering=True,
+        errors='replace'
     )
     stdout = io.TextIOWrapper(
         process.stdout,
         encoding='utf-8',
+        errors='replace'
     )
+    #if len(input_text):
     stdin.write(input_text)
     stdin.close()
 
     out = ""
+
     for line in stdout:
 
         line = ansi_escape.sub('', line)

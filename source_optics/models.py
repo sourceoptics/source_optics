@@ -160,7 +160,7 @@ class Repository(models.Model):
         return None
 
 class Author(models.Model):
-    email = models.CharField(db_index=True, max_length=255, unique=True, blank=False, null=True)
+    email = models.CharField(db_index=True, max_length=512, unique=True, blank=False, null=True)
 
     def __str__(self):
         return f"Author: {self.email}"
@@ -179,10 +179,10 @@ class Commit(models.Model):
 
     repo = models.ForeignKey(Repository, db_index=True, on_delete=models.CASCADE, related_name='commits')
     author = models.ForeignKey(Author, db_index=True, on_delete=models.CASCADE, blank=False, null=True, related_name='commits')
-    sha = models.CharField(db_index=True, max_length=255, blank=False)
+    sha = models.CharField(db_index=True, max_length=512, blank=False)
     commit_date = models.DateTimeField(db_index=True,blank=False, null=True)
     author_date = models.DateTimeField(blank=False, null=True)
-    subject = models.CharField(db_index=True, max_length=255, blank=False)
+    subject = models.TextField(db_index=True, blank=False)
 
     class Meta:
         unique_together = [ 'repo', 'sha' ]

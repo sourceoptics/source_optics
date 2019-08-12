@@ -2,10 +2,10 @@ Django
 django-split-settings
 psycopg2-binary==2.7.7
 django-tables2==2.0.4
-plotly==3.7.1
+plotly>=4.1.0
 cryptography>=2.6.1
 coverage==4.5.3
 django-filter
 djangorestframework==3.9.1
 PyGithub==1.43.2
-
+pandas

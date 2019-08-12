@@ -69,25 +69,32 @@ class Plugin(object):
         ).aggregate(
             lines_changed=Sum("lines_changed"),
         )
+        print("DEBUG: stat=%s" % stat)
         return stat['lines_changed']
 
 
     def _earliest_vs_latest(self, repo, authors):
+        print("stat...")
         return [[self._earliest_commit(repo, x), self._latest_commit(repo,x)] for x in authors.all() ]
 
     def _earliest_vs_commits(self, repo, authors):
-       return [ [self._earliest_commit(repo, x), self._commits(repo, x)] for x in authors.all() ]
+        print("stat...")
+        return [ [self._earliest_commit(repo, x), self._commits(repo, x)] for x in authors.all() ]
 
     def _earliest_vs_changed(self, repo, authors):
+        print("stat...")
         return [[self._earliest_commit(repo, x), self._lines_changed(repo, x)] for x in authors.all()]
 
     def _latest_vs_changed(self, repo, authors):
+        print("stat...")
         return [[self._latest_commit(repo, x), self._lines_changed(repo, x)] for x in authors.all()]
 
     def _latest_vs_commits(self, repo, authors):
-       return [ [self._latest_commit(repo, x), self._commits(repo, x)] for x in authors.all() ]
+        print("stat...")
+        return [ [self._latest_commit(repo, x), self._commits(repo, x)] for x in authors.all() ]
 
     def _contributors_per_month(self, repo):
+        print("stat...")
         commit_months = Commit.objects.filter(repo=repo).datetimes('commit_date', 'month', order='ASC')
         data = []
         for start_day in commit_months:
@@ -97,6 +104,7 @@ class Plugin(object):
 
 
     def _commits_per_month(self, repo):
+        print("stat...")
         commit_months = Commit.objects.filter(repo=repo).datetimes('commit_date', 'month', order='ASC')
         data = []
         for start_day in commit_months:
@@ -104,11 +112,13 @@ class Plugin(object):
         return data
 
     def _changed_per_month(self, repo):
+        print("stat...")
         commit_months = Commit.objects.filter(repo=repo).datetimes('commit_date', 'month', order='ASC')
         data = []
         for start_day in commit_months:
             stat = Statistic.objects.filter(repo=repo, author__isnull=True, start_date__month=start_day.month, start_date__year=start_day.year).first()
-            data.append([start_day, stat.lines_changed])
+            if stat is not None:
+                data.append([start_day, stat.lines_changed])
         return data
 
     def generate(self, start=None, end=None, days=0, interval='DY', repos=None, authors=None):

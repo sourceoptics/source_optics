@@ -315,8 +315,19 @@ class Commits:
         if removed == '-':
             binary = True
             removed = 0
-        added = int(added)
-        removed = int(removed)
+
+        # FIXME: when scanning one repo, the added string containted
+
+        try:
+            added = int(added)
+            removed = int(removed)
+        except:
+            # FIXME:
+            # I found one instance in one repo where the 'added' text returns "warning: inexact" and in this case
+            # we might as well keep going, we probably need to parse the line differently in this instance.
+            # example found in kubernetes/kubernetes on github. This reference is not an endorsement.
+            added = 0
+            removed = 0
 
         path = cls.repair_move_path(path)
 
