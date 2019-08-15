@@ -28,6 +28,10 @@
 # limitations under the License.
 #
 
+# FIXME: DEPRECATED - use the flex_graph plugin, it is much more powerful and will be used going forward.
+# by deprecated, we don't think anyone is using this, and it will be deleted whenever I feel like it.
+# so, yeah...
+
 from django.db.models import Sum, Max
 from ... models import Statistic, Commit, Author
 

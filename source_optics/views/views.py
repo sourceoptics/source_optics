@@ -286,21 +286,7 @@ def webhook_post(request, *args, **kwargs):
 
 @api_view(['POST'])
 def generate_graph(request):
-    """
-    List all code snippets, or create a new snippet.
-    """
     data = request.data
-
-    #data = dict(
-    #    end = "2019-10-31 10:00:00",
-    #    days = 1000,
-    #    interval = "WK",
-    #    organization_id = 1,
-    #    # repo_pattern = "%",
-    #    repo_id = 1,
-    #    plugin = "comm_health"
-    #)
-
     if 'error' not in data:
         data = GraphGenerator(data).graph()
         return Response(data, status=status.HTTP_200_OK)

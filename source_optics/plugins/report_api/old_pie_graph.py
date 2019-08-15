@@ -16,6 +16,8 @@
 from django.db.models import Sum, Max
 from ... models import Statistic, Commit, Author
 
+# use flex_graph instead!
+
 # FIXME: throughout the code, we have 'commit_total' and not 'commits' ... commits would seemingly make more sense
 # because the other elements are totals. Consider a global replacement.
 

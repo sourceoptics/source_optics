@@ -23,6 +23,8 @@
 from django.db.models import Sum, Max
 from ... models import Statistic, Commit
 
+# DEPRECATED: this isn't needed so much because most of this data is available via REST queries
+# and using 'flex_graph'.  It will probably be removed soon.
 
 class Plugin(object):
 
@@ -52,8 +54,8 @@ class Plugin(object):
 
             )
 
-        for t in totals.all():
-            print("AUTHOR TOTAL=", t.author_total)
+        #for t in totals.all():
+        #    print("AUTHOR TOTAL=", t.author_total)
 
         # print("DEBUG: totals=", totals)
 
@@ -93,7 +95,7 @@ class Plugin(object):
             item['overall'] = self._get_aggregation(repo=repo, start=start, end=end, days=days, interval=interval, author=None)
 
             # add per-author info...
-            # FIXME: this gets all authors, not just those in the time range, we may wish to change this
+            # FIXME: this gets all authors, not just those in the (input) time range, we may wish to change this
 
             by_author = item['by_author'] = dict()
             author_ids = Commit.objects.filter(repo=repo).values_list('author__pk', flat=True).distinct().all()
