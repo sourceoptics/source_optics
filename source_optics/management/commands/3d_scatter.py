@@ -8,9 +8,10 @@ from plotly.subplots import make_subplots
 import plotly.graph_objects as go
 
 class Command(BaseCommand):
-    help = 'dumps raw aggregated statistics from the database, mostly for debug purposes'
+    help = 'draws 3d graphs'
 
-    # EX: python manage.py 3d_scatter -r <repo_name> -a earliest_commit,latest_commit,commits -p author
+    # EX: python manage.py longtail_map -r <repo_name> -a earliest_commit,latest_commit,commits -p author
+    # EX: python manage.py longtail_map -r <repo_name> -a month,authors,commits -p month
 
     def add_arguments(self, parser):
 
@@ -41,8 +42,8 @@ class Command(BaseCommand):
         fig = go.Figure(
             data = go.Scatter3d(
                 x=[a[1] for a in data],
-                y=[a[2] for a in data],
-                z=[a[3] for a in data],
+                z=[a[2] for a in data],
+                y=[a[3] for a in data],
                 opacity=0.5
             )
         )
@@ -50,8 +51,9 @@ class Command(BaseCommand):
         fig.update_layout(scene=dict(
                 xaxis_title=aspects[0],
                 yaxis_title=aspects[1],
-                zaxis_title=aspects[2]
-            )
+                zaxis_title = aspects[2],
+
+        )
         )
 
         fig.show()
