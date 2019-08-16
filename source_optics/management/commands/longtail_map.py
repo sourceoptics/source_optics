@@ -17,7 +17,7 @@ class Command(BaseCommand):
         parser.add_argument('-r', '--repo', dest='repo', type=str, help='report stats on this repo name', default=None)
         parser.add_argument('-e', '--each_bucket', dest='each_bucket', type=str, help='width of bucket', default=None)
         parser.add_argument('-b', '--bucket_max', dest='bucket_max', type=str, help='max bucket size', default=None)
-        # FIXME: only commits is implemented for now.
+        # FIXME: only LoC Changed is implemented for now.
         parser.add_argument('-m', '--metric', dest='metric', type=str, help='what stat to bucketize)', default='commits')
 
 
@@ -42,11 +42,13 @@ class Command(BaseCommand):
             print(row)
 
         fig = go.Figure(
-            data = go.Mesh3d(
+            data = go.Scatter3d(
                 x=[a[0] for a in data],
                 z=[a[1] for a in data],
                 y=[a[2] for a in data],
-                opacity=0.5
+                mode='markers',
+                opacity=0.5,
+
             )
         )
 

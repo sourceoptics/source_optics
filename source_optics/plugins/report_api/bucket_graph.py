@@ -147,7 +147,8 @@ class Plugin(object):
                     print(entry)
                 else:
                     print(".")
-                results.append(entry)
+                if count != 0:
+                    results.append(entry)
 
                 #if top is None or ((count == 0) and (top > monthly_count)):
                 #    break
