@@ -1,21 +1,27 @@
 Source Optics
 =============
 
-Source Optics is a repository analysis tool, focused on understanding
-code activity and the teams that work on them.
+Source Optics is a source code repository dashboard, focused on understanding
+evolving code activity and the teams that work on them.
+
+It can help answer basic questions such as:
+
+* what repositories are most active right now
+* which projects are growing or decreasing in activity
+* who is working on what projects
+* what are the contribution dynamics around these projects
 
 Features include:
 
 * quick at-a-glance graphical output
 * quickly comparing multiple repositories
-* analyzing multiple branches together, as opposed to just master.
+* analyzing multiple branches all at once, as opposed to just "master"
 
 It should be equally relevant to many types of users including:
 
 * Computer Science educators
-* Professional software developers and managers
-* Open source community managers
-* Data scientists interested in studying software development
+* Commercial software developers and managers
+* Researchers interested in studying software development
 
 Website
 =======
@@ -27,32 +33,29 @@ See [sourceoptics.io](https://sourceoptics.io)
 Technical Details
 =================
 
-Source Optics is a stand-alone web applicaton implemented in Python3/Django that 
-uses a PostgreSQL database.
+Source Optics is a stand-alone web applicaton implemented in Python3 and Django, using PostgreSQL
+for a database.
 
-It is essentially a multi-tenant system, and can run multiple courses or seperate views from
-the same installation.  In a university setting, this means that you can keep projects
-from one course or past semesters seperate from the others.
+It is essentially a multi-tenant system, and can index multiple courses or seperate business
+departments from the same installation.
 
-Any background tasks are implemented as Django management commands, which could be run by
-any task management system and/or cron.  Celery is not needed.
+Background tasks are implemented as Django management commands, which could be run by
+any task management system and/or cron.  Celery is not used, simplifying setup and
+maintaince.
 
-Currently the admin interface uses the built-in Django management interface, for instance,
-to add new repos. This can also be scripted and will evolve over time.
+Repositories can be automatically imported via a management command, and all other aspects
+of the system are configured within in the Django management interface (on "/admin").
 
-There is a current Django template frontend and a planned React Frontend will soon speak
-to a built-in REST API.
-
-The API is largely read-only but will support injection of user data via a few custom
-POST endpoints, allowing display in-GUI of data from source code analysis systems, build
-systems, etc.
+The API is largely read-only but will support eventually support injection of user data via a few custom
+POST endpoints, for instance allowing display in-GUI of build-system status, source code
+static analysis, and so on. 
 
 For those wishing to try out Source Optics, it should run happily from a laptop.
 
 Installation
 ============
 
-For install as well as basic operations instructions, backups, and upgrades, see INSTALL.md
+Installation and operation is as with any standard Django application and is described in INSTALL.md.
 
 Roadmap
 =======
@@ -62,9 +65,14 @@ See GitHub Projects
 Usage
 =====
 
+(Also described in INSTALL.md)
+
 Once installed and running, add in data via Django admin, ex: http://servername/admin
 
 View graphs at http://servername/
+
+More detailed documentation about Django admin settings will come later, but is largely
+documented already with tooltips and in the install guide.
 
 License
 =======
@@ -82,39 +90,44 @@ Authors/Credits
 ===============
 
 Initial version:
-
  * Ady Francis
  * Pranesh Kamalakanthan
  * Austin Shafer
  * Nick Wrenn
  
-Concept/Management: 
+Concept: 
  * Michael DeHaan
  * NCSU Senior Design Center
 
-Other additions:
+Current development:
  * Michael DeHaan
 
 Mailing List
 ============
 
-A user & development discussion list is available on Google Groups. Setup & maintaince questions, ideas,
-and code questions are all equally appropriate.  
+A combined user & development discussion list is available on Google Groups. Setup & management questions, ideas,
+and code questions are all equally appropriate.  The mailing list is also the best place to keep up with the 
+direction of the project.
 
 To join, visit [https://groups.google.com/forum/#!forum/sourceoptics](https://groups.google.com/forum/#!forum/sourceoptics).  First posts are moderated to reduce spam, and most first posts should be approved in 24 hours.
 
 Requests for features and ideas should be sent to the mailing list, not GitHub.
+
 
 Code Contribution Preferences
 =============================
 
 A few small guidelines to keep things easy to manage.
 
-1) Contributions should be by github pull request on a seperate branch per topic. Do not combine features. Rebase your pull requests to keep them up to date and avoid merges in the git history.  
+0) While not required, it is strongly encouraged that all contributors should join the mailing list.
+
+1) Contributions should be by github pull request on a seperate branch per topic. Please do not combine features. Rebase your pull requests to keep them up to date and avoid merges in the git history.  
 
 2) We care a lot about managing the surface area of the application to keep it easy to maintain and operate, and this project should move pretty fast. To keep frustrations over repeated work low, discussion of feature ideas *prior* to submitting a pull request is strongly encouraged (i.e. what do you think about X, how should this be implemented?). For bugfixes, feel free to submit code directly. If you make a database change, you must check in a new Django migrations file.
 
 3) Please do not send any submissions to tweak PEP8, pylint, or other code preferences.  Management will do that periodically, this breaks source code attribution.  Similarly, do not submit additions to add packaging or integration with third party build or test services.
+
+4) Any addition of new database fields must also add a Django migration in the same pull request.
 
 Thank you!
 
