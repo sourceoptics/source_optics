@@ -1,3 +1,5 @@
+# OBSOLETE - this will be folded back into the main UI
+
 # Copyright 2018 SourceOptics Project Contributors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");

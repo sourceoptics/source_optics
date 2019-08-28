@@ -1,3 +1,5 @@
+# OBSOLETE - this will be folded back into the main UI
+
 import plotly.express as px
 import pandas as pd
 from django.core.management.base import BaseCommand, CommandError
@@ -42,9 +44,11 @@ class Command(BaseCommand):
         fig = go.Figure(
             data = go.Scatter3d(
                 x=[a[1] for a in data],
-                z=[a[2] for a in data],
-                y=[a[3] for a in data],
-                opacity=0.5
+                z=[a[3] for a in data],
+                y=[a[2] for a in data],
+                opacity=0.5,
+                # mode='markers'
+
             )
         )
 

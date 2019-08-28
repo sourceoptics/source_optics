@@ -1,3 +1,5 @@
+# OBSOLETE - this will be folded back into the main UI
+
 # Copyright 2018 SourceOptics Project Contributors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -137,9 +139,9 @@ class Plugin(object):
                         continue
 
 
-                if (count > 200):
+                if (count > 500):
                     # don't let anomalies smash the graph scale, crop it
-                    count = 200
+                    count = 500
 
 
                 entry = [ month, count, current]

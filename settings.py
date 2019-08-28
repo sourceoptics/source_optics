@@ -111,9 +111,7 @@ TEMPLATE_CONTEXT_PROCESSORS = (
   "django.core.context_processors.request",
   "django.core.context_processors.auth",
   "django.core.context_processors.debug",
-  "django.core.context_processors.i18n",
-  "thetrailbehind.context_processors.canonical_url",
-  "thetrailbehind.context_processors.gmapkey",
+  "django.core.context_processors.i18n"
 )
 
 # Internationalization
@@ -161,12 +159,13 @@ PLUGIN_CONFIGURATION = dict(
     secrets=OrderedDict(
         basic="source_optics.plugins.secrets.cloak_v1"
     ),
-    report_api=OrderedDict(
-        line_graph="source_optics.plugins.report_api.line_graph",
-        pie_graph="source_optics.plugins.report_api.pie_graph",
-        repo_summary="source_optics.plugins.report_api.repo_summary",
-        comm_health="source_optics.plugins.report_api.comm_health"
-    )
+    # OBSOLETE
+    #report_api=OrderedDict(
+    #    line_graph="source_optics.plugins.report_api.line_graph",
+    #    pie_graph="source_optics.plugins.report_api.pie_graph",
+    #    repo_summary="source_optics.plugins.report_api.repo_summary",
+    #    comm_health="source_optics.plugins.report_api.comm_health"
+    #)
 )
 
 SCANNER_LOCK_FILE = "/etc/source_optics/scanner.lock"

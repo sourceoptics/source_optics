@@ -1,3 +1,5 @@
+# OBSOLETE - this will be folded back into the main UI
+
 import plotly.express as px
 import pandas as pd
 from django.core.management.base import BaseCommand, CommandError

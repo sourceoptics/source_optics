@@ -24,18 +24,15 @@ from django_filters.rest_framework import DjangoFilterBackend
 from django_tables2 import RequestConfig
 from rest_framework import viewsets
 from django.contrib.auth.models import User, Group
-from rest_framework import status
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
-from . graphs.generate import GraphGenerator
-from ..models import Repository, Organization, Credential, Commit, Author, Statistic
-from ..serializers import (AuthorSerializer, CommitSerializer,
-                           CredentialSerializer, GroupSerializer,
-                           OrganizationSerializer, RepositorySerializer,
-                           StatisticSerializer, UserSerializer)
-from . import v1_graph, v1_util
-from .v1_tables import StatTable, AuthorStatTable
-from .webhooks import Webhooks
+from source_optics.models import Repository, Organization, Credential, Commit, Author, Statistic
+from source_optics.serializers import (AuthorSerializer, CommitSerializer,
+                                       CredentialSerializer, GroupSerializer,
+                                       OrganizationSerializer, RepositorySerializer,
+                                       StatisticSerializer, UserSerializer)
+from source_optics.views.webhooks import Webhooks
+import datetime
+from django.db.models import Sum, Max, Value, IntegerField
+from django.db.models.expressions import Subquery, OuterRef
 
 
 class UserViewSet(viewsets.ReadOnlyModelViewSet):
@@ -47,7 +44,6 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
     filter_backends = (DjangoFilterBackend,)
 
 
-
 class GroupViewSet(viewsets.ReadOnlyModelViewSet):
     """
     API endpoint that allows groups to be viewed or edited.
@@ -56,92 +52,172 @@ class GroupViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = GroupSerializer
     filter_backends = (DjangoFilterBackend,)
 
-class RepositoryViewSet(viewsets.ReadOnlyModelViewSet):
 
+class RepositoryViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Repository.objects.all()
     serializer_class = RepositorySerializer
     filter_backends = (DjangoFilterBackend,)
     filterset_fields = ('name', 'url', 'tags', 'last_scanned', 'enabled', 'organization')
 
-class OrganizationViewSet(viewsets.ReadOnlyModelViewSet):
 
+class OrganizationViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Organization.objects.all()
     serializer_class = OrganizationSerializer
     filter_backends = (DjangoFilterBackend,)
     filterset_fields = ('name',)
 
-class CredentialViewSet(viewsets.ReadOnlyModelViewSet):
 
+class CredentialViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Credential.objects.all()
     serializer_class = CredentialSerializer
     filter_backends = (DjangoFilterBackend,)
     filterset_fields = ('name', 'username')
 
-class CommitViewSet(viewsets.ReadOnlyModelViewSet):
 
+class CommitViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Commit.objects.all()
     serializer_class = CommitSerializer
     filter_backends = (DjangoFilterBackend,)
-    filterset_fields = ('repo', 'author', 'sha', 'commit_date', 'author_date', 'subject', 'lines_added', 'lines_removed')
+    filterset_fields = (
+    'repo', 'author', 'sha', 'commit_date', 'author_date', 'subject', 'lines_added', 'lines_removed')
+
 
 class AuthorViewSet(viewsets.ReadOnlyModelViewSet):
-
     queryset = Author.objects.all()
     serializer_class = AuthorSerializer
     filter_backends = (DjangoFilterBackend,)
     filterset_fields = ('email', 'repos')
 
-class StatisticViewSet(viewsets.ReadOnlyModelViewSet):
 
+class StatisticViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Statistic.objects.all()
     serializer_class = StatisticSerializer
     filter_backends = (DjangoFilterBackend,)
     filterset_fields = ('start_date', 'interval', 'repo', 'author', 'lines_added', 'lines_removed', 'lines_changed',
                         'commit_total', 'author_total')
 
-def index(request):
+
+def _repo_stats(repos, start, end):
+
+    # this generates 1 query per repo - which is *not* optimal, but will do for now.
+
+    repos = repos.order_by('name').all()
+    results = []
+
+    for repo in repos:
+
+        stat = Statistic.objects.filter(
+            repo = repo,
+            author__isnull=True,
+            interval='DY',
+            start_date__gte=start,
+            start_date__lte=end
+        ).aggregate(
+            lines_added = Sum('lines_added'),
+            lines_removed = Sum('lines_removed'),
+            lines_changed = Sum('lines_changed'),
+            author_total = Max('author_total'),
+            commit_total=Sum("commit_total"),
+            files_changed=Sum("files_changed"),
+        )
+
+        results.append(dict(
+            id = repo.id,
+            name = repo.name,
+            lines_added = stat['lines_added'],
+            lines_removed = stat['lines_removed'],
+            lines_changed = stat['lines_changed'],
+            author_total = stat['author_total'],
+            commit_total = stat['commit_total'],
+            files_changed = stat['files_changed']
+        ))
+
+
+    print("RESULTS=%s" % results)
+    return results
+
+
+def _get_scope(request, org=None, repos=None, start=None, end=None, repo_stats=False):
+
     """
-    Site homepage lists all repos (or all repos in an organization)
+    Get objects from the URL parameters
     """
 
-    org = request.GET.get('org')
-    repos = v1_util.query(request.GET.get('filter'), org)
-    queries = v1_util.get_query_strings(request)
+    orgs = Organization.objects.all()
 
-    # aggregates statistics for repositories based on start and end date
-    stats = v1_util.get_all_repo_stats(repos=repos, start=queries['start'], end=queries['end'])
-    stat_table = StatTable(stats)
+    if end is not None:
+        end = datetime.datetime.strptime(end, "%Y-%m-%d")
+    else:
+        end = datetime.datetime.now()
 
-    # FIXME: make pagination configurable
-    RequestConfig(request, paginate={'per_page': 100 }).configure(stat_table)
+    if start is None:
+        start = end - datetime.timedelta(days=14)
+    else:
+        start =datetime.datetime.strptime(start, "%Y-%m-%d")
 
-    context = {
-        'title': 'SrcOptics',
-        'organizations': Organization.objects.all(),
-        'repositories': repos,
-        'stats': stat_table
-    }
+    if org and org != '_':
+        org = Organization.objects.get(name=org)
+        print("org select: %s" % org)
 
-    return render(request, 'dashboard.html', context=context)
+    if repos and org and repos != '_':
+        repos = repos_filter.split(',')
+        repos = Repository.objects.filter(organization=org, repos__name__in=repos)
+    elif repos and repos != '_':
+        repos = Repository.objects.filter(repos__name__in=repos_filter)
+    elif org:
+        repos = Repository.objects.filter(organization=org)
+    else:
+        repos = Repository.objects
+
+
+    context = dict(
+        orgs  = orgs.order_by('name').all(),
+        org   = org,
+        repos = repos.all(),
+        start = start,
+        end   = end,
+        start_str = start.strftime("%Y-%m-%d"),
+        end_str   = start.strftime("%Y-%m-%d")
+    )
+
+    if repo_stats:
+        context['stats'] = _repo_stats(repos, start, end)
+
+    return context
+
+
+
+def repos(request, org=None, repos=None, start=None, end=None):
+    scope = _get_scope(request, org=org, repos=repos, start=start, end=end, repo_stats=True)
+    return render(request, 'repos.html', context=scope)
+
+
+def orgs(request):
+    scope = _get_scope(request)
+    return render(request, 'orgs.html', context=scope)
+
 
 
 """
 Data to be displayed for the repo details view
 """
 
+
+OLD = """
 # FIXME: not all of the code is needed for each (author elements vs line_elements?), simplify this later
 
-def repo_team(request, repo_name):
+def v1_repo_team(request, repo_name):
     return _repo_details(request, repo_name, template='repo_team.html')
 
-def repo_contributors(request, repo_name):
+
+def v1_epo_contributors(request, repo_name):
     return _repo_details(request, repo_name, template='repo_contributors.html')
 
-def _repo_details(request, repo_name, template=None):
-    
+
+def v1_repo_details(request, repo_name, template=None):
     assert template is not None
 
-    #Gets repo name from url slug
+    # Gets repo name from url slug
     repo = Repository.objects.get(name=repo_name)
 
     queries = v1_util.get_query_strings(request)
@@ -151,19 +227,19 @@ def _repo_details(request, repo_name, template=None):
     stat_table = StatTable(stats)
     RequestConfig(request, paginate={'per_page': 10}).configure(stat_table)
 
-    #Generates line graphs based on attribute query param
+    # Generates line graphs based on attribute query param
     # FIXME: take the object, not the name
     line_elements = v1_graph.attribute_graphs(request, repo_name)
 
-    #Generates line graph of an attribute for the top contributors
+    # Generates line graph of an attribute for the top contributors
     # to that attribute within the specified time period
     # FIXME: take the object, not the name
     author_elements = v1_graph.attribute_author_graphs(request, repo_name)
 
-    #possible attribute values to filter by
+    # possible attribute values to filter by
     attributes = Statistic.ATTRIBUTES
 
-    #possible interval values to filter by
+    # possible interval values to filter by
     intervals = Statistic.INTERVALS
 
     # Get the attribute to get the top authors for from the query parameter
@@ -173,14 +249,15 @@ def _repo_details(request, repo_name, template=None):
         attribute = attributes[0][0]
 
     # Generate a table of the top contributors statistics
-    authors = v1_util.get_top_authors(repo=repo, start=queries['start'], end=queries['end'], attribute=queries['attribute'])
+    authors = v1_util.get_top_authors(repo=repo, start=queries['start'], end=queries['end'],
+                                      attribute=queries['attribute'])
     author_stats = v1_util.get_all_author_stats(authors=authors, repo=repo, start=queries['start'], end=queries['end'])
     author_table = AuthorStatTable(author_stats)
     RequestConfig(request, paginate={'per_page': 6}).configure(author_table)
 
     summary_stats = v1_util.get_lifetime_stats(repo)
 
-    #Context variable being passed to template
+    # Context variable being passed to template
     context = {
         'repo': repo,
         'stats': stat_table,
@@ -189,16 +266,14 @@ def _repo_details(request, repo_name, template=None):
         'author_graphs': author_elements,
         'author_table': author_table,
         'attributes': attributes,
-        'intervals':intervals
+        'intervals': intervals
     }
     return render(request, template, context=context)
 
 
-"""
-Data to be displayed for the author details view
-"""
-def author_details(request, author_email):
-    #Gets repo name from url slug
+
+def v1_author_details(request, author_email):
+    # Gets repo name from url slug
     auth = Author.objects.get(email=author_email)
 
     queries = v1_util.get_query_strings(request)
@@ -208,16 +283,16 @@ def author_details(request, author_email):
     stat_table = StatTable(stats)
     RequestConfig(request, paginate={'per_page': 5}).configure(stat_table)
 
-    #Generates line graphs based on attribute query param
+    # Generates line graphs based on attribute query param
     line_elements = v1_graph.attribute_summary_graph_author(request, auth)
 
     # get the top repositories the author commits to
     author_elements = v1_graph.attribute_author_contributions(request, auth)
 
-    #possible attribute values to filter by
+    # possible attribute values to filter by
     attributes = Statistic.ATTRIBUTES
 
-    #possible interval values to filter by
+    # possible interval values to filter by
     intervals = Statistic.INTERVALS
 
     # Get the attribute to get the top authors for from the query parameter
@@ -227,14 +302,14 @@ def author_details(request, author_email):
         attribute = attributes[0][0]
 
     # Generate a table of the top contributors statistics
-    #authors = util.get_top_authors(repo=repo, start=queries['start'], end=queries['end'], attribute=queries['attribute'])
-    #author_stats = util.get_all_author_stats(authors=authors, repo=repo, start=queries['start'], end=queries['end'])
-    #author_table = AuthorStatTable(author_stats)
-    #RequestConfig(request, paginate={'per_page': 10}).configure(author_table)
+    # authors = util.get_top_authors(repo=repo, start=queries['start'], end=queries['end'], attribute=queries['attribute'])
+    # author_stats = util.get_all_author_stats(authors=authors, repo=repo, start=queries['start'], end=queries['end'])
+    # author_table = AuthorStatTable(author_stats)
+    # RequestConfig(request, paginate={'per_page': 10}).configure(author_table)
 
     summary_stats = v1_util.get_lifetime_stats_author(auth)
 
-    #Context variable being passed to template
+    # Context variable being passed to template
     context = {
         'title': "Author Details: " + str(auth),
         'stats': stat_table,
@@ -242,24 +317,11 @@ def author_details(request, author_email):
         'data': line_elements,
         'author_graphs': author_elements,
         'attributes': attributes,
-        'intervals':intervals
+        'intervals': intervals
     }
     return render(request, 'author_details.html', context=context)
 
-
-def attributes_by_repo(request):
-
-    
-    data = v1_graph.attributes_by_repo(request)
-    context = {
-        'title': 'Repo Statistics Over Time',
-        'organizations': Organization.objects.all(),
-        'data' : data,
-        'attributes': Statistic.ATTRIBUTES,
-        'intervals': Statistic.INTERVALS,
-        'repos': Repository.objects.all()
-    }
-    return render(request, 'repo_view.html', context=context)
+"""
 
 @csrf_exempt
 def webhook_post(request, *args, **kwargs):
@@ -279,16 +341,8 @@ def webhook_post(request, *args, **kwargs):
         Webhooks(request, token).handle()
     except Exception:
         traceback.print_exc()
-        #LOG.error("error processing webhook: %s" % str(e))
+        # LOG.error("error processing webhook: %s" % str(e))
         return HttpResponseServerError("webhook processing error")
 
     return HttpResponse("ok", content_type="text/plain")
 
-@api_view(['POST'])
-def generate_graph(request):
-    data = request.data
-    if 'error' not in data:
-        data = GraphGenerator(data).graph()
-        return Response(data, status=status.HTTP_200_OK)
-    else:
-        return Response(data, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

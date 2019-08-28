@@ -22,7 +22,7 @@ class Webhooks(object):
 
     def handle(self):
         """
-        Invoked by views.py, recieves all webhooks and attempts to find out what
+        Invoked by v1_views.py, recieves all webhooks and attempts to find out what
         projects correspond with them by looking at the repo.  If the project
         is webhook enabled, it will create a QUEUED build for that project.
         """

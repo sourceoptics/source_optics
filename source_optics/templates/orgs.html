@@ -1,0 +1,14 @@
+{% include 'header.html' %}
+
+<h1>Organizations</h1>
+<table>
+    {% for org in orgs %}
+    <tr>
+        <td>
+            <a href="/repos/org/{{ org.name }}/repos/_/start/{{ start_str }}/end/{{ end_str }}/">{{ org.name }}</a>
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+
+{% include 'footer.html' %}

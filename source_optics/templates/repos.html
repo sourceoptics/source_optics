@@ -1,0 +1,29 @@
+{% include 'header.html' %}
+
+<h1>Repos</h1>
+<table>
+
+    <tr>
+    <th>Name</th>
+    <th>Authors</th>
+    <th>Commits</th>
+    <th>Added</th>
+    <th>Removed</th>
+    <th>Changed</th>
+
+    </tr>
+
+    {% for repo in stats %}
+    <tr>
+        <td><a href="/repos/{{ repo.id }}">{{ repo.name }}</a></td>
+        <td>{{ repo.author_total }}</td>
+        <td>{{ repo.commit_total }}</td>
+        <td>{{ repo.lines_added }}</td>
+        <td>{{ repo.lines_removed }}</td>
+        <td>{{ repo.lines_changed }}</td>
+    </tr>
+    {% endfor %}
+
+</table>
+
+{% include 'footer.html' %}

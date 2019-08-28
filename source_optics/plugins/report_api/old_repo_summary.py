@@ -1,3 +1,4 @@
+# OBSOLETE - this will be folded back into the main UI
 
 # Copyright 2018 SourceOptics Project Contributors
 #
