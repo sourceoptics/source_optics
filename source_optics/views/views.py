@@ -33,7 +33,8 @@ from source_optics.views.webhooks import Webhooks
 import datetime
 from django.db.models import Sum, Max, Value, IntegerField
 from django.db.models.expressions import Subquery, OuterRef
-
+from . import dataframes
+from . import graphs
 
 class UserViewSet(viewsets.ReadOnlyModelViewSet):
     """
@@ -123,6 +124,7 @@ def _repo_stats(repos, start, end):
 
         results.append(dict(
             id = repo.id,
+            pk = repo.id,
             name = repo.name,
             lines_added = stat['lines_added'],
             lines_removed = stat['lines_removed'],
@@ -137,7 +139,7 @@ def _repo_stats(repos, start, end):
     return results
 
 
-def _get_scope(request, org=None, repos=None, start=None, end=None, repo_stats=False):
+def _get_scope(request, org=None, repos=None, repo=None, start=None, end=None, repo_stats=False):
 
     """
     Get objects from the URL parameters
@@ -156,19 +158,20 @@ def _get_scope(request, org=None, repos=None, start=None, end=None, repo_stats=F
         start =datetime.datetime.strptime(start, "%Y-%m-%d")
 
     if org and org != '_':
-        org = Organization.objects.get(name=org)
-        print("org select: %s" % org)
+        org = Organization.objects.get(pk=int(org))
 
     if repos and org and repos != '_':
         repos = repos_filter.split(',')
-        repos = Repository.objects.filter(organization=org, repos__name__in=repos)
+        repos = Repository.objects.select_related('organization').filter(organization=org, repos__name__in=repos)
     elif repos and repos != '_':
-        repos = Repository.objects.filter(repos__name__in=repos_filter)
+        repos = Repository.objects.select_related('organization').filter(repos__name__in=repos_filter)
     elif org:
-        repos = Repository.objects.filter(organization=org)
+        repos = Repository.objects.select_related('organization').filter(organization=org)
     else:
-        repos = Repository.objects
+        repos = Repository.objects.select_related('organization')
 
+    if repo:
+        repo = Repository.objects.get(pk=repo)
 
     context = dict(
         orgs  = orgs.order_by('name').all(),
@@ -177,7 +180,8 @@ def _get_scope(request, org=None, repos=None, start=None, end=None, repo_stats=F
         start = start,
         end   = end,
         start_str = start.strftime("%Y-%m-%d"),
-        end_str   = start.strftime("%Y-%m-%d")
+        end_str   = start.strftime("%Y-%m-%d"),
+        repo = repo
     )
 
     if repo_stats:
@@ -185,7 +189,14 @@ def _get_scope(request, org=None, repos=None, start=None, end=None, repo_stats=F
 
     return context
 
+def repo(request, org=None, repo=None, start=None, end=None):
+    interval = 'DY' # FIXME
+    scope = _get_scope(request, org=org, repo=repo, start=start, end=end)
 
+    author_lines_changed = dataframes.author_series(repo=repo, start=start, end=end, interval=interval)
+    scope['lines_changed_by_author'] = graphs.author_series(repo=repo, start=start, end=end, df=author_lines_changed)
+
+    return render(request, 'repo.html', context=scope)
 
 def repos(request, org=None, repos=None, start=None, end=None):
     scope = _get_scope(request, org=org, repos=repos, start=start, end=end, repo_stats=True)

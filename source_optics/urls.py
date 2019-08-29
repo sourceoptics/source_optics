@@ -33,7 +33,9 @@ urlpatterns = [
 
     # UI
     path('', views.orgs, name='orgs'),
-    path('repos/org/<org>/repos/<repos>/start/<start>/end/<end>/', views.repos, name='repos'),
+    path('org/<org>/repos/<repos>/start/<start>/end/<end>/', views.repos, name='repos'),
+    path('org/<org>/repo/<repo>/start/<start>/end/<end>/', views.repo, name='repo'),
+
 
     # REST API
     path('api/', include(api_router.urls)),
