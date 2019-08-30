@@ -23,6 +23,7 @@ from django.db import models
 
 from source_optics.scanner.encrypt import SecretsManager
 from django.contrib.postgres.indexes import BrinIndex
+from django.db.models import Sum, Max
 
 repo_validator = re.compile(r'[^a-zA-Z0-9._]')
 
@@ -108,7 +109,7 @@ class Repository(models.Model):
     tags = models.ManyToManyField('Tag', related_name='tags', blank=True)
     last_pulled = models.DateTimeField(blank = True, null = True)
     url = models.CharField(max_length=255, db_index=True, blank=False, help_text='use a git ssh url for private repos, else http/s are ok')
-    color = models.CharField(max_length=10, null=True, blank=True)
+
     force_next_pull = models.BooleanField(null=False, default=False, help_text='used by webhooks to signal the scanner')
     webhook_token = models.CharField(max_length=255, null=True, blank=True, help_text='prevents against trivial webhook spam')
     force_nuclear_rescan = models.BooleanField(null=False, default=False, help_text='on next scan loop, delete all commits/records and rescan everything')
@@ -132,23 +133,24 @@ class Repository(models.Model):
     def __str__(self):
         return self.name
 
-    def effective_color(self):
-        if self.color:
-            return self.color
-        return "#000000"
 
     def earliest_commit_date(self, author=None):
 
+        # FIXME: duplication with Author class below, remove the author option
+
+
         commits = Commit.objects
         if author:
-            commits = commits.filter(author=author)
-        else:
             commits = commits.filter(author=author, repo=self)
+        else:
+            commits = commits.filter(repo=self)
         if commits.count():
             return commits.earliest("commit_date").commit_date
         return None
 
     def latest_commit_date(self, author=None):
+
+        # FIXME: duplication with Author class below, remove the author option
 
         commits = Commit.objects
         if author:
@@ -159,12 +161,34 @@ class Repository(models.Model):
             return commits.latest("commit_date").commit_date
         return None
 
+    def author_ids(self, start, end):
+        return [ x[0] for x in Commit.objects.filter(repo=self, commit_date__range=(start, end)).values_list('author').distinct() ]
+
 class Author(models.Model):
     email = models.CharField(db_index=True, max_length=512, unique=True, blank=False, null=True)
 
     def __str__(self):
         return f"Author: {self.email}"
 
+    def earliest_commit_date(self, repo):
+        return Commit.objects.filter(author=self, repo=repo).earliest("commit_date").commit_date
+
+    def latest_commit_date(self, repo):
+        return Commit.objects.filter(author=self, repo=repo).latest("commit_date").commit_date
+
+    def statistics(self, repo, start, end, interval):
+        stat = Statistic.objects.filter(
+            repo=repo,
+            author=self,
+            interval=interval,
+            start_date__range=(start, end)
+        ).aggregate(
+            lines_added=Sum('lines_added'),
+            lines_changed=Sum('lines_removed'),
+            lines_removed=Sum('lines_removed'),
+            commit_total=Sum('commit_total'),
+        )
+        return stat
 
 
 class Tag(models.Model):

@@ -37,13 +37,16 @@ def render_chart(chart):
     c = template.Context()
     return template.Template(TEMPLATE_CHART.format(output_div=output_div, spec=json.dumps(spec), embed_opt=json.dumps(embed_opt))).render(c)
 
-def total_series(repo=None, start=None, end=None, df=None):
+def _basic_graph(repo=None, start=None, end=None, df=None, x=None, y=None, tooltips=None):
+
+    if tooltips is None:
+        tooltips=['date', 'commit_total', 'lines_changed', 'author_total']
 
     alt.data_transformers.disable_max_rows()
     chart = alt.Chart(df).mark_point().encode(
-        x=alt.X('date', scale=alt.Scale(zero=False)),
-        y=alt.Y("lines_changed", scale=alt.Scale(zero=False)),
-        tooltip=['date', 'commits', 'lines_changed'],
+        x=alt.X(x, scale=alt.Scale(zero=False)),
+        y=alt.Y(y, scale=alt.Scale(zero=False)),
+        tooltip=tooltips
     ).interactive()
 
     # Plot the best fit polynomials
@@ -66,6 +69,16 @@ def total_series(repo=None, start=None, end=None, df=None):
 
     return render_chart(chart)
 
+def volume(repo=None, start=None, end=None, df=None):
+    return _basic_graph(repo=repo, start=start, end=end, df=df, x='date', y='lines_changed')
+
+def frequency(repo=None, start=None, end=None, df=None):
+    return _basic_graph(repo=repo, start=start, end=end, df=df, x='date', y='commit_total')
+
+def participation(repo=None, start=None, end=None, df=None):
+    return _basic_graph(repo=repo, start=start, end=end, df=df, x='date', y='author_total')
+
+NA = """
 def author_series(repo=None, start=None, end=None, df=None):
     alt.data_transformers.disable_max_rows()
     chart = alt.Chart(df).mark_point().encode(
@@ -78,5 +91,32 @@ def author_series(repo=None, start=None, end=None, df=None):
 
 
 
+
+    return render_chart(chart)
+"""
+
+
+OLD = """
+
+
+def health_matrix(repo=None, start=None, end=None, df=None):
+    rows = ['days_before_joined', 'days_since_seen', 'lines_changed', 'commits', 'average_commit_size' ]
+    cols = ['days_before_joined', 'days_since_seen', 'lines_changed', 'commits', 'average_commit_size' ]
+    tooltips = ('author', 'commits', 'lines_changed', 'average_commit_size', 'days_before_joined', 'days_since_seen')
+
+    chart = alt.Chart(df).mark_circle().encode(
+        alt.X(alt.repeat("column"), type='quantitative'),
+        alt.Y(alt.repeat("row"), type='quantitative'),
+        #color='author:N'
+        tooltip = tooltips
+    ).properties(
+        width=150,
+        height=150
+    ).repeat(
+        row=rows,
+        column=cols
+    ).interactive()
+
     return render_chart(chart)
 
+"""

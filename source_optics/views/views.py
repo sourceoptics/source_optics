@@ -189,21 +189,38 @@ def _get_scope(request, org=None, repos=None, repo=None, start=None, end=None, r
 
     return (context, start, end)
 
-def _render_graph(request, org=None, repo=None, start=None, end=None, method=None):
+def _render_graph(request, org=None, repo=None, start=None, end=None, by_author=False, data_method=None, interval=None, graph_method=None):
     (scope, start, end) = _get_scope(request, org=org, repo=repo, start=start, end=end)
-    dataframe = getattr(dataframes, method)(repo=repo, start=start, end=end)
-    scope['graph'] = getattr(graphs, method)(repo=repo, start=start, end=end, df=dataframe)
+    dataframe = getattr(dataframes, data_method)(repo=repo, start=start, by_author=by_author, end=end, interval=interval)
+    scope['graph'] = getattr(graphs, graph_method)(repo=repo, start=start, end=end, df=dataframe)
     return render(request, 'graph.html', context=scope)
 
 def repo(request, org=None, repo=None, start=None, end=None):
     (scope, start, end) = _get_scope(request, org=org, repo=repo, start=start, end=end)
     return render(request, 'repo.html', context=scope)
 
+SKETCH = """
 def repo_total_graph(request, org=None, repo=None, start=None, end=None):
     return _render_graph(request, org=org, repo=repo, start=start, end=end, method='total_series')
 
 def repo_author_graph(request, org=None, repo=None, start=None, end=None):
     return _render_graph(request, org=org, repo=repo, start=start, end=end, method='author_series')
+
+def repo_health_matrix(request, org=None, repo=None, start=None, end=None):
+    return _render_graph(request, org=org, repo=repo, start=start, end=end, method='health_matrix')
+"""
+
+def graph_volume(request, org=None, repo=None, start=None, end=None):
+    return _render_graph(request, org=org, repo=repo, start=start, end=end,
+        data_method='stat_series', graph_method='volume')
+
+def graph_frequency(request, org=None, repo=None, start=None, end=None):
+    return _render_graph(request, org=org, repo=repo, start=start, end=end,
+        data_method='stat_series', graph_method='frequency')
+
+def graph_participation(request, org=None, repo=None, start=None, end=None):
+    return _render_graph(request, org=org, repo=repo, start=start, end=end, interval='MN',
+        data_method='stat_series', graph_method='participation')
 
 def repos(request, org=None, repos=None, start=None, end=None):
     (scope, start, end) = _get_scope(request, org=org, repos=repos, start=start, end=end, repo_stats=True)
@@ -213,9 +230,6 @@ def orgs(request):
     (scope, start, end) = _get_scope(request)
     return render(request, 'orgs.html', context=scope)
 
-def test_temp(request):
-    scope=dict()
-    return render(request, 'test.html', context=scope)
 
 
 """

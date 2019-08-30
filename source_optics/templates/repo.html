@@ -4,8 +4,27 @@
 
 <h1>Repo: {{ repo.name }}</h1>
 
-<div data-loader="ajax" data-src="/org/{{ org.pk }}/repo/{{ repo.pk }}/start/{{ start_str }}/end/{{ end_str }}/partials/repo_total_graph"></div>
-<div data-loader="ajax" data-src="/org/{{ org.pk }}/repo/{{ repo.pk }}/start/{{ start_str }}/end/{{ end_str }}/partials/repo_author_graph"></div>
+<h2>Volume</h2>
 
+<div data-loader="ajax" data-src="/org/{{ org.pk }}/repo/{{ repo.pk }}/start/{{ start_str }}/end/{{ end_str }}/graph/volume">loading</div>
+
+<h2>Frequency</h2>
+
+<div data-loader="ajax" data-src="/org/{{ org.pk }}/repo/{{ repo.pk }}/start/{{ start_str }}/end/{{ end_str }}/graph/frequency">loading</div>
+
+<h2>Participation</h2>
+
+<div data-loader="ajax" data-src="/org/{{ org.pk }}/repo/{{ repo.pk }}/start/{{ start_str }}/end/{{ end_str }}/graph/participation">loading</div>
+
+
+<h2>Largest Contributors</h2>
+
+<h2>Key Contributor Retention</h2>
+
+<h2>Early Contributor Retention</h2>
+
+<h2>Commit Granularity</h2>
+
+<h2></h2>
 
 {% include 'footer.html' %}
