@@ -35,7 +35,9 @@ urlpatterns = [
     path('', views.orgs, name='orgs'),
     path('org/<org>/repos/<repos>/start/<start>/end/<end>/', views.repos, name='repos'),
     path('org/<org>/repo/<repo>/start/<start>/end/<end>/', views.repo, name='repo'),
+    # TODO: use the reverse url function vs having these URLs directly in templates
     path('org/<org>/repo/<repo>/start/<start>/end/<end>/partials/repo_author_graph', views.repo_author_graph, name='repo_author_graph'),
+    path('org/<org>/repo/<repo>/start/<start>/end/<end>/partials/repo_total_graph', views.repo_total_graph, name='repo_total_graph'),
 
     # REST API
     path('api/', include(api_router.urls)),

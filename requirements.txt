@@ -2,8 +2,8 @@ Django
 django-split-settings
 psycopg2-binary==2.7.7
 cryptography>=2.6.1
-coverage==4.5.3
 djangorestframework==3.9.1
 PyGithub==1.43.2
 pandas
 altair==3.1.2
+numpy

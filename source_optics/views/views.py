@@ -187,26 +187,30 @@ def _get_scope(request, org=None, repos=None, repo=None, start=None, end=None, r
     if repo_stats:
         context['stats'] = _repo_stats(repos, start, end)
 
-    return context
+    return (context, start, end)
 
-def repo(request, org=None, repo=None, start=None, end=None):
-    scope = _get_scope(request, org=org, repo=repo, start=start, end=end)
-    author_lines_changed = dataframes.author_series(repo=repo, start=start, end=end, interval='DY')
-    # scope['lines_changed_by_author'] = graphs.author_series(repo=repo, start=start, end=end, df=author_lines_changed)
-    return render(request, 'repo.html', context=scope)
-
-def repo_author_graph(request, org=None, repo=None, start=None, end=None):
-    scope = _get_scope(request, org=org, repo=repo, start=start, end=end)
-    author_lines_changed = dataframes.author_series(repo=repo, start=start, end=end, interval='DY')
-    scope['graph'] = graphs.author_series(repo=repo, start=start, end=end, df=author_lines_changed)
+def _render_graph(request, org=None, repo=None, start=None, end=None, method=None):
+    (scope, start, end) = _get_scope(request, org=org, repo=repo, start=start, end=end)
+    dataframe = getattr(dataframes, method)(repo=repo, start=start, end=end)
+    scope['graph'] = getattr(graphs, method)(repo=repo, start=start, end=end, df=dataframe)
     return render(request, 'graph.html', context=scope)
 
+def repo(request, org=None, repo=None, start=None, end=None):
+    (scope, start, end) = _get_scope(request, org=org, repo=repo, start=start, end=end)
+    return render(request, 'repo.html', context=scope)
+
+def repo_total_graph(request, org=None, repo=None, start=None, end=None):
+    return _render_graph(request, org=org, repo=repo, start=start, end=end, method='total_series')
+
+def repo_author_graph(request, org=None, repo=None, start=None, end=None):
+    return _render_graph(request, org=org, repo=repo, start=start, end=end, method='author_series')
+
 def repos(request, org=None, repos=None, start=None, end=None):
-    scope = _get_scope(request, org=org, repos=repos, start=start, end=end, repo_stats=True)
+    (scope, start, end) = _get_scope(request, org=org, repos=repos, start=start, end=end, repo_stats=True)
     return render(request, 'repos.html', context=scope)
 
 def orgs(request):
-    scope = _get_scope(request)
+    (scope, start, end) = _get_scope(request)
     return render(request, 'orgs.html', context=scope)
 
 def test_temp(request):
