@@ -43,10 +43,10 @@ def _basic_graph(repo=None, start=None, end=None, df=None, x=None, y=None, toolt
         tooltips=['date', 'commit_total', 'lines_changed', 'author_total']
 
     alt.data_transformers.disable_max_rows()
-    chart = alt.Chart(df).mark_point().encode(
-        x=alt.X(x, scale=alt.Scale(zero=False)),
-        y=alt.Y(y, scale=alt.Scale(zero=False)),
-        tooltip=tooltips
+    chart = alt.Chart(df, height=600, width=600).mark_point().encode(
+        x=alt.X(x, scale=alt.Scale(zero=False, clamp=True)),
+        y=alt.Y(y, scale=alt.Scale(zero=False, clamp=True)),
+        tooltip=tooltips,
     ).interactive()
 
     # Plot the best fit polynomials
@@ -81,8 +81,8 @@ def participation(repo=None, start=None, end=None, df=None):
 def largest_contributors(repo=None, start=None, end=None, df=None):
     alt.data_transformers.disable_max_rows()
     chart = alt.Chart(df).mark_point().encode(
-        x=alt.X('date', scale=alt.Scale(zero=False)),
-        y=alt.Y("lines_changed", scale=alt.Scale(zero=False)), #  domain=(0,2000), clamp=True)),
+        x=alt.X('date', scale=alt.Scale(zero=False, clamp=True)),
+        y=alt.Y("lines_changed", scale=alt.Scale(zero=False, clamp=True)), #  domain=(0,2000), clamp=True)),
         color='author:N',
         # size='commit_count:N',
         tooltip = ['date', 'commit_total', 'lines_changed', 'author' ],
