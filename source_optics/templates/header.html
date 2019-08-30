@@ -9,7 +9,16 @@
   <script src="https://cdn.jsdelivr.net/npm/vega-lite@3"></script>
   <script src="https://cdn.jsdelivr.net/npm/vega-embed@4"></script>
 
-  <script src='{% static 'source_optics.js' %}'></script>
+  <script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js"></script>
+<script type="text/javascript" src="//cdn.jsdelivr.net/jquery.lazy/1.7.1/jquery.lazy.min.js"></script>
+<script type="text/javascript" src="//cdn.jsdelivr.net/jquery.lazy/1.7.1/plugins/jquery.lazy.ajax.min.js"></script>
+
+
+<script>
+$(function() {
+    $("div[data-src]").Lazy();
+});
+</script>
 
 </head>
 

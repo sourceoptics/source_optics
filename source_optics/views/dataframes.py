@@ -59,7 +59,6 @@ def author_series(repo, start=None, end=None, interval='DY'):
         lines_changed = lines_changed
     )
 
-
     return pd.DataFrame(results, columns=['date', 'lines_changed', 'commits', 'author'])
 
 

@@ -180,7 +180,7 @@ def _get_scope(request, org=None, repos=None, repo=None, start=None, end=None, r
         start = start,
         end   = end,
         start_str = start.strftime("%Y-%m-%d"),
-        end_str   = start.strftime("%Y-%m-%d"),
+        end_str   = end.strftime("%Y-%m-%d"),
         repo = repo
     )
 
@@ -190,23 +190,28 @@ def _get_scope(request, org=None, repos=None, repo=None, start=None, end=None, r
     return context
 
 def repo(request, org=None, repo=None, start=None, end=None):
-    interval = 'DY' # FIXME
     scope = _get_scope(request, org=org, repo=repo, start=start, end=end)
-
-    author_lines_changed = dataframes.author_series(repo=repo, start=start, end=end, interval=interval)
-    scope['lines_changed_by_author'] = graphs.author_series(repo=repo, start=start, end=end, df=author_lines_changed)
-
+    author_lines_changed = dataframes.author_series(repo=repo, start=start, end=end, interval='DY')
+    # scope['lines_changed_by_author'] = graphs.author_series(repo=repo, start=start, end=end, df=author_lines_changed)
     return render(request, 'repo.html', context=scope)
+
+def repo_author_graph(request, org=None, repo=None, start=None, end=None):
+    scope = _get_scope(request, org=org, repo=repo, start=start, end=end)
+    author_lines_changed = dataframes.author_series(repo=repo, start=start, end=end, interval='DY')
+    scope['graph'] = graphs.author_series(repo=repo, start=start, end=end, df=author_lines_changed)
+    return render(request, 'graph.html', context=scope)
 
 def repos(request, org=None, repos=None, start=None, end=None):
     scope = _get_scope(request, org=org, repos=repos, start=start, end=end, repo_stats=True)
     return render(request, 'repos.html', context=scope)
 
-
 def orgs(request):
     scope = _get_scope(request)
     return render(request, 'orgs.html', context=scope)
 
+def test_temp(request):
+    scope=dict()
+    return render(request, 'test.html', context=scope)
 
 
 """
