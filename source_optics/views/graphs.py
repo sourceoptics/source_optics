@@ -78,23 +78,16 @@ def frequency(repo=None, start=None, end=None, df=None):
 def participation(repo=None, start=None, end=None, df=None):
     return _basic_graph(repo=repo, start=start, end=end, df=df, x='date', y='author_total')
 
-NA = """
-def author_series(repo=None, start=None, end=None, df=None):
+def largest_contributors(repo=None, start=None, end=None, df=None):
     alt.data_transformers.disable_max_rows()
     chart = alt.Chart(df).mark_point().encode(
         x=alt.X('date', scale=alt.Scale(zero=False)),
         y=alt.Y("lines_changed", scale=alt.Scale(zero=False)), #  domain=(0,2000), clamp=True)),
         color='author:N',
         # size='commit_count:N',
-        tooltip = ['date', 'author', 'commits', 'lines_changed' ],
+        tooltip = ['date', 'commit_total', 'lines_changed', 'author' ],
     ).interactive()
-
-
-
-
     return render_chart(chart)
-"""
-
 
 OLD = """
 

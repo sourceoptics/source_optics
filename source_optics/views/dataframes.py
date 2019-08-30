@@ -11,7 +11,7 @@ def get_interval(start, end):
     else:
         return 'DY'
 
-def get_top_authors(repo, start, end, attribute='commit_total', limit=10):
+def top_authors(repo, start, end, attribute='commit_total', limit=10):
 
     interval = get_interval(start, end)
 
@@ -23,13 +23,8 @@ def get_top_authors(repo, start, end, attribute='commit_total', limit=10):
         start_date__range=(start, end)
     ).values('author_id').annotate(total=Sum(attribute)).order_by('-total')[0:limit]
 
-    # FIXME: one query per author, somewhat slow
-    for t in filter_set:
-        top_auth = Author.objects.get(pk=t['author_id'])
-        authors.append(top_auth)
-
-
-    return authors
+    author_ids = [ t['author_id'] for t in filter_set ]
+    return author_ids
 
 def stat_series(repo, start=None, end=None, fields=None, by_author=False, interval=None):
 
@@ -37,7 +32,11 @@ def stat_series(repo, start=None, end=None, fields=None, by_author=False, interv
         interval = get_interval(start, end)
 
     if fields is None:
-        fields = [ 'date', 'author', 'lines_changed', 'commit_total', 'author_total' ]
+        if not by_author:
+            fields = [ 'date', 'lines_changed', 'commit_total', 'author_total' ]
+        else:
+            fields = [ 'date', 'author', 'lines_changed', 'commit_total', 'author_total' ]
+
 
     data = dict()
     for f in fields:
@@ -52,10 +51,11 @@ def stat_series(repo, start=None, end=None, fields=None, by_author=False, interv
             start_date__range=(start, end)
         )
     else:
+        top = top_authors(repo, start, end)
         totals = Statistic.objects.select_related('repo','author').filter(
             interval=interval,
             repo=repo,
-            author__isnull=False,
+            author__pk__in=top,
             start_date__range=(start, end)
         )
 
@@ -65,6 +65,8 @@ def stat_series(repo, start=None, end=None, fields=None, by_author=False, interv
         for f in fields:
             if f == 'date':
                 data[f].append(t.start_date)
+            elif f == 'author':
+                data[f].append(t.author.email)
             else:
                 data[f].append(getattr(t, f))
 

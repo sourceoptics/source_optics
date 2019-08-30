@@ -39,6 +39,7 @@ urlpatterns = [
     path('org/<org>/repo/<repo>/start/<start>/end/<end>/graph/volume', views.graph_volume, name='graph_volume'),
     path('org/<org>/repo/<repo>/start/<start>/end/<end>/graph/frequency', views.graph_frequency, name='graph_frequency'),
     path('org/<org>/repo/<repo>/start/<start>/end/<end>/graph/participation', views.graph_participation, name='graph_participation'),
+    path('org/<org>/repo/<repo>/start/<start>/end/<end>/graph/largest_contributors', views.graph_largest_contributors, name='graph_largest_contributors'),
 
     # REST API
     path('api/', include(api_router.urls)),
