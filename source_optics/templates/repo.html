@@ -1,6 +1,8 @@
 {% include 'header.html' %}
 
 <h1>SourceOptics: {{ repo.name }}</h1>
+<p>between: {{ start_str }} and {{ end_str }}</p>
+
 <a href="/org/{{ org.pk }}/repos/_/start/{{ start_str }}/end/{{ end_str }}">(back)</A>
 
 <h2>Volume</h2>
@@ -19,12 +21,16 @@
 
 <div data-loader="ajax" data-src="/org/{{ org.pk }}/repo/{{ repo.pk }}/start/{{ start_str }}/end/{{ end_str }}/graph/largest_contributors">loading</div>
 
+<h2>Granularity</h2>
+
+<div data-loader="ajax" data-src="/org/{{ org.pk }}/repo/{{ repo.pk }}/start/{{ start_str }}/end/{{ end_str }}/graph/granularity">loading</div>
+
 <h2>Key Contributor Retention</h2>
+
+<div data-loader="ajax" data-src="/org/{{ org.pk }}/repo/{{ repo.pk }}/start/{{ start_str }}/end/{{ end_str }}/graph/key_retention">loading</div>
 
 <h2>Early Contributor Retention</h2>
 
-<h2>Commit Granularity</h2>
-
-<h2></h2>
+<div data-loader="ajax" data-src="/org/{{ org.pk }}/repo/{{ repo.pk }}/start/{{ start_str }}/end/{{ end_str }}/graph/early_retention">loading</div>
 
 {% include 'footer.html' %}

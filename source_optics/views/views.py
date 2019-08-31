@@ -226,6 +226,18 @@ def graph_largest_contributors(request, org=None, repo=None, start=None, end=Non
     return _render_graph(request, org=org, repo=repo, start=start, end=end, by_author=True, interval='MN',
         data_method='stat_series', graph_method='largest_contributors')
 
+def graph_granularity(request, org=None, repo=None, start=None, end=None):
+    return _render_graph(request, org=org, repo=repo, start=start, end=end, interval='MN',
+        data_method='stat_series', graph_method='granularity')
+
+def graph_key_retention(request, org=None, repo=None, start=None, end=None):
+    return _render_graph(request, org=org, repo=repo, start=start, end=end, interval='LF', by_author=True,
+        data_method='stat_series', graph_method='key_retention')
+
+def graph_early_retention(request, org=None, repo=None, start=None, end=None):
+    return _render_graph(request, org=org, repo=repo, start=start, end=end, interval='LF', by_author=True,
+        data_method='stat_series', graph_method='early_retention')
+
 def repos(request, org=None, repos=None, start=None, end=None):
     (scope, start, end) = _get_scope(request, org=org, repos=repos, start=start, end=end, repo_stats=True)
     return render(request, 'repos.html', context=scope)

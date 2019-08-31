@@ -78,6 +78,18 @@ def frequency(repo=None, start=None, end=None, df=None):
 def participation(repo=None, start=None, end=None, df=None):
     return _basic_graph(repo=repo, start=start, end=end, df=df, x='date', y='author_total')
 
+def granularity(repo=None, start=None, end=None, df=None):
+    return _basic_graph(repo=repo, start=start, end=end, df=df, x='date', y='average_commit_size')
+
+def key_retention(repo=None, start=None, end=None, df=None):
+    return _basic_graph(repo=repo, start=start, end=end, df=df, x='latest_commit_date', y='lines_changed',
+                        tooltips=['author', 'earliest_commit_date', 'latest_commit_date', 'commit_total', 'lines_changed'])
+
+def early_retention(repo=None, start=None, end=None, df=None):
+    return _basic_graph(repo=repo, start=start, end=end, df=df, x='earliest_commit_date', y='days_since_seen',
+                        tooltips=['author', 'earliest_commit_date', 'latest_commit_date', 'commit_total', 'lines_changed'])
+
+
 def largest_contributors(repo=None, start=None, end=None, df=None):
     alt.data_transformers.disable_max_rows()
     chart = alt.Chart(df).mark_point().encode(

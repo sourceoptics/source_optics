@@ -40,6 +40,9 @@ urlpatterns = [
     path('org/<org>/repo/<repo>/start/<start>/end/<end>/graph/frequency', views.graph_frequency, name='graph_frequency'),
     path('org/<org>/repo/<repo>/start/<start>/end/<end>/graph/participation', views.graph_participation, name='graph_participation'),
     path('org/<org>/repo/<repo>/start/<start>/end/<end>/graph/largest_contributors', views.graph_largest_contributors, name='graph_largest_contributors'),
+    path('org/<org>/repo/<repo>/start/<start>/end/<end>/graph/granularity', views.graph_granularity, name='graph_granularity'),
+    path('org/<org>/repo/<repo>/start/<start>/end/<end>/graph/key_retention', views.graph_key_retention, name='graph_key_retention'),
+    path('org/<org>/repo/<repo>/start/<start>/end/<end>/graph/early_retention', views.graph_early_retention, name='graph_early_retention'),
 
     # REST API
     path('api/', include(api_router.urls)),

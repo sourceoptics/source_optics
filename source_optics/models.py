@@ -154,9 +154,9 @@ class Repository(models.Model):
 
         commits = Commit.objects
         if author:
-            commits = commits.filter(author=author)
-        else:
             commits = commits.filter(author=author, repo=self)
+        else:
+            commits = commits.filter(repo=self)
         if commits.count():
             return commits.latest("commit_date").commit_date
         return None
@@ -260,16 +260,18 @@ class Statistic(models.Model):
     INTERVALS = (
         ('DY', 'Day'),
         ('WK', 'Week'),
-        ('MN', 'Month')
+        ('MN', 'Month'),
+        ('LF', 'Lifetime')
     )
-    ATTRIBUTES = (
-        ('commit_total', "Total Commits"),
-        ('lines_added', "Lines Added"),
-        ('lines_removed', "Lines Removed"),
-        ('lines_changed', "Lines Changed"),
-        ('files_changed', "Files Changed"),
-        ('author_total', "Total Authors"),
-        )
+    # FIXME: unused - can remove, right?
+    #ATTRIBUTES = (
+    #    ('commit_total', "Total Commits"),
+    #    ('lines_added', "Lines Added"),
+    #    ('lines_removed', "Lines Removed"),
+    #    ('lines_changed', "Lines Changed"),
+    #    ('files_changed', "Files Changed"),
+    #    ('author_total', "Total Authors"),
+    #    )
         
     start_date = models.DateTimeField(blank=False, null=True)
     interval = models.TextField(max_length=5, choices=INTERVALS)
@@ -281,6 +283,12 @@ class Statistic(models.Model):
     commit_total = models.IntegerField(blank = True, null = True)
     files_changed = models.IntegerField(blank = True, null = True)
     author_total = models.IntegerField(blank = True, null = True)
+
+    # somewhat denormalized fields used in LIFETIME (LF) interval queries only
+    earliest_commit_date = models.DateTimeField(blank=True, null=True)
+    latest_commit_date = models.DateTimeField(blank=True, null=True)
+    days_since_seen = models.IntegerField(blank=False, null=True, default=-1)
+    days_before_joined = models.IntegerField(blank=False, null=True, default=-1)
 
     def __str__(self):
         if self.author is None:

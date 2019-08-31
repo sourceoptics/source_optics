@@ -27,6 +27,7 @@ intervals =  Statistic.INTERVALS
 DAY = 'DY'
 WEEK = 'WK'
 MONTH = 'MN'
+LIFETIME = 'LF'
 
 #
 # This class aggregates commit data already scanned in based on intervals
@@ -69,6 +70,8 @@ class Rollup:
         This code detects whether the rollup is in the current interval.
         """
 
+        # FIXME: all this code should be cleaned up.
+
         update = False
         if interval == DAY:
             if cls.today == start_day:
@@ -81,11 +84,16 @@ class Rollup:
         elif interval == MONTH:
             if cls.today.year == start_day.year and cls.today.year == start_day.year:
                 update = True
+        elif interval == LIFETIME:
+            update = True
 
         if update:
             # a rather expensive update of the current month if statistic already exists
             # that normally doesn't happen on most records.
-            stats = Statistic.objects.filter(repo=repo, interval=interval, start_date=cls.aware(start_day))
+            if interval != LIFETIME:
+                stats = Statistic.objects.filter(repo=repo, interval=interval, start_date=cls.aware(start_day))
+            else:
+                stats = Statistic.objects.filter(repo=repo, interval=interval)
             if author:
                 stats = stats.filter(author=author)
             else:
@@ -95,15 +103,17 @@ class Rollup:
                 update = False
             else:
                 # just assuming this can't match more than one, not doing 'get' as exceptions are be slower
-                old_stat = stats[0]
-                old_stat.update(
-                    lines_added=stat.lines_added,
-                    lines_removed=stat.lines_removed,
-                    lines_changed=stat.lines_changed,
-                    commit_total=stat.commit_total,
-                    files_changed=stat.files_changed,
-                    author_total=stat.author_total
-                )
+                old_stat = stats.first()
+                old_stat.lines_added=stat.lines_added,
+                old_stat.lines_removed=stat.lines_removed,
+                old_stat.lines_changed=stat.lines_changed,
+                old_stat.commit_total=stat.commit_total,
+                old_stat.files_changed=stat.files_changed,
+                old_stat.author_total=stat.author_total,
+                old_stat.earliest_commit_date=stat.earliest_commit_date,
+                old_stat.latest_commit_date=stat.latest_commit_date,
+                old_stat.days_since_seen=stat.days_since_seen,
+                old_stat.days_before_joined=stat.days_before_joined
                 old_stat.save()
 
         if not update:
@@ -115,6 +125,9 @@ class Rollup:
         """
         Generate rollup stats for everything the team did on a given day
         """
+
+        # FIXME: all this code should be cleaned up.
+
         file_changes = None
         if not author:
             file_changes = FileChange.objects.select_related('commit').filter(
@@ -178,15 +191,32 @@ class Rollup:
         start_day is the beginning of that period
         """
 
+        # FIXME: all this code should be cleaned up.
+
         # IF in weekly mode, and start_day is this week, we need to delete the current stat
         # IF in monthly mode, and start_day is this month, we need to delete the current stat
 
         assert repo is not None
-        assert interval in [ 'WK', 'MN']
-        assert start_day is not None
+        assert interval in [ 'WK', 'MN', 'LF']
 
-        start_day = start_day.replace(tzinfo=None)
-        end_date = cls.get_end_day(start_day, interval)
+        absolute_first_commit_date = repo.earliest_commit_date()
+        absolute_last_commit_date = repo.latest_commit_date()
+        assert absolute_first_commit_date is not None
+        assert absolute_last_commit_date is not None
+
+        if interval != LIFETIME:
+            start_day = start_day.replace(tzinfo=None)
+            end_date = cls.get_end_day(start_day, interval)
+        else:
+            if author:
+                start_day = repo.earliest_commit_date(author=author)
+                end_date = repo.latest_commit_date(author=author)
+            else:
+                start_day = repo.earliest_commit_date()
+                end_date = repo.latest_commit_date()
+            if start_day is None or end_date is None:
+                print("**** GLITCH: Author has no commits? ", author)
+                return
 
         days = None
         if author is None:
@@ -197,9 +227,10 @@ class Rollup:
                 start_date__gte=start_day,
                 start_date__lte=end_date
             )
+
         else:
             days = Statistic.objects.filter(
-                author=author.pk,
+                author=author,
                 interval=DAY,
                 repo=repo,
                 start_date__gte=start_day,
@@ -219,8 +250,6 @@ class Rollup:
             lines_removed=Sum("lines_removed"),
             lines_changed=Sum("lines_changed"),
             commit_total=Sum("commit_total"),
-            files_changed=Sum("files_changed"),
-            author_total=Max("author_total")
         )
 
         stat = Statistic(
@@ -232,9 +261,16 @@ class Rollup:
             lines_removed=data['lines_removed'],
             lines_changed=data['lines_changed'],
             commit_total=data['commit_total'],
-            files_changed=data['files_changed'],
-            author_total=data['author_total']
+            files_changed=-1, # FIXME: we have to add code for this, using Max() isn't correct
+            author_total=-1  # FIXME: we have to add code for this, using Max() isn't correct
         )
+
+        if interval == LIFETIME:
+            # we don't bother computing this for other intervals, it doesn't make sense in time series
+            stat.earliest_commit_date = repo.earliest_commit_date(author=author)
+            stat.latest_commit_date = repo.latest_commit_date(author=author)
+            stat.days_since_seen = (cls.aware(absolute_last_commit_date) - cls.aware(stat.latest_commit_date)).days
+            stat.days_before_joined = (cls.aware(absolute_first_commit_date) - cls.aware(stat.earliest_commit_date)).days
 
 
         cls.smart_bulk_update(repo=repo, start_day=start_day, author=author, interval=interval, stat=stat, total_instances=total_instances)
@@ -301,6 +337,10 @@ class Rollup:
 
             print("(RTS3) compiling team stats: month=%s" % start_day)
             cls.compute_interval_rollup(repo=repo, start_day=start_day, interval=MONTH, total_instances=total_instances)
+
+        print("(RTS4) compiling team stats: lifetime")
+        cls.compute_interval_rollup(repo=repo, start_day=None, interval=LIFETIME, total_instances=total_instances)
+
         cls.bulk_create(total_instances)
 
     @classmethod
@@ -334,8 +374,11 @@ class Rollup:
         cls.bulk_create(total_instances)
 
 
+        author_count = 0
 
         for author in authors:
+
+            author_count = author_count + 1
 
             commits = Commit.objects.filter(repo=repo, author=author)
 
@@ -351,6 +394,14 @@ class Rollup:
                 print("(RAS2) compiling contributor stats: %s/%s (week=%s)" % (author_count, author_total, start_day))
                 cls.compute_interval_rollup(repo=repo, author=author, interval=WEEK, start_day=start_day, total_instances=total_instances)
 
+        cls.bulk_create(total_instances)
+
+        author_count = 0
+
+        for author in authors:
+            author_count = author_count + 1
+            commits = Commit.objects.filter(repo=repo, author=author)
+
             commit_months = commits.datetimes('commit_date', 'month', order='ASC')
 
             for start_day in commit_months:
@@ -362,6 +413,17 @@ class Rollup:
 
             if len(total_instances) > 2000:
                 cls.bulk_create(total_instances)
+
+        cls.bulk_create(total_instances)
+
+        author_count = 0
+
+        for author in authors:
+
+            author_count = author_count + 1
+
+            print("(RAS4) compiling contributor stats: %s/%s (lifetime)" % (author_count, author_total))
+            cls.compute_interval_rollup(repo=repo, author=author, interval=LIFETIME, start_day=None, total_instances=total_instances)
 
         cls.bulk_create(total_instances)
 
