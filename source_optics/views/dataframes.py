@@ -33,9 +33,9 @@ def stat_series(repo, start=None, end=None, fields=None, by_author=False, interv
 
     if fields is None:
         if not by_author:
-            fields = [ 'date', 'lines_changed', 'commit_total', 'author_total', 'average_commit_size' ]
+            fields = [ 'date', 'day', 'lines_changed', 'commit_total', 'author_total', 'average_commit_size' ]
         else:
-            fields = [ 'date', 'author', 'lines_changed', 'commit_total', 'author_total', 'average_commit_size' ]
+            fields = [ 'date', 'day', 'author', 'lines_changed', 'commit_total', 'author_total', 'average_commit_size' ]
         if interval == 'LF':
             # these are only computed in lifetime mode as they don't really makes sense in time series...
             fields.append('earliest_commit_date')
@@ -89,10 +89,18 @@ def stat_series(repo, start=None, end=None, fields=None, by_author=False, interv
     else:
         totals = totals.order_by('author')
 
+    first_day = repo.earliest_commit_date()
+
     for t in totals:
         for f in fields:
             if f == 'date':
                 data[f].append(t.start_date)
+                if first_day is None:
+                    first_day = t.start_date
+            elif f == 'day':
+                day = (t.start_date - first_day).days
+                # print("DAY=%s" % day)
+                data[f].append(day)
             elif f == 'author':
                 data[f].append(t.author.email)
             elif f == 'average_commit_size':

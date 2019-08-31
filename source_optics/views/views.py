@@ -36,6 +36,9 @@ from django.db.models.expressions import Subquery, OuterRef
 from . import dataframes
 from . import graphs
 
+#=====
+# BEGIN REST API
+
 class UserViewSet(viewsets.ReadOnlyModelViewSet):
     """
     API endpoint that allows users to be viewed or edited.
@@ -98,46 +101,8 @@ class StatisticViewSet(viewsets.ReadOnlyModelViewSet):
                         'commit_total', 'author_total')
 
 
-def _repo_stats(repos, start, end):
-
-    # this generates 1 query per repo - which is *not* optimal, but will do for now.
-
-    repos = repos.order_by('name').all()
-    results = []
-
-    for repo in repos:
-
-        stat = Statistic.objects.filter(
-            repo = repo,
-            author__isnull=True,
-            interval='DY',
-            start_date__gte=start,
-            start_date__lte=end
-        ).aggregate(
-            lines_added = Sum('lines_added'),
-            lines_removed = Sum('lines_removed'),
-            lines_changed = Sum('lines_changed'),
-            author_total = Max('author_total'),
-            commit_total=Sum("commit_total"),
-            files_changed=Sum("files_changed"),
-        )
-
-        results.append(dict(
-            id = repo.id,
-            pk = repo.id,
-            name = repo.name,
-            lines_added = stat['lines_added'],
-            lines_removed = stat['lines_removed'],
-            lines_changed = stat['lines_changed'],
-            author_total = stat['author_total'],
-            commit_total = stat['commit_total'],
-            files_changed = stat['files_changed']
-        ))
-
-
-    print("RESULTS=%s" % results)
-    return results
-
+# END REST API
+# ======
 
 def _get_scope(request, org=None, repos=None, repo=None, start=None, end=None, repo_stats=False):
 
@@ -187,28 +152,17 @@ def _get_scope(request, org=None, repos=None, repo=None, start=None, end=None, r
     if repo_stats:
         context['stats'] = _repo_stats(repos, start, end)
 
-    return (context, start, end)
+    return (context, repo, start, end)
 
 def _render_graph(request, org=None, repo=None, start=None, end=None, by_author=False, data_method=None, interval=None, graph_method=None):
-    (scope, start, end) = _get_scope(request, org=org, repo=repo, start=start, end=end)
+    (scope, repo, start, end) = _get_scope(request, org=org, repo=repo, start=start, end=end)
     dataframe = getattr(dataframes, data_method)(repo=repo, start=start, by_author=by_author, end=end, interval=interval)
     scope['graph'] = getattr(graphs, graph_method)(repo=repo, start=start, end=end, df=dataframe)
     return render(request, 'graph.html', context=scope)
 
 def repo(request, org=None, repo=None, start=None, end=None):
-    (scope, start, end) = _get_scope(request, org=org, repo=repo, start=start, end=end)
+    (scope, repo, start, end) = _get_scope(request, org=org, repo=repo, start=start, end=end)
     return render(request, 'repo.html', context=scope)
-
-SKETCH = """
-def repo_total_graph(request, org=None, repo=None, start=None, end=None):
-    return _render_graph(request, org=org, repo=repo, start=start, end=end, method='total_series')
-
-def repo_author_graph(request, org=None, repo=None, start=None, end=None):
-    return _render_graph(request, org=org, repo=repo, start=start, end=end, method='author_series')
-
-def repo_health_matrix(request, org=None, repo=None, start=None, end=None):
-    return _render_graph(request, org=org, repo=repo, start=start, end=end, method='health_matrix')
-"""
 
 def graph_volume(request, org=None, repo=None, start=None, end=None):
     return _render_graph(request, org=org, repo=repo, start=start, end=end,
@@ -239,139 +193,13 @@ def graph_early_retention(request, org=None, repo=None, start=None, end=None):
         data_method='stat_series', graph_method='early_retention')
 
 def repos(request, org=None, repos=None, start=None, end=None):
-    (scope, start, end) = _get_scope(request, org=org, repos=repos, start=start, end=end, repo_stats=True)
+    (scope, repo, start, end) = _get_scope(request, org=org, repos=repos, start=start, end=end, repo_stats=True)
     return render(request, 'repos.html', context=scope)
 
 def orgs(request):
-    (scope, start, end) = _get_scope(request)
+    (scope, repo, start, end) = _get_scope(request)
     return render(request, 'orgs.html', context=scope)
 
-
-
-"""
-Data to be displayed for the repo details view
-"""
-
-
-OLD = """
-# FIXME: not all of the code is needed for each (author elements vs line_elements?), simplify this later
-
-def v1_repo_team(request, repo_name):
-    return _repo_details(request, repo_name, template='repo_team.html')
-
-
-def v1_epo_contributors(request, repo_name):
-    return _repo_details(request, repo_name, template='repo_contributors.html')
-
-
-def v1_repo_details(request, repo_name, template=None):
-    assert template is not None
-
-    # Gets repo name from url slug
-    repo = Repository.objects.get(name=repo_name)
-
-    queries = v1_util.get_query_strings(request)
-
-    stats = v1_util.get_all_repo_stats(repos=[repo], start=queries['start'], end=queries['end'])
-
-    stat_table = StatTable(stats)
-    RequestConfig(request, paginate={'per_page': 10}).configure(stat_table)
-
-    # Generates line graphs based on attribute query param
-    # FIXME: take the object, not the name
-    line_elements = v1_graph.attribute_graphs(request, repo_name)
-
-    # Generates line graph of an attribute for the top contributors
-    # to that attribute within the specified time period
-    # FIXME: take the object, not the name
-    author_elements = v1_graph.attribute_author_graphs(request, repo_name)
-
-    # possible attribute values to filter by
-    attributes = Statistic.ATTRIBUTES
-
-    # possible interval values to filter by
-    intervals = Statistic.INTERVALS
-
-    # Get the attribute to get the top authors for from the query parameter
-    attribute = request.GET.get('attr')
-
-    if not attribute:
-        attribute = attributes[0][0]
-
-    # Generate a table of the top contributors statistics
-    authors = v1_util.get_top_authors(repo=repo, start=queries['start'], end=queries['end'],
-                                      attribute=queries['attribute'])
-    author_stats = v1_util.get_all_author_stats(authors=authors, repo=repo, start=queries['start'], end=queries['end'])
-    author_table = AuthorStatTable(author_stats)
-    RequestConfig(request, paginate={'per_page': 6}).configure(author_table)
-
-    summary_stats = v1_util.get_lifetime_stats(repo)
-
-    # Context variable being passed to template
-    context = {
-        'repo': repo,
-        'stats': stat_table,
-        'summary_stats': summary_stats,
-        'data': line_elements,
-        'author_graphs': author_elements,
-        'author_table': author_table,
-        'attributes': attributes,
-        'intervals': intervals
-    }
-    return render(request, template, context=context)
-
-
-
-def v1_author_details(request, author_email):
-    # Gets repo name from url slug
-    auth = Author.objects.get(email=author_email)
-
-    queries = v1_util.get_query_strings(request)
-
-    stats = v1_util.get_total_author_stats(author=auth, start=queries['start'], end=queries['end'])
-
-    stat_table = StatTable(stats)
-    RequestConfig(request, paginate={'per_page': 5}).configure(stat_table)
-
-    # Generates line graphs based on attribute query param
-    line_elements = v1_graph.attribute_summary_graph_author(request, auth)
-
-    # get the top repositories the author commits to
-    author_elements = v1_graph.attribute_author_contributions(request, auth)
-
-    # possible attribute values to filter by
-    attributes = Statistic.ATTRIBUTES
-
-    # possible interval values to filter by
-    intervals = Statistic.INTERVALS
-
-    # Get the attribute to get the top authors for from the query parameter
-    attribute = request.GET.get('attr')
-
-    if not attribute:
-        attribute = attributes[0][0]
-
-    # Generate a table of the top contributors statistics
-    # authors = util.get_top_authors(repo=repo, start=queries['start'], end=queries['end'], attribute=queries['attribute'])
-    # author_stats = util.get_all_author_stats(authors=authors, repo=repo, start=queries['start'], end=queries['end'])
-    # author_table = AuthorStatTable(author_stats)
-    # RequestConfig(request, paginate={'per_page': 10}).configure(author_table)
-
-    summary_stats = v1_util.get_lifetime_stats_author(auth)
-
-    # Context variable being passed to template
-    context = {
-        'title': "Author Details: " + str(auth),
-        'stats': stat_table,
-        'summary_stats': summary_stats,
-        'data': line_elements,
-        'author_graphs': author_elements,
-        'attributes': attributes,
-        'intervals': intervals
-    }
-    return render(request, 'author_details.html', context=context)
-
-"""
 
 @csrf_exempt
 def webhook_post(request, *args, **kwargs):

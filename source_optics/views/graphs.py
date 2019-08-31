@@ -37,55 +37,65 @@ def render_chart(chart):
     c = template.Context()
     return template.Template(TEMPLATE_CHART.format(output_div=output_div, spec=json.dumps(spec), embed_opt=json.dumps(embed_opt))).render(c)
 
-def _basic_graph(repo=None, start=None, end=None, df=None, x=None, y=None, tooltips=None):
+def _basic_graph(repo=None, start=None, end=None, df=None, x=None, y=None, tooltips=None, fit=False):
 
     if tooltips is None:
-        tooltips=['date', 'commit_total', 'lines_changed', 'author_total']
+        tooltips=['day', 'date', 'commit_total', 'lines_changed', 'author_total']
+
+    if fit and x=='date':
+        x='day'
+
+    # print("X AXIS=%s" % x)
 
     alt.data_transformers.disable_max_rows()
     chart = alt.Chart(df, height=600, width=600).mark_point().encode(
-        x=alt.X(x, scale=alt.Scale(zero=False, clamp=True)),
-        y=alt.Y(y, scale=alt.Scale(zero=False, clamp=True)),
+        x=alt.X(x, scale=alt.Scale(zero=False, clamp=True)), #, scale=alt.Scale(zero=False, clamp=True)),
+        y=alt.Y(y, scale=alt.Scale(zero=False, clamp=True)), #, scale=alt.Scale(zero=False, clamp=True)),
         tooltip=tooltips,
     ).interactive()
 
     # Plot the best fit polynomials
     # degree_list = [1, 3, 5]
 
-    # Build a dataframe with the fitted data
-    #poly_data = pd.DataFrame({'xfit': np.linspace(df['lines_changed'].min(), df['lines_changed'].max(), 500)})
-    #print("PD=%s" % poly_data)
+    if fit:
 
-    #polynomial_fit = alt.Chart(poly_data).transform_fold(
-    #    ['1', '3', '5'],
-    #    as_=['degree', 'yfit']
-    #).mark_line().encode(
-    #    x='xfit:Q',
-    #    y='yfit:Q',
-    #    color='degree:N'
-    #)
+        # Build a dataframe with the fitted data
+        poly_data = pd.DataFrame({'xfit': np.linspace(df[x].min(), df[x].max(), 500)})
+        for degree in [1,3,5]:
+            poly_data[str(degree)] = np.poly1d(np.polyfit(df[x], df[y], degree))(poly_data['xfit'])
 
-    #chart = chart + polynomial_fit
+        polynomial_fit = alt.Chart(poly_data).transform_fold(
+            ['1', '3', '5'],
+            as_=['degree', 'yfit']
+        ).mark_line().encode(
+        x='xfit:Q',
+        y='yfit:Q',
+        color='degree:N'
+        )
+
+        chart = chart + polynomial_fit
 
     return render_chart(chart)
 
 def volume(repo=None, start=None, end=None, df=None):
-    return _basic_graph(repo=repo, start=start, end=end, df=df, x='date', y='lines_changed')
+    return _basic_graph(repo=repo, start=start, end=end, df=df, x='day', y='lines_changed', fit=True)
 
 def frequency(repo=None, start=None, end=None, df=None):
-    return _basic_graph(repo=repo, start=start, end=end, df=df, x='date', y='commit_total')
+    return _basic_graph(repo=repo, start=start, end=end, df=df, x='day', y='commit_total', fit=True)
 
 def participation(repo=None, start=None, end=None, df=None):
-    return _basic_graph(repo=repo, start=start, end=end, df=df, x='date', y='author_total')
+    return _basic_graph(repo=repo, start=start, end=end, df=df, x='day', y='author_total', fit=True)
 
 def granularity(repo=None, start=None, end=None, df=None):
-    return _basic_graph(repo=repo, start=start, end=end, df=df, x='date', y='average_commit_size')
+    return _basic_graph(repo=repo, start=start, end=end, df=df, x='day', y='average_commit_size', fit=True)
 
 def key_retention(repo=None, start=None, end=None, df=None):
-    return _basic_graph(repo=repo, start=start, end=end, df=df, x='latest_commit_date', y='lines_changed',
+    # FIXME: earliest_commit_date should be 0-based (earliest_commit_day) from project start so we can apply fit
+    return _basic_graph(repo=repo, start=start, end=end, df=df, x='earliest_commit_date', y='lines_changed',
                         tooltips=['author', 'earliest_commit_date', 'latest_commit_date', 'commit_total', 'lines_changed'])
 
 def early_retention(repo=None, start=None, end=None, df=None):
+    # FIXME: earliest_commit_date should be 0-based (earliest_commit_day) from project start so we can apply fit
     return _basic_graph(repo=repo, start=start, end=end, df=df, x='earliest_commit_date', y='days_since_seen',
                         tooltips=['author', 'earliest_commit_date', 'latest_commit_date', 'commit_total', 'lines_changed'])
 
@@ -93,11 +103,11 @@ def early_retention(repo=None, start=None, end=None, df=None):
 def largest_contributors(repo=None, start=None, end=None, df=None):
     alt.data_transformers.disable_max_rows()
     chart = alt.Chart(df, height=600, width=600).mark_point().encode(
-        x=alt.X('date', scale=alt.Scale(zero=False, clamp=True)),
+        x=alt.X('day', scale=alt.Scale(zero=False, clamp=True)),
         y=alt.Y("lines_changed", scale=alt.Scale(zero=False, clamp=True)), #  domain=(0,2000), clamp=True)),
         color='author:N',
         # size='commit_count:N',
-        tooltip = ['date', 'commit_total', 'lines_changed', 'author' ],
+        tooltip = ['day', 'date', 'commit_total', 'lines_changed', 'author' ],
     ).interactive()
     return render_chart(chart)
 
