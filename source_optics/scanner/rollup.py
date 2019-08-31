@@ -249,7 +249,7 @@ class Rollup:
                     start_date__lte=end_date
                 )
             else:
-                days = Statistic.obje cts.filter(
+                days = Statistic.objects.filter(
                     author=author,
                     interval=DAY,
                     repo=repo,
