@@ -91,13 +91,14 @@ def granularity(repo=None, start=None, end=None, df=None):
 
 def key_retention(repo=None, start=None, end=None, df=None):
     # FIXME: earliest_commit_date should be 0-based (earliest_commit_day) from project start so we can apply fit
-    return _basic_graph(repo=repo, start=start, end=end, df=df, x='earliest_commit_date', y='lines_changed',
-                        tooltips=['author', 'earliest_commit_date', 'latest_commit_date', 'commit_total', 'lines_changed'])
+    return _basic_graph(repo=repo, start=start, end=end, df=df, x='last_commit_day', y='commit_total',
+                        tooltips=['author', 'earliest_commit_date', 'latest_commit_date', 'longevity', 'commit_total', 'lines_changed'])
 
 def early_retention(repo=None, start=None, end=None, df=None):
     # FIXME: earliest_commit_date should be 0-based (earliest_commit_day) from project start so we can apply fit
-    return _basic_graph(repo=repo, start=start, end=end, df=df, x='earliest_commit_date', y='days_since_seen',
-                        tooltips=['author', 'earliest_commit_date', 'latest_commit_date', 'commit_total', 'lines_changed'])
+    # FIXME: terminology between 'first' and 'earliest' and 'last' and 'latest' is redundant/confusing and should be standardized
+    return _basic_graph(repo=repo, start=start, end=end, df=df, x='first_commit_day', y='longevity',
+                        tooltips=['author', 'earliest_commit_date', 'latest_commit_date', 'longevity', 'commit_total', 'lines_changed'], fit=True)
 
 
 def largest_contributors(repo=None, start=None, end=None, df=None):

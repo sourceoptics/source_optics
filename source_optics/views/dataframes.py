@@ -38,11 +38,13 @@ def stat_series(repo, start=None, end=None, fields=None, by_author=False, interv
             fields = [ 'date', 'day', 'author', 'lines_changed', 'commit_total', 'author_total', 'average_commit_size' ]
         if interval == 'LF':
             # these are only computed in lifetime mode as they don't really makes sense in time series...
+            fields.append('first_commit_day')
             fields.append('earliest_commit_date')
             fields.append('latest_commit_date')
             fields.append('days_since_seen')
             fields.append('days_before_joined')
-
+            fields.append('last_commit_day')
+            fields.append('longevity')
 
     data = dict()
     for f in fields:
@@ -103,6 +105,16 @@ def stat_series(repo, start=None, end=None, fields=None, by_author=False, interv
                 data[f].append(day)
             elif f == 'author':
                 data[f].append(t.author.email)
+            elif f == 'first_commit_day':
+                day = (t.earliest_commit_date - first_day).days
+                data[f].append(day)
+            elif f == 'last_commit_day':
+                day = (t.latest_commit_date - first_day).days
+                data[f].append(day)
+            elif f == 'longevity':
+                # FIXME: this is very useful, should store in the scanner code
+                day  = (t.latest_commit_date - t.earliest_commit_date).days
+                data[f].append(day)
             elif f == 'average_commit_size':
                 data[f].append(int(float(t.lines_changed) / float(t.commit_total)))
             else:
