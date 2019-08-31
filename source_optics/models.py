@@ -291,7 +291,6 @@ class Statistic(models.Model):
     latest_commit_date = models.DateTimeField(blank=True, null=True)
     days_since_seen = models.IntegerField(blank=False, null=True, default=-1)
     days_before_joined = models.IntegerField(blank=False, null=True, default=-1)
-    days_before_last = models.IntegerField(blank=False, null=True, default=-1)
     longevity = models.IntegerField(blank=True, null=False, default=0)
 
 

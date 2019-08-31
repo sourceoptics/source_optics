@@ -118,6 +118,7 @@ class Rollup:
                 old_stat.latest_commit_date=stat.latest_commit_date,
                 old_stat.days_since_seen=stat.days_since_seen,
                 old_stat.days_before_joined=stat.days_before_joined
+                old_stat.days_active=stat.days_active
                 old_stat.save()
 
         if not update:
@@ -355,9 +356,10 @@ class Rollup:
             all_latest = repo.latest_commit_date()
             stat.earliest_commit_date = repo.earliest_commit_date(author)
             stat.latest_commit_date = repo.latest_commit_date(author)
-            stat.days_since_seen = (all_latest - stat.earliest_commit_date).days
-            stat.days_before_joined = (all_earliest - stat.earliest_commit_date).days
-            stat.days_before_last = (stat.latest_commit_date - all_earliest).days
+
+            stat.days_since_seen = (all_latest - stat.latest_commit_date).days
+
+            stat.days_before_joined = (stat.earliest_commit_date - all_earliest).days
             stat.longevity = (stat.latest_commit_date - stat.earliest_commit_date).days
 
         cls.smart_bulk_update(repo=repo, start_day=start_day, author=author, interval=interval, stat=stat, total_instances=total_instances)

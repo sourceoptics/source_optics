@@ -92,7 +92,7 @@ DEFAULT_SCATTER_FIELDS = [
 ]
 LIFETIME_ONLY_SCATTER_FIELDS = [
      'earliest_commit_date', 'latest_commit_date', 'days_since_seen',
-     'days_before_joined', 'days_before_last', 'longevity', 'days_active'
+     'days_before_joined', 'longevity', 'days_active'
 ]
 
 def stat_series(repo, start=None, end=None, fields=None, by_author=False, interval=None):
