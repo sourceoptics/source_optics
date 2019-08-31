@@ -91,7 +91,7 @@ def granularity(repo=None, start=None, end=None, df=None):
 
 def key_retention(repo=None, start=None, end=None, df=None):
     # FIXME: earliest_commit_date should be 0-based (earliest_commit_day) from project start so we can apply fit
-    return _basic_graph(repo=repo, start=start, end=end, df=df, x='last_commit_day', y='commit_total',
+    return _basic_graph(repo=repo, start=start, end=end, df=df, x='last_commit_day', y='lines_changed',
                         tooltips=['author', 'earliest_commit_date', 'latest_commit_date', 'longevity', 'commit_total', 'lines_changed'])
 
 def early_retention(repo=None, start=None, end=None, df=None):
