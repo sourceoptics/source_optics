@@ -45,7 +45,6 @@ def _basic_graph(repo=None, start=None, end=None, df=None, x=None, y=None, toolt
     if fit and x=='date':
         x='day'
 
-    # print("X AXIS=%s" % x)
 
     alt.data_transformers.disable_max_rows()
     chart = alt.Chart(df, height=600, width=600).mark_point().encode(
@@ -54,10 +53,9 @@ def _basic_graph(repo=None, start=None, end=None, df=None, x=None, y=None, toolt
         tooltip=tooltips,
     ).interactive()
 
-    # Plot the best fit polynomials
-    # degree_list = [1, 3, 5]
 
-    if fit:
+    if fit and len(df.index) > 0:
+        # only show the curve if it is turned on and there is data to apply the curve to.
 
         # Build a dataframe with the fitted data
         poly_data = pd.DataFrame({'xfit': np.linspace(df[x].min(), df[x].max(), 500)})
@@ -68,9 +66,9 @@ def _basic_graph(repo=None, start=None, end=None, df=None, x=None, y=None, toolt
             ['1', '3', '5'],
             as_=['degree', 'yfit']
         ).mark_line().encode(
-        x='xfit:Q',
-        y='yfit:Q',
-        color='degree:N'
+            x='xfit:Q',
+            y='yfit:Q',
+            color='degree:N'
         )
 
         chart = chart + polynomial_fit

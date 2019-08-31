@@ -9,7 +9,7 @@
 
     function detailsCellRendererFunc(params) {
         console.log(params)
-        return "<a href='/org/{{ org.pk }}/repo/" + params.value + "/start/{{ start_str }}/end/{{ end_str }}'>go</a>";
+        return "<a href='/org/{{ org.pk }}/repo/" + params.value + "/start/{{ start_str }}/end/{{ end_str }}/intv/{{ intv }}'>go</a>";
     }
 
     // FIXME: TODO: once fixed, we can re-add author total here, as well as the newly proposed days_active

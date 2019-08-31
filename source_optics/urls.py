@@ -33,8 +33,8 @@ urlpatterns = [
 
     # UI
     path('', views.orgs, name='orgs'),
-    path('org/<org>/repos/<repos>/start/<start>/end/<end>/', views.repos, name='repos'),
-    path('org/<org>/repo/<repo>/start/<start>/end/<end>/', views.repo, name='repo'),
+    path('org/<org>/repos/<repos>/start/<start>/end/<end>/intv/<intv>', views.repos, name='repos'),
+    path('org/<org>/repo/<repo>/start/<start>/end/<end>/intv/<intv>', views.repo, name='repo'),
     # TODO: use the reverse url function vs having these URLs directly in templates
     path('org/<org>/repo/<repo>/start/<start>/end/<end>/intv/<intv>/graph/volume', views.graph_volume, name='graph_volume'),
     path('org/<org>/repo/<repo>/start/<start>/end/<end>/intv/<intv>/graph/frequency', views.graph_frequency, name='graph_frequency'),

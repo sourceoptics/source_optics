@@ -284,7 +284,17 @@ class Rollup:
                 return
 
         days = cls._queryset_for_interval_rollup(repo=repo, author=author, interval=interval, start_day=start_day, end_date=end_date)
-        author_ids = days.values_list('author', flat=True).distinct()
+
+        days2 = Commit.objects.filter(
+            author__isnull=False,
+            repo=repo,
+             # FIXME: use range everywhere
+            commit_date__gte=start_day,
+            commit_date__lte=end_date
+        )
+
+        author_ids = days2.values_list('author', flat=True).distinct('author') # previous attempt to get the author count out of this.
+        author_count = author_ids.count()
 
         if days.count() == 0:
             print("WARNING: NO HITS: SHOULDN'T BE HERE!: ", author, DAY, repo, cls.aware(start_day), cls.aware(end_date))
@@ -333,11 +343,9 @@ class Rollup:
             days_active=data['days_active'],
             files_changed=files_changed,
             average_commit_size =avg_commit_size,
-            author_total=None
+            author_total=author_count, # if author is set, this should be 1, just ignore it
         )
 
-        if not author:
-            stat.author_total = author_ids.count()
 
         if interval == LIFETIME:
 

@@ -130,13 +130,16 @@ def get_repo_table(repos, start, end):
     return json.dumps(results)
 
 
-def _get_scope(request, org=None, repos=None, repo=None, start=None, end=None, repo_table=False):
+def _get_scope(request, org=None, repos=None, repo=None, start=None, end=None, interval=None, repo_table=False):
 
     """
     Get objects from the URL parameters
     """
 
     orgs = Organization.objects.all()
+
+    if interval is None:
+        interval='WK'
 
     if end is not None:
         end = datetime.datetime.strptime(end, "%Y-%m-%d")
@@ -172,7 +175,8 @@ def _get_scope(request, org=None, repos=None, repo=None, start=None, end=None, r
         end   = end,
         start_str = start.strftime("%Y-%m-%d"),
         end_str   = end.strftime("%Y-%m-%d"),
-        repo = repo
+        repo = repo,
+        intv = interval
     )
 
     if repo_table:
@@ -186,8 +190,8 @@ def _render_graph(request, org=None, repo=None, start=None, end=None, by_author=
     scope['graph'] = getattr(graphs, graph_method)(repo=repo, start=start, end=end, df=dataframe)
     return render(request, 'graph.html', context=scope)
 
-def repo(request, org=None, repo=None, start=None, end=None):
-    (scope, repo, start, end) = _get_scope(request, org=org, repo=repo, start=start, end=end)
+def repo(request, org=None, repo=None, start=None, end=None, intv=None):
+    (scope, repo, start, end) = _get_scope(request, org=org, repo=repo, start=start, end=end, interval=intv)
     return render(request, 'repo.html', context=scope)
 
 def graph_volume(request, org=None, repo=None, start=None, end=None, intv=None):
@@ -231,8 +235,8 @@ def report_largest_contributors(request, org=None, repo=None, start=None, end=No
     return render(request, 'authors.html', context=scope)
 
 
-def repos(request, org=None, repos=None, start=None, end=None):
-    (scope, repo, start, end) = _get_scope(request, org=org, repos=repos, start=start, end=end, repo_table=True)
+def repos(request, org=None, repos=None, start=None, end=None, intv=None):
+    (scope, repo, start, end) = _get_scope(request, org=org, repos=repos, start=start, end=end, repo_table=True, interval=intv)
     return render(request, 'repos.html', context=scope)
 
 def orgs(request):
