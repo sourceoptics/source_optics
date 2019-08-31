@@ -190,24 +190,24 @@ def repo(request, org=None, repo=None, start=None, end=None):
     (scope, repo, start, end) = _get_scope(request, org=org, repo=repo, start=start, end=end)
     return render(request, 'repo.html', context=scope)
 
-def graph_volume(request, org=None, repo=None, start=None, end=None):
-    return _render_graph(request, org=org, repo=repo, start=start, end=end,
+def graph_volume(request, org=None, repo=None, start=None, end=None, intv=None):
+    return _render_graph(request, org=org, repo=repo, start=start, end=end, interval=intv,
         data_method='stat_series', graph_method='volume')
 
-def graph_frequency(request, org=None, repo=None, start=None, end=None):
-    return _render_graph(request, org=org, repo=repo, start=start, end=end,
+def graph_frequency(request, org=None, repo=None, start=None, end=None, intv=None):
+    return _render_graph(request, org=org, repo=repo, start=start, end=end, interval=intv,
         data_method='stat_series', graph_method='frequency')
 
-def graph_participation(request, org=None, repo=None, start=None, end=None):
-    return _render_graph(request, org=org, repo=repo, start=start, end=end, interval='MN',
+def graph_participation(request, org=None, repo=None, start=None, end=None, intv=None):
+    return _render_graph(request, org=org, repo=repo, start=start, end=end, interval=intv,
         data_method='stat_series', graph_method='participation')
 
-def graph_largest_contributors(request, org=None, repo=None, start=None, end=None):
-    return _render_graph(request, org=org, repo=repo, start=start, end=end, by_author=True, interval='MN',
+def graph_largest_contributors(request, org=None, repo=None, start=None, end=None, intv=None):
+    return _render_graph(request, org=org, repo=repo, start=start, end=end, by_author=True, interval=intv,
         data_method='stat_series', graph_method='largest_contributors')
 
-def graph_granularity(request, org=None, repo=None, start=None, end=None):
-    return _render_graph(request, org=org, repo=repo, start=start, end=end, interval='MN',
+def graph_granularity(request, org=None, repo=None, start=None, end=None, intv=None):
+    return _render_graph(request, org=org, repo=repo, start=start, end=end, interval=intv,
         data_method='stat_series', graph_method='granularity')
 
 def graph_key_retention(request, org=None, repo=None, start=None, end=None):
