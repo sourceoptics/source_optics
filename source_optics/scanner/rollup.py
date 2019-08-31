@@ -36,7 +36,7 @@ LIFETIME = 'LF'
 class Rollup:
 
     # FIXME: this should be called 'now', not 'today' and really should be a function
-    today = datetime.datetime.now(tz=timezone.utc)
+    today = datetime.datetime.now() # tz=timezone.utc)
 
     @classmethod
     def aware(cls, date):
@@ -53,10 +53,11 @@ class Rollup:
         Sets the time to 11:59 PM or 23:59 for the day
         """
         if interval == WEEK:
-            return date + datetime.timedelta(days=6)
+            result = date + datetime.timedelta(days=6)
+            return result.replace(hour=23, minute=59, second=59, microsecond=99)
         elif interval == MONTH:
             (weekday, days_in_month) = calendar.monthrange(date.year, date.month)
-            return date.replace(day=days_in_month)
+            return date.replace(day=days_in_month, hour=23, minute=59, second=59, microsecond=99)
         elif interval == DAY:
             return date.replace(hour=23, minute=59, second=59, microsecond=99)
         else:
@@ -208,6 +209,7 @@ class Rollup:
             start_day = start_day.replace(tzinfo=None)
             end_date = cls.get_end_day(start_day, interval)
         else:
+            # lifetime...
             if author:
                 start_day = repo.earliest_commit_date(author=author)
                 end_date = repo.latest_commit_date(author=author)
@@ -220,22 +222,38 @@ class Rollup:
 
         days = None
         if author is None:
-            days = Statistic.objects.filter(
-                author__isnull=True,
-                interval=DAY,
-                repo=repo,
-                start_date__gte=start_day,
-                start_date__lte=end_date
-            )
-
+            if interval != LIFETIME:
+                # FIXME: break this up into WAY smaller functions... (possibly a method on Statistic...)
+                days = Statistic.objects.filter(
+                    author__isnull=True,
+                    interval=DAY,
+                    repo=repo,
+                    # FIXME: use range everywhere
+                    start_date__gte=start_day,
+                    start_date__lte=end_date
+                )
+            else:
+                days = Statistic.objects.filter(
+                    author__isnull=True,
+                    interval=DAY,
+                    repo=repo,
+                )
         else:
-            days = Statistic.objects.filter(
-                author=author,
-                interval=DAY,
-                repo=repo,
-                start_date__gte=start_day,
-                start_date__lte=end_date
-            )
+            if interval != LIFETIME:
+                days = Statistic.objects.filter(
+                    author=author,
+                    interval=DAY,
+                    repo=repo,
+                    # FIXME: use range everywhere
+                    start_date__gte=start_day,
+                    start_date__lte=end_date
+                )
+            else:
+                days = Statistic.obje cts.filter(
+                    author=author,
+                    interval=DAY,
+                    repo=repo,
+                )
             if days.count() == 0:
                 print("WARNING: NO HITS: SHOULDN'T BE HERE!: ", author, DAY, repo, cls.aware(start_day), cls.aware(end_date))
                 # FIXME: temporary workaround bc of the file move code, this should probably be fatal
