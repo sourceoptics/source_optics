@@ -6,31 +6,44 @@
 <a href="/org/{{ org.pk }}/repos/_/start/{{ start_str }}/end/{{ end_str }}">(back)</A>
 
 <h2>Volume</h2>
+<!-- TODO: move these comments to tooltips with an info block and we can have more inline help. -->
+<i>How does the rate of change of code morph over time?</i>
 
 <div data-loader="ajax" data-src="/org/{{ org.pk }}/repo/{{ repo.pk }}/start/{{ start_str }}/end/{{ end_str }}/graph/volume">loading</div>
 
 <h2>Frequency</h2>
+<i>How does the number of commits morph over time?</i>
 
 <div data-loader="ajax" data-src="/org/{{ org.pk }}/repo/{{ repo.pk }}/start/{{ start_str }}/end/{{ end_str }}/graph/frequency">loading</div>
 
 <h2>Participation</h2>
+<i>How many people worked on this project within the time period?</i>
 
 <div data-loader="ajax" data-src="/org/{{ org.pk }}/repo/{{ repo.pk }}/start/{{ start_str }}/end/{{ end_str }}/graph/participation">loading</div>
 
 <h2>Largest Contributors</h2>
+<i>For the top contributors, who is most active at what times?</i>
 
 <div data-loader="ajax" data-src="/org/{{ org.pk }}/repo/{{ repo.pk }}/start/{{ start_str }}/end/{{ end_str }}/graph/largest_contributors">loading</div>
 
 <h2>Granularity</h2>
+<i>How has commit size changed over time?</i>
 
 <div data-loader="ajax" data-src="/org/{{ org.pk }}/repo/{{ repo.pk }}/start/{{ start_str }}/end/{{ end_str }}/graph/granularity">loading</div>
 
 <h2>Key Contributor Retention</h2>
+<i>At what points did this project possibly lose significant contributors?</i>
 
 <div data-loader="ajax" data-src="/org/{{ org.pk }}/repo/{{ repo.pk }}/start/{{ start_str }}/end/{{ end_str }}/graph/key_retention">loading</div>
 
 <h2>Early Contributor Retention</h2>
+<i>How long does it seem that new contributors are staying around?</i>
 
 <div data-loader="ajax" data-src="/org/{{ org.pk }}/repo/{{ repo.pk }}/start/{{ start_str }}/end/{{ end_str }}/graph/early_retention">loading</div>
+
+<h2>Longevity vs Volume</h2>
+<i>Does history with the project translate to work volume?</i>
+
+<div data-loader="ajax" data-src="/org/{{ org.pk }}/repo/{{ repo.pk }}/start/{{ start_str }}/end/{{ end_str }}/graph/staying_power">loading</div>
 
 {% include 'footer.html' %}

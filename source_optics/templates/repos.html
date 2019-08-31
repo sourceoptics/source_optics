@@ -3,31 +3,45 @@
 <h1>SourceOptics: {{ org.name }} organization</h1>
 <A HREF="/">(back)</A>
 
-<table>
+<div id="myGrid" class="ag-theme-balham"></div>
 
-    <tr>
-    <th>Name</th>
-    <!--
-    <th>Commits</th>
-    <th>Added</th>
-    <th>Removed</th>
-    <th>Changed</th>
-    -->
+  <script type="text/javascript" charset="utf-8">
+    // specify the columns
 
-    </tr>
 
-    {% for repo in stats %}
-    <tr>
-        <td><a href="/org/{{ org.pk }}/repo/{{ repo.pk }}/start/{{ start_str }}/end/{{ end_str }}">{{ repo.name }}</a></td>
-        <!--
-        <td>{{ repo.commit_total }}</td>
-        <td>{{ repo.lines_added }}</td>
-        <td>{{ repo.lines_removed }}</td>
-        <td>{{ repo.lines_changed }}</td>
-        -->
-    </tr>
-    {% endfor %}
+    function detailsCellRendererFunc(params) {
+        console.log(params)
+        return "<a href='/org/{{ org.pk }}/repo/" + params.value + "/start/{{ start_str }}/end/{{ end_str }}'>go</a>";
+    }
 
-</table>
+    var columnDefs = [
+        {headerName: "Name",          field: "name", sortable: true, filter: true },
+        {headerName: "Details",       field: "details", cellRenderer: detailsCellRendererFunc },
+        {headerName: "Lines Changed", field: "lines_changed", sortable: true, filter: true },
+        {headerName: "Lines Added",   field: "lines_added", sortable: true, filter: true },
+        {headerName: "Lines Removed", field: "lines_removed", sortable: true, filter: true },
+        {headerName: "Commit Total",  field: "commit_total", sortable: true, filter: true }
+    ];
+
+
+    // specify the data
+    var rowData = {{ repo_table | safe }};
+
+    // let the grid know which columns and what data to use
+    var gridOptions = {
+      columnDefs: columnDefs,
+      rowData: rowData
+    };
+
+  // lookup the container we want the Grid to use
+  var eGridDiv = document.querySelector('#myGrid');
+
+  // create the grid passing in the div to use together with the columns & data we want to use
+  thisGrid = new agGrid.Grid(eGridDiv, gridOptions);
+
+
+
+  </script>
+
 
 {% include 'footer.html' %}

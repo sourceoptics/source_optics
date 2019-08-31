@@ -100,6 +100,10 @@ def early_retention(repo=None, start=None, end=None, df=None):
     return _basic_graph(repo=repo, start=start, end=end, df=df, x='first_commit_day', y='longevity',
                         tooltips=['author', 'earliest_commit_date', 'latest_commit_date', 'longevity', 'commit_total', 'lines_changed'], fit=True)
 
+def staying_power(repo=None, start=None, end=None, df=None):
+    return _basic_graph(repo=repo, start=start, end=end, df=df, x='longevity', y='lines_changed',
+                        tooltips=['author', 'earliest_commit_date', 'latest_commit_date', 'longevity', 'commit_total', 'lines_changed'], fit=True)
+
 
 def largest_contributors(repo=None, start=None, end=None, df=None):
     alt.data_transformers.disable_max_rows()

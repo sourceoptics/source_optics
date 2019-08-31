@@ -31,10 +31,11 @@ from source_optics.serializers import (AuthorSerializer, CommitSerializer,
                                        StatisticSerializer, UserSerializer)
 from source_optics.views.webhooks import Webhooks
 import datetime
-from django.db.models import Sum, Max, Value, IntegerField
+from django.db.models import Sum, Max, Value, IntegerField, F
 from django.db.models.expressions import Subquery, OuterRef
 from . import dataframes
 from . import graphs
+import json
 
 #=====
 # BEGIN REST API
@@ -104,7 +105,33 @@ class StatisticViewSet(viewsets.ReadOnlyModelViewSet):
 # END REST API
 # ======
 
-def _get_scope(request, org=None, repos=None, repo=None, start=None, end=None, repo_stats=False):
+def get_repo_table(repos, start, end):
+
+    results = []
+    for repo in repos:
+        stat = Statistic.objects.order_by('repo__name').select_related('repository').filter(
+            repo=repo,
+            interval='DY',
+            start_date__range=(start,end)
+        ).aggregate(
+            lines_changed=Sum('lines_changed'),
+            lines_added=Sum('lines_added'),
+            lines_removed=Sum('lines_removed'),
+            author_total=Sum('author_total'),
+            commit_total=Sum('commit_total')
+        )
+        stat['name'] = repo.name
+        stat['details'] = repo.pk
+
+        results.append(stat)
+
+    results = sorted(results, key=lambda x: x['name'])
+
+    print("TABLE JSON=%s" % results)
+    return json.dumps(results)
+
+
+def _get_scope(request, org=None, repos=None, repo=None, start=None, end=None, repo_table=False):
 
     """
     Get objects from the URL parameters
@@ -149,8 +176,8 @@ def _get_scope(request, org=None, repos=None, repo=None, start=None, end=None, r
         repo = repo
     )
 
-    if repo_stats:
-        context['stats'] = _repo_stats(repos, start, end)
+    if repo_table:
+        context['repo_table'] = get_repo_table(repos, start, end)
 
     return (context, repo, start, end)
 
@@ -192,8 +219,12 @@ def graph_early_retention(request, org=None, repo=None, start=None, end=None):
     return _render_graph(request, org=org, repo=repo, start=start, end=end, interval='LF', by_author=True,
         data_method='stat_series', graph_method='early_retention')
 
+def graph_staying_power(request, org=None, repo=None, start=None, end=None):
+    return _render_graph(request, org=org, repo=repo, start=start, end=end, interval='LF', by_author=True,
+        data_method='stat_series', graph_method='staying_power')
+
 def repos(request, org=None, repos=None, start=None, end=None):
-    (scope, repo, start, end) = _get_scope(request, org=org, repos=repos, start=start, end=end, repo_stats=True)
+    (scope, repo, start, end) = _get_scope(request, org=org, repos=repos, start=start, end=end, repo_table=True)
     return render(request, 'repos.html', context=scope)
 
 def orgs(request):
