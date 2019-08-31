@@ -1,6 +1,7 @@
 import pandas as pd
 from .. models import Statistic, Commit, Author, Repository
 from django.db.models import Count, Sum
+import datetime
 
 def get_interval(start, end):
     # FIXME: this isn't quite a solid plan for educational vs corporate repos when people may want to zoom in.
@@ -26,36 +27,12 @@ def top_authors(repo, start, end, attribute='commit_total', limit=10):
     author_ids = [ t['author_id'] for t in filter_set ]
     return author_ids
 
-def stat_series(repo, start=None, end=None, fields=None, by_author=False, interval=None):
 
-    if not interval:
-        interval = get_interval(start, end)
-
-    if fields is None:
-        if not by_author:
-            fields = [ 'date', 'day', 'lines_changed', 'commit_total', 'author_total', 'average_commit_size' ]
-        else:
-            fields = [ 'date', 'day', 'author', 'lines_changed', 'commit_total', 'author_total', 'average_commit_size' ]
-        if interval == 'LF':
-            # these are only computed in lifetime mode as they don't really makes sense in time series...
-            fields.append('first_commit_day')
-            fields.append('earliest_commit_date')
-            fields.append('latest_commit_date')
-            fields.append('days_since_seen')
-            fields.append('days_before_joined')
-            fields.append('last_commit_day')
-            fields.append('longevity')
-
-    data = dict()
-    for f in fields:
-        data[f] = []
-
-    # FIXME: all this code should be cleaned up.
-
+def _queryset_for_scatter(repo, start=None, end=None, by_author=False, interval='DY'):
     totals = None
     if not by_author:
         if interval != 'LF':
-            totals = Statistic.objects.select_related('repo',).filter(
+            totals = Statistic.objects.select_related('repo', ).filter(
                 interval=interval,
                 repo=repo,
                 author__isnull=True,
@@ -70,11 +47,11 @@ def stat_series(repo, start=None, end=None, fields=None, by_author=False, interv
     else:
         top = top_authors(repo, start, end)
         if interval != 'LF':
-            totals = Statistic.objects.select_related('repo','author').filter(
+            totals = Statistic.objects.select_related('repo', 'author').filter(
                 interval=interval,
                 repo=repo,
                 author__pk__in=top,
-                #start_date__range=(start, end)
+                start_date__range=(start, end)
             )
         else:
             # note, this is used for slightly DIFFERENT purposes in the final graphs, so doesn't restrict
@@ -85,39 +62,53 @@ def stat_series(repo, start=None, end=None, fields=None, by_author=False, interv
                 author__isnull=False
                 # author__pk__in=top
             )
+    return totals.order_by('author','start_date')
 
-    if interval != 'LF':
-        totals = totals.order_by('author','start_date')
-    else:
-        totals = totals.order_by('author')
+def _scatter_queryset_to_dataframe(repo, totals, fields):
+    data = dict()
 
     first_day = repo.earliest_commit_date()
 
+    for f in fields:
+        data[f] = []
+
     for t in totals:
+
         for f in fields:
             if f == 'date':
+                # just renaming this one field for purposes of axes labelling
                 data[f].append(t.start_date)
-                if first_day is None:
-                    first_day = t.start_date
             elif f == 'day':
-                day = (t.start_date - first_day).days
-                # print("DAY=%s" % day)
-                data[f].append(day)
+                data[f].append((t.start_date - first_day).days)
             elif f == 'author':
                 data[f].append(t.author.email)
-            elif f == 'first_commit_day':
-                day = (t.earliest_commit_date - first_day).days
-                data[f].append(day)
-            elif f == 'last_commit_day':
-                day = (t.latest_commit_date - first_day).days
-                data[f].append(day)
-            elif f == 'longevity':
-                # FIXME: this is very useful, should store in the scanner code
-                day  = (t.latest_commit_date - t.earliest_commit_date).days
-                data[f].append(day)
-            elif f == 'average_commit_size':
-                data[f].append(int(float(t.lines_changed) / float(t.commit_total)))
             else:
                 data[f].append(getattr(t, f))
 
     return pd.DataFrame(data, columns=fields)
+
+DEFAULT_SCATTER_FIELDS = [
+    'date', 'day', 'lines_changed', 'commit_total', 'author_total', 'average_commit_size',
+]
+LIFETIME_ONLY_SCATTER_FIELDS = [
+     'earliest_commit_date', 'latest_commit_date', 'days_since_seen',
+     'days_before_joined', 'days_before_last', 'longevity', 'days_active'
+]
+
+def stat_series(repo, start=None, end=None, fields=None, by_author=False, interval=None):
+
+    if not interval:
+        interval = get_interval(start, end)
+
+    if fields is None:
+        fields = DEFAULT_SCATTER_FIELDS[:]
+        if interval == 'LF':
+            fields.extend(LIFETIME_ONLY_SCATTER_FIELDS)
+        if by_author:
+            fields.append('author')
+
+    totals = _queryset_for_scatter(repo, start=start, end=end, by_author=by_author, interval=interval)
+    return _scatter_queryset_to_dataframe(repo, totals, fields)
+
+
+

@@ -1,9 +1,7 @@
 {% include 'header.html' %}
 
-<h1>SourceOptics: {{ repo.name }}</h1>
+<h1><A HREF="/org/{{ org.pk }}/repos/_/start/{{ start_str }}/end/{{ end_str }}">SourceOptics</A>: repo={{ repo.name }}</h1>
 <p>between: {{ start_str }} and {{ end_str }}</p>
-
-<a href="/org/{{ org.pk }}/repos/_/start/{{ start_str }}/end/{{ end_str }}">(back)</A>
 
 <h2>Volume</h2>
 <!-- TODO: move these comments to tooltips with an info block and we can have more inline help. -->
@@ -16,15 +14,20 @@
 
 <div data-loader="ajax" data-src="/org/{{ org.pk }}/repo/{{ repo.pk }}/start/{{ start_str }}/end/{{ end_str }}/graph/frequency">loading</div>
 
+<h2>Largest Contributors</h2>
+<i>For the top contributors, who is most active at what times?</i>
+
+<div data-loader="ajax" data-src="/org/{{ org.pk }}/repo/{{ repo.pk }}/start/{{ start_str }}/end/{{ end_str }}/graph/largest_contributors">loading</div>
+
+<!-- WORK IN PROGRESS
+<div data-loader="ajax" data-src="/org/{{ org.pk }}/repo/{{ repo.pk }}/start/{{ start_str }}/end/{{ end_str }}/report/largest_contributors">loading</div>
+-->
+
 <h2>Participation</h2>
 <i>How many people worked on this project within the time period?</i>
 
 <div data-loader="ajax" data-src="/org/{{ org.pk }}/repo/{{ repo.pk }}/start/{{ start_str }}/end/{{ end_str }}/graph/participation">loading</div>
 
-<h2>Largest Contributors</h2>
-<i>For the top contributors, who is most active at what times?</i>
-
-<div data-loader="ajax" data-src="/org/{{ org.pk }}/repo/{{ repo.pk }}/start/{{ start_str }}/end/{{ end_str }}/graph/largest_contributors">loading</div>
 
 <h2>Granularity</h2>
 <i>How has commit size changed over time?</i>

@@ -13,10 +13,13 @@
 # limitations under the License.
 #
 
+# FIXME: this whole class is well overdue for splitting up into smaller
+# functions and/or multiple files.
+
 import calendar
 from django.db.models import Sum, Max
 from django.utils import timezone
-from source_optics.models import Statistic, Commit, FileChange, Author
+from source_optics.models import Statistic, Commit, FileChange, Author, File
 from dateutil import rrule
 import datetime
 CURRENT_TZ = timezone.get_current_timezone()
@@ -129,6 +132,15 @@ class Rollup:
 
         # FIXME: all this code should be cleaned up.
 
+
+        all_commits = Commit.objects.filter(
+            repo=repo
+        )
+        author_commits = Commit.objects.filter(
+            repo=repo,
+            author=author
+        )
+
         file_changes = None
         if not author:
             file_changes = FileChange.objects.select_related('commit').filter(
@@ -161,13 +173,26 @@ class Rollup:
 
         # Aggregate values from query set for rollup
         data = file_changes.aggregate(lines_added=Sum("lines_added"), lines_removed = Sum("lines_removed"))
-        commits_total = len(commits)
+        commit_total = len(commits)
         files_changed = len(files)
         lines_added = data['lines_added']
         lines_removed = data['lines_removed']
         lines_changed = lines_added + lines_removed
 
         # FIXME: if start_day is today, we need to delete the current stat
+
+        # BOOKMARK longevity
+        DEFAULT_SCATTER_FIELDS = ['date',
+                                  'day', 'lines_changed', 'commit_total', 'author_total', 'average_commit_size',
+                                  'earliest_commit_date', 'latest_commit_date', 'days_since_seen',
+                                  'days_before_joined', 'first_commit_day', 'last_commit_day', 'longevity',
+                                  'days_active']
+
+        # FIXME: move these to use methods on the Author/Repo object, which should be already there.
+        # FIXME: usage here is notably inefficient as we make this query a *lot*, so we really should memoize it.
+
+        avg_commit_size = int(float(lines_changed) / float(commit_total))
+
 
         # Create total rollup row for the day
         stat = Statistic(
@@ -178,12 +203,50 @@ class Rollup:
             lines_added=lines_added,
             lines_removed=lines_removed,
             lines_changed=lines_changed,
-            commit_total=commits_total,
+            commit_total=commit_total,
             files_changed=files_changed,
-            author_total=authors_count
+            author_total=authors_count,
+            average_commit_size=avg_commit_size,
+            days_active=1,
         )
 
         cls.smart_bulk_update(repo=repo, start_day=start_day, author=author, interval=DAY, stat=stat, total_instances=total_instances)
+
+    @classmethod
+    def _queryset_for_interval_rollup(cls, repo=None, author=None, interval=None, start_day=None, end_date=None):
+
+        if author is None:
+            if interval != LIFETIME:
+                return Statistic.objects.filter(
+                    author__isnull=True,
+                    interval=DAY,
+                    repo=repo,
+                    # FIXME: use range everywhere
+                    start_date__gte=start_day,
+                    start_date__lte=end_date
+                )
+            else:
+                return Statistic.objects.filter(
+                    author__isnull=True,
+                    interval=DAY,
+                    repo=repo,
+                )
+        else:
+            if interval != LIFETIME:
+                return Statistic.objects.filter(
+                    author=author,
+                    interval=DAY,
+                    repo=repo,
+                    # FIXME: use range everywhere
+                    start_date__gte=start_day,
+                    start_date__lte=end_date
+                )
+            else:
+                return Statistic.objects.filter(
+                    author=author,
+                    interval=DAY,
+                    repo=repo,
+                )
 
     @classmethod
     def compute_interval_rollup(cls, repo=None, author=None, interval=None, start_day=None, total_instances=None):
@@ -220,47 +283,16 @@ class Rollup:
                 print("**** GLITCH: Author has no commits? ", author)
                 return
 
-        days = None
-        if author is None:
-            if interval != LIFETIME:
-                # FIXME: break this up into WAY smaller functions... (possibly a method on Statistic...)
-                days = Statistic.objects.filter(
-                    author__isnull=True,
-                    interval=DAY,
-                    repo=repo,
-                    # FIXME: use range everywhere
-                    start_date__gte=start_day,
-                    start_date__lte=end_date
-                )
-            else:
-                days = Statistic.objects.filter(
-                    author__isnull=True,
-                    interval=DAY,
-                    repo=repo,
-                )
-        else:
-            if interval != LIFETIME:
-                days = Statistic.objects.filter(
-                    author=author,
-                    interval=DAY,
-                    repo=repo,
-                    # FIXME: use range everywhere
-                    start_date__gte=start_day,
-                    start_date__lte=end_date
-                )
-            else:
-                days = Statistic.objects.filter(
-                    author=author,
-                    interval=DAY,
-                    repo=repo,
-                )
-            if days.count() == 0:
-                print("WARNING: NO HITS: SHOULDN'T BE HERE!: ", author, DAY, repo, cls.aware(start_day), cls.aware(end_date))
-                # FIXME: temporary workaround bc of the file move code, this should probably be fatal
-                # this can happen because the file move support is not quite smart about paths yet and seemingly
-                # does not write FileChange records in those cases, which results in Statistic objects for days being
-                # missing if all edits involved a move.  But we need to verify this.  The opsmop repo has a few examples.
-                return
+        days = cls._queryset_for_interval_rollup(repo=repo, author=author, interval=interval, start_day=start_day, end_date=end_date)
+        author_ids = days.values_list('author', flat=True).distinct()
+
+        if days.count() == 0:
+            print("WARNING: NO HITS: SHOULDN'T BE HERE!: ", author, DAY, repo, cls.aware(start_day), cls.aware(end_date))
+            # FIXME: temporary workaround bc of the file move code, this should probably be fatal
+            # this can happen because the file move support is not quite smart about paths yet and seemingly
+            # does not write FileChange records in those cases, which results in Statistic objects for days being
+            # missing if all edits involved a move.  But we need to verify this.  The opsmop repo has a few examples.
+            return
 
         # aggregates total stats for the interval
         data = days.aggregate(
@@ -268,7 +300,26 @@ class Rollup:
             lines_removed=Sum("lines_removed"),
             lines_changed=Sum("lines_changed"),
             commit_total=Sum("commit_total"),
+            days_active=Sum("days_active"),
         )
+
+        # FIXME: move into a function on the FileChange object
+        changes=None
+        if author:
+            changes = File.objects.select_related('file_changes','commit').filter(
+                repo=repo,
+                file_changes__commit__author=author,
+                file_changes__commit__commit_date__range=(start_day, end_date)
+            ).distinct('path')
+        else:
+            changes = File.objects.select_related('file_changes','commit').filter(
+                repo=repo,
+                file_changes__commit__commit_date__range=(start_day, end_date)
+            ).distinct('path')
+        files_changed = changes.count()
+
+        avg_commit_size = int(float(data['lines_changed']) / float(data['commit_total']))
+
 
         stat = Statistic(
             start_date=cls.aware(start_day),
@@ -279,17 +330,27 @@ class Rollup:
             lines_removed=data['lines_removed'],
             lines_changed=data['lines_changed'],
             commit_total=data['commit_total'],
-            files_changed=-1, # FIXME: we have to add code for this, using Max() isn't correct
-            author_total=-1  # FIXME: we have to add code for this, using Max() isn't correct
+            days_active=data['days_active'],
+            files_changed=files_changed,
+            average_commit_size =avg_commit_size,
+            author_total=None
         )
 
-        if interval == LIFETIME:
-            # we don't bother computing this for other intervals, it doesn't make sense in time series
-            stat.earliest_commit_date = repo.earliest_commit_date(author=author)
-            stat.latest_commit_date = repo.latest_commit_date(author=author)
-            stat.days_since_seen = (cls.aware(absolute_last_commit_date) - cls.aware(stat.latest_commit_date)).days
-            stat.days_before_joined = (cls.aware(absolute_first_commit_date) - cls.aware(stat.earliest_commit_date)).days
+        if not author:
+            stat.author_total = author_ids.count()
 
+        if interval == LIFETIME:
+
+            # FIXME: use the methods on the Repo and Author class to get to these values
+            # make sure they are memoized for efficiency as they are executed often
+            all_earliest = repo.earliest_commit_date()
+            all_latest = repo.latest_commit_date()
+            stat.earliest_commit_date = repo.earliest_commit_date(author)
+            stat.latest_commit_date = repo.latest_commit_date(author)
+            stat.days_since_seen = (all_latest - stat.earliest_commit_date).days
+            stat.days_before_joined = (all_earliest - stat.earliest_commit_date).days
+            stat.days_before_last = (stat.latest_commit_date - all_earliest).days
+            stat.longevity = (stat.latest_commit_date - stat.earliest_commit_date).days
 
         cls.smart_bulk_update(repo=repo, start_day=start_day, author=author, interval=interval, stat=stat, total_instances=total_instances)
 

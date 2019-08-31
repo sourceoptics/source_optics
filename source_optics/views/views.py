@@ -127,7 +127,6 @@ def get_repo_table(repos, start, end):
 
     results = sorted(results, key=lambda x: x['name'])
 
-    print("TABLE JSON=%s" % results)
     return json.dumps(results)
 
 
@@ -222,6 +221,15 @@ def graph_early_retention(request, org=None, repo=None, start=None, end=None):
 def graph_staying_power(request, org=None, repo=None, start=None, end=None):
     return _render_graph(request, org=org, repo=repo, start=start, end=end, interval='LF', by_author=True,
         data_method='stat_series', graph_method='staying_power')
+
+def report_largest_contributors(request, org=None, repo=None, start=None, end=None):
+    (scope, repo, start, end) = _get_scope(request, org=org, repo=repo, start=start, end=end)
+
+    # FIXME: TODO: may want to take the limit as a parameter to the URL
+    data = dataframes.stat_series(repo, start=start, end=end, by_author=True, interval='DY', want_dataframe=False)
+    scope['author_json'] = json.dumps(data)
+    return render(request, 'authors.html', context=scope)
+
 
 def repos(request, org=None, repos=None, start=None, end=None):
     (scope, repo, start, end) = _get_scope(request, org=org, repos=repos, start=start, end=end, repo_table=True)

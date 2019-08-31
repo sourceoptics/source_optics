@@ -1,18 +1,18 @@
 {% include 'header.html' %}
 
-<h1>SourceOptics: {{ org.name }} organization</h1>
-<A HREF="/">(back)</A>
+<h1><a href="/">SourceOptics</A>: organization={{ org.name }}</h1>
 
 <div id="myGrid" class="ag-theme-balham"></div>
 
   <script type="text/javascript" charset="utf-8">
     // specify the columns
 
-
     function detailsCellRendererFunc(params) {
         console.log(params)
         return "<a href='/org/{{ org.pk }}/repo/" + params.value + "/start/{{ start_str }}/end/{{ end_str }}'>go</a>";
     }
+
+    // FIXME: TODO: once fixed, we can re-add author total here, as well as the newly proposed days_active
 
     var columnDefs = [
         {headerName: "Name",          field: "name", sortable: true, filter: true },
@@ -22,7 +22,6 @@
         {headerName: "Lines Removed", field: "lines_removed", sortable: true, filter: true },
         {headerName: "Commit Total",  field: "commit_total", sortable: true, filter: true }
     ];
-
 
     // specify the data
     var rowData = {{ repo_table | safe }};
@@ -38,8 +37,6 @@
 
   // create the grid passing in the div to use together with the columns & data we want to use
   thisGrid = new agGrid.Grid(eGridDiv, gridOptions);
-
-
 
   </script>
 

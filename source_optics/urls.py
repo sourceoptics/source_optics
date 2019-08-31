@@ -44,6 +44,7 @@ urlpatterns = [
     path('org/<org>/repo/<repo>/start/<start>/end/<end>/graph/key_retention', views.graph_key_retention, name='graph_key_retention'),
     path('org/<org>/repo/<repo>/start/<start>/end/<end>/graph/early_retention', views.graph_early_retention, name='graph_early_retention'),
     path('org/<org>/repo/<repo>/start/<start>/end/<end>/graph/staying_power', views.graph_staying_power, name='graph_staying_power'),
+    path('org/<org>/repo/<repo>/start/<start>/end/<end>/report/largest_contributors', views.report_largest_contributors, name='report_largest_contributors'),
 
     # REST API
     path('api/', include(api_router.urls)),

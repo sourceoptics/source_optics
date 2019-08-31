@@ -49,8 +49,8 @@ def _basic_graph(repo=None, start=None, end=None, df=None, x=None, y=None, toolt
 
     alt.data_transformers.disable_max_rows()
     chart = alt.Chart(df, height=600, width=600).mark_point().encode(
-        x=alt.X(x, scale=alt.Scale(zero=False, clamp=True)), #, scale=alt.Scale(zero=False, clamp=True)),
-        y=alt.Y(y, scale=alt.Scale(zero=False, clamp=True)), #, scale=alt.Scale(zero=False, clamp=True)),
+        x=alt.X(x, scale=alt.Scale(zero=True, clamp=True)), #, scale=alt.Scale(zero=False, clamp=True)),
+        y=alt.Y(y, scale=alt.Scale(zero=True, clamp=True)), #, scale=alt.Scale(zero=False, clamp=True)),
         tooltip=tooltips,
     ).interactive()
 
@@ -91,13 +91,13 @@ def granularity(repo=None, start=None, end=None, df=None):
 
 def key_retention(repo=None, start=None, end=None, df=None):
     # FIXME: earliest_commit_date should be 0-based (earliest_commit_day) from project start so we can apply fit
-    return _basic_graph(repo=repo, start=start, end=end, df=df, x='last_commit_day', y='lines_changed',
+    return _basic_graph(repo=repo, start=start, end=end, df=df, x='days_since_seen', y='lines_changed',
                         tooltips=['author', 'earliest_commit_date', 'latest_commit_date', 'longevity', 'commit_total', 'lines_changed'])
 
 def early_retention(repo=None, start=None, end=None, df=None):
     # FIXME: earliest_commit_date should be 0-based (earliest_commit_day) from project start so we can apply fit
     # FIXME: terminology between 'first' and 'earliest' and 'last' and 'latest' is redundant/confusing and should be standardized
-    return _basic_graph(repo=repo, start=start, end=end, df=df, x='first_commit_day', y='longevity',
+    return _basic_graph(repo=repo, start=start, end=end, df=df, x='days_before_joined', y='longevity',
                         tooltips=['author', 'earliest_commit_date', 'latest_commit_date', 'longevity', 'commit_total', 'lines_changed'], fit=True)
 
 def staying_power(repo=None, start=None, end=None, df=None):
@@ -108,35 +108,10 @@ def staying_power(repo=None, start=None, end=None, df=None):
 def largest_contributors(repo=None, start=None, end=None, df=None):
     alt.data_transformers.disable_max_rows()
     chart = alt.Chart(df, height=600, width=600).mark_point().encode(
-        x=alt.X('day', scale=alt.Scale(zero=False, clamp=True)),
-        y=alt.Y("lines_changed", scale=alt.Scale(zero=False, clamp=True)), #  domain=(0,2000), clamp=True)),
+        x=alt.X('day', scale=alt.Scale(zero=True, clamp=True)),
+        y=alt.Y("lines_changed", scale=alt.Scale(zero=True, clamp=True)), #  domain=(0,2000), clamp=True)),
         color='author:N',
         # size='commit_count:N',
         tooltip = ['day', 'date', 'commit_total', 'lines_changed', 'author' ],
     ).interactive()
     return render_chart(chart)
-
-OLD = """
-
-
-def health_matrix(repo=None, start=None, end=None, df=None):
-    rows = ['days_before_joined', 'days_since_seen', 'lines_changed', 'commits', 'average_commit_size' ]
-    cols = ['days_before_joined', 'days_since_seen', 'lines_changed', 'commits', 'average_commit_size' ]
-    tooltips = ('author', 'commits', 'lines_changed', 'average_commit_size', 'days_before_joined', 'days_since_seen')
-
-    chart = alt.Chart(df).mark_circle().encode(
-        alt.X(alt.repeat("column"), type='quantitative'),
-        alt.Y(alt.repeat("row"), type='quantitative'),
-        #color='author:N'
-        tooltip = tooltips
-    ).properties(
-        width=150,
-        height=150
-    ).repeat(
-        row=rows,
-        column=cols
-    ).interactive()
-
-    return render_chart(chart)
-
-"""

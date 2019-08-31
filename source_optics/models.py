@@ -237,7 +237,7 @@ class File(models.Model):
 
 class FileChange(models.Model):
 
-    file = models.ForeignKey(File, db_index=True, on_delete=models.CASCADE, related_name='+', null=False)
+    file = models.ForeignKey(File, db_index=True, on_delete=models.CASCADE, related_name='file_changes', null=False)
     commit = models.ForeignKey(Commit, db_index=True, on_delete=models.CASCADE, related_name='file_changes')
     lines_added = models.IntegerField(default=0)
     lines_removed = models.IntegerField(default=0)
@@ -283,12 +283,17 @@ class Statistic(models.Model):
     commit_total = models.IntegerField(blank = True, null = True)
     files_changed = models.IntegerField(blank = True, null = True)
     author_total = models.IntegerField(blank = True, null = True)
+    days_active = models.IntegerField(blank=True, null=False, default=0)
+    average_commit_size = models.IntegerField(blank=True, null=True, default=0)
 
-    # somewhat denormalized fields used in LIFETIME (LF) interval queries only
+    # the following stats are only going to be valid for LIFETIME ('LF') intervals
     earliest_commit_date = models.DateTimeField(blank=True, null=True)
     latest_commit_date = models.DateTimeField(blank=True, null=True)
     days_since_seen = models.IntegerField(blank=False, null=True, default=-1)
     days_before_joined = models.IntegerField(blank=False, null=True, default=-1)
+    days_before_last = models.IntegerField(blank=False, null=True, default=-1)
+    longevity = models.IntegerField(blank=True, null=False, default=0)
+
 
     def __str__(self):
         if self.author is None:
