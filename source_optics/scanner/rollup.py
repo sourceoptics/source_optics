@@ -108,15 +108,15 @@ class Rollup:
             else:
                 # just assuming this can't match more than one, not doing 'get' as exceptions are be slower
                 old_stat = stats.first()
-                old_stat.lines_added=stat.lines_added,
-                old_stat.lines_removed=stat.lines_removed,
-                old_stat.lines_changed=stat.lines_changed,
-                old_stat.commit_total=stat.commit_total,
-                old_stat.files_changed=stat.files_changed,
-                old_stat.author_total=stat.author_total,
-                old_stat.earliest_commit_date=stat.earliest_commit_date,
-                old_stat.latest_commit_date=stat.latest_commit_date,
-                old_stat.days_since_seen=stat.days_since_seen,
+                old_stat.lines_added=stat.lines_added
+                old_stat.lines_removed=stat.lines_removed
+                old_stat.lines_changed=stat.lines_changed
+                old_stat.commit_total=stat.commit_total
+                old_stat.files_changed=stat.files_changed
+                old_stat.author_total=stat.author_total
+                old_stat.earliest_commit_date=stat.earliest_commit_date
+                old_stat.latest_commit_date=stat.latest_commit_date
+                old_stat.days_since_seen=stat.days_since_seen
                 old_stat.days_before_joined=stat.days_before_joined
                 old_stat.days_active=stat.days_active
                 old_stat.save()
@@ -197,7 +197,7 @@ class Rollup:
 
         # Create total rollup row for the day
         stat = Statistic(
-            start_date=cls.aware(start_day),
+            start_date=start_day,
             interval=DAY,
             repo=repo,
             author=author,
