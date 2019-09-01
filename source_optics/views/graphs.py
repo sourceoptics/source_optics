@@ -48,8 +48,8 @@ def _basic_graph(repo=None, start=None, end=None, df=None, x=None, y=None, toolt
 
     alt.data_transformers.disable_max_rows()
     chart = alt.Chart(df, height=600, width=600).mark_point().encode(
-        x=alt.X(x, scale=alt.Scale(zero=True, clamp=True)), #, scale=alt.Scale(zero=False, clamp=True)),
-        y=alt.Y(y, scale=alt.Scale(zero=True, clamp=True)), #, scale=alt.Scale(zero=False, clamp=True)),
+        x=alt.X(x, scale=alt.Scale(zero=False, clamp=True)), #, scale=alt.Scale(zero=False, clamp=True)),
+        y=alt.Y(y, scale=alt.Scale(zero=False, clamp=True)), #, scale=alt.Scale(zero=False, clamp=True)),
         tooltip=tooltips,
     ).interactive()
 
@@ -109,8 +109,8 @@ def staying_power(repo=None, start=None, end=None, df=None):
 def largest_contributors(repo=None, start=None, end=None, df=None):
     alt.data_transformers.disable_max_rows()
     chart = alt.Chart(df, height=600, width=600).mark_point().encode(
-        x=alt.X('day', scale=alt.Scale(zero=True, clamp=True)),
-        y=alt.Y("lines_changed", scale=alt.Scale(zero=True, clamp=True)), #  domain=(0,2000), clamp=True)),
+        x=alt.X('day', scale=alt.Scale(zero=False, clamp=True)),
+        y=alt.Y("lines_changed", scale=alt.Scale(zero=False, clamp=True)), #  domain=(0,2000), clamp=True)),
         color='author:N',
         # size='commit_count:N',
         tooltip = ['day', 'date', 'commit_total', 'lines_changed', 'author' ],
