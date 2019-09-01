@@ -101,7 +101,7 @@ class RepoProcessor:
         if repo.last_pulled is None:
             return True
 
-        today = datetime.datetime.now(tz=timezone.utc)
+        today = datetime.datetime.now()
         timediff = (today - repo.last_pulled).total_seconds() / 60.0
         return (timediff > settings.PULL_THRESHOLD)
 
