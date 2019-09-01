@@ -24,7 +24,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from django_tables2 import RequestConfig
 from rest_framework import viewsets
 from django.contrib.auth.models import User, Group
-from source_optics.models import Repository, Organization, Credential, Commit, Author, Statistic
+from source_optics.models import Repository, Organization, Credential, Commit, Author, Statistic, File
 from source_optics.serializers import (AuthorSerializer, CommitSerializer,
                                        CredentialSerializer, GroupSerializer,
                                        OrganizationSerializer, RepositorySerializer,
@@ -105,6 +105,111 @@ class StatisticViewSet(viewsets.ReadOnlyModelViewSet):
 # END REST API
 # ======
 
+# FIXME: move these into another file, like 'tables.py'
+
+def get_author_table(repo, start=None, end=None, interval=None, limit=None):
+
+    # this drives the author tables, both ranged and non-ranged, accessed off the main repo list.
+
+
+    # FIXME: we don't really use the value of interval, we just check if it's not LF (lifetime).
+    # so it really should be a boolean parameter instead
+
+    # FIXME: right now limit is not doing anything, we would want to call order_by commit_total
+    # for the non-aggregate query, and sort by commit_total on the aggregate one.
+
+    results = []
+
+    if interval != 'LF':
+        # FIXME: this should be a method on Author
+        authors = Commit.objects.filter(
+            commit_date__range=(start, end),
+            repo=repo
+        ).distinct('author').values_list('author', flat=True)
+    else:
+        authors = Commit.objects.filter(
+            repo=repo
+        ).distinct('author').values_list('author', flat=True)
+
+    print("authors", authors)
+    print("COUNT=%s" % authors.count())
+
+    for author in authors:
+        if interval == 'LF':
+            # we don't use aggregate
+            # FIXME: this should be a function on the statistic object
+            stats = Statistic.objects.filter(
+                author=author,
+                interval='LF',
+                repo=repo
+            )
+            if stats.count():
+                # this IF is just in case there's an author row and we didn't do a full scan
+                # with the new code yet
+                stat = stats.first()
+
+                stat2 = dict(
+                    author=stat.author.email,
+                    days_active=stat.days_active,
+                    commit_total=stat.commit_total,
+                    average_commit_size=stat.average_commit_size,
+                    lines_changed = stat.lines_changed,
+                    lines_added = stat.lines_added,
+                    lines_removed = stat.lines_removed,
+                    longevity = stat.longevity,
+                    earliest_commit_date = str(stat.earliest_commit_date),
+                    latest_commit_date = str(stat.latest_commit_date),
+                    days_before_joined = stat.days_before_joined,
+                    days_since_seen = stat.days_since_seen
+
+                )
+                # FIXME: this should be a method on Author
+                stat2['files_changed'] = File.objects.select_related('file_changes', 'commit').filter(
+                    repo=repo,
+                    file_changes__commit__author=author,
+                ).distinct('path').count()
+                results.append(stat2)
+
+
+        else:
+            # FIXME: move into functions on the statistic object
+            author = Author.objects.get(pk=author)
+            stats = Statistic.objects.select_related('author').filter(
+                repo = repo,
+                author = author,
+                start_date__range = (start, end),
+                interval = 'DY'
+            )
+            stat2 = stats.aggregate(
+                days_active=Sum('days_active'),
+                commit_total=Sum('commit_total'),
+                lines_changed=Sum('lines_changed'),
+                lines_added=Sum('lines_added'),
+                lines_removed=Sum('lines_removed')
+            )
+            stat2['author'] = author.email
+
+            # FIXME: extra queries are going to be pretty slow for a large number of authors, we may want to only
+            # include it when the limit is low.
+            stat2['files_changed'] = File.objects.select_related('file_changes', 'commit').filter(
+                repo=repo,
+                file_changes__commit__author=author,
+                file_changes__commit__commit_date__range=(start, end)
+            ).distinct('path').count()
+
+            # we had to use aggregate
+            # FIXME: as written elsewhere, this should be a function on statistic that takes a stat or a dict
+            if stat2['lines_changed']:
+                stat2['average_commit_size'] = int(float(stat2['lines_changed']) / float(stat2['commit_total']))
+            else:
+                stat2['average_commit_size'] = None
+
+                # FIXME: we should add files_changed to these after all of this is validated
+                # it should be quite useful in author graphs but also the main repo list.
+            results.append(stat2)
+    return results
+
+
 def get_repo_table(repos, start, end):
 
     results = []
@@ -155,15 +260,20 @@ def _get_scope(request, org=None, repos=None, repo=None, start=None, end=None, i
     if interval is None:
         interval='WK'
 
-    if end is not None:
+    if end == '_':
+        end = None
+    elif end is not None:
         end = datetime.datetime.strptime(end, "%Y-%m-%d")
     else:
         end = datetime.datetime.now()
 
-    if start is None:
+    if start == '_':
+        start = None
+    elif start is None:
+        # FIXME: flip this if condition so it looks like the above method
         start = end - datetime.timedelta(days=14)
     else:
-        start =datetime.datetime.strptime(start, "%Y-%m-%d")
+        start = datetime.datetime.strptime(start, "%Y-%m-%d")
 
     if org and org != '_':
         org = Organization.objects.get(pk=int(org))
@@ -187,11 +297,17 @@ def _get_scope(request, org=None, repos=None, repo=None, start=None, end=None, i
         repos = repos.all(),
         start = start,
         end   = end,
-        start_str = start.strftime("%Y-%m-%d"),
-        end_str   = end.strftime("%Y-%m-%d"),
+
         repo = repo,
         intv = interval
     )
+
+    if start and end:
+        context['start_str'] = start.strftime("%Y-%m-%d")
+        context['end_str'] = end.strftime("%Y-%m-%d")
+    else:
+        context['start_str'] = None
+        context['end_str'] = None
 
     if repo_table:
         context['repo_table'] = get_repo_table(repos, start, end)
@@ -240,10 +356,9 @@ def graph_staying_power(request, org=None, repo=None, start=None, end=None):
     return _render_graph(request, org=org, repo=repo, start=start, end=end, interval='LF', by_author=True,
         data_method='stat_series', graph_method='staying_power')
 
-
 def report_authors(request, org=None, repo=None, start=None, end=None, intv=None, limit=None):
-    (scope, repo, start, end) = _get_scope(request, org=org, repo=repo, start=start, end=end)
-    data = dataframes.author_table(repo, start=start, end=end, interval=intv, limit=limit)
+    (scope, repo, start, end) = _get_scope(request, org=org, repo=repo, start=start, end=end, interval=intv)
+    data = get_author_table(repo, start=start, end=end, interval=intv, limit=limit)
     scope['author_json'] = json.dumps(data)
     return render(request, 'authors.html', context=scope)
 

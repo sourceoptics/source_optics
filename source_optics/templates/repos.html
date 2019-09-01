@@ -11,11 +11,11 @@
     }
 
     function authorsRangedCell(params) {
-        return "<a href='/org/{{ org.pk }}/repo/" + params.value + "/start/{{ start_str }}/end/{{ end_str }}/intv/{{ intv }}/report/authors'>go</a>";
+        return "<a href='/org/{{ org.pk }}/repo/" + params.value + "/start/{{ start_str }}/end/{{ end_str }}/intv/{{ intv }}/limit/0/report/authors'>go</a>";
     }
 
     function authorsLifetimeCell(params) {
-        return "<a href='/org/{{ org.pk }}/repo/" + params.value + "/start/_/end/_/intv/LF/report/authors'>go</a>";
+        return "<a href='/org/{{ org.pk }}/repo/" + params.value + "/start/_/end/_/intv/LF/limit/0/report/authors'>go</a>";
     }
 
     var columnDefs = [
