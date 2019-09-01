@@ -119,24 +119,14 @@ class RepoProcessor:
     @classmethod
     def finalize_commit_scan_info(cls, repo, scan_time_start):
          scan_time_total = time.clock() - scan_time_start
-         print("scanning complete. time: " + str(repo) + ": " + str(scan_time_total) + "s")
          repo.force_next_pull = False
          repo.save()
 
     @classmethod
     def compute_repo_aggregrate_stats(cls, repo):
-
          # Generate the statistics for the repository
          print("aggregating stats for " + str(repo))
-         stat_time_start = time.clock()
-
-
          Rollup.rollup_repo(repo)
-
-
-         stat_time_total = time.clock() - stat_time_start
-         print("aggregation complete. time: " + str(repo) + ": " + str(stat_time_total) + "s")
-
 
     @classmethod
     def checkout_and_read_commit_logs(cls, repo, work_dir):
