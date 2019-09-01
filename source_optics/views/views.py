@@ -112,16 +112,30 @@ def get_repo_table(repos, start, end):
         stat = Statistic.objects.order_by('repo__name').select_related('repository').filter(
             repo=repo,
             interval='DY',
-            start_date__range=(start,end)
+            start_date__range=(start,end),
+            author__isnull=True,
         ).aggregate(
             lines_changed=Sum('lines_changed'),
             lines_added=Sum('lines_added'),
             lines_removed=Sum('lines_removed'),
             author_total=Sum('author_total'),
-            commit_total=Sum('commit_total')
+            commit_total=Sum('commit_total'),
+            days_active=Sum('days_active')
         )
         stat['name'] = repo.name
-        stat['details'] = repo.pk
+        # FIXME: this is calculated in a few places and should be a method that takes a statistic object or a dict
+        if stat['commit_total']:
+            # prevent division by zero when the repo has not yet been scanned
+            stat['average_commit_size'] = int(float(stat['lines_changed']) / float(stat['commit_total']))
+        else:
+            stat['average_commit_size'] = None
+        # FIXME: this should be a method somewhere, also can we use with a Subquery to make this more efficient?
+        author_ids = Commit.objects.filter(repo=repo, author__isnull=False, commit_date__range=(start,end)).values_list('author', flat=True).distinct('author')
+        stat['author_total'] = author_ids.count()
+
+        # providing pk's for link columns in the repo chart
+        for x in [ 'details1', 'details2', 'details3']:
+            stat[x] = repo.pk
 
         results.append(stat)
 
@@ -226,14 +240,12 @@ def graph_staying_power(request, org=None, repo=None, start=None, end=None):
     return _render_graph(request, org=org, repo=repo, start=start, end=end, interval='LF', by_author=True,
         data_method='stat_series', graph_method='staying_power')
 
-def report_largest_contributors(request, org=None, repo=None, start=None, end=None):
-    (scope, repo, start, end) = _get_scope(request, org=org, repo=repo, start=start, end=end)
 
-    # FIXME: TODO: may want to take the limit as a parameter to the URL
-    data = dataframes.stat_series(repo, start=start, end=end, by_author=True, interval='DY', want_dataframe=False)
+def report_authors(request, org=None, repo=None, start=None, end=None, intv=None, limit=None):
+    (scope, repo, start, end) = _get_scope(request, org=org, repo=repo, start=start, end=end)
+    data = dataframes.author_table(repo, start=start, end=end, interval=intv, limit=limit)
     scope['author_json'] = json.dumps(data)
     return render(request, 'authors.html', context=scope)
-
 
 def repos(request, org=None, repos=None, start=None, end=None, intv=None):
     (scope, repo, start, end) = _get_scope(request, org=org, repos=repos, start=start, end=end, repo_table=True, interval=intv)

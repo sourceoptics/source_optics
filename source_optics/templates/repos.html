@@ -5,37 +5,41 @@
 <div id="myGrid" class="ag-theme-balham"></div>
 
   <script type="text/javascript" charset="utf-8">
-    // specify the columns
 
-    function detailsCellRendererFunc(params) {
-        console.log(params)
+    function chartsCell(params) {
         return "<a href='/org/{{ org.pk }}/repo/" + params.value + "/start/{{ start_str }}/end/{{ end_str }}/intv/{{ intv }}'>go</a>";
     }
 
-    // FIXME: TODO: once fixed, we can re-add author total here, as well as the newly proposed days_active
+    function authorsRangedCell(params) {
+        return "<a href='/org/{{ org.pk }}/repo/" + params.value + "/start/{{ start_str }}/end/{{ end_str }}/intv/{{ intv }}/report/authors'>go</a>";
+    }
+
+    function authorsLifetimeCell(params) {
+        return "<a href='/org/{{ org.pk }}/repo/" + params.value + "/start/_/end/_/intv/LF/report/authors'>go</a>";
+    }
 
     var columnDefs = [
-        {headerName: "Name",          field: "name", sortable: true, filter: true },
-        {headerName: "Details",       field: "details", cellRenderer: detailsCellRendererFunc },
-        {headerName: "Lines Changed", field: "lines_changed", sortable: true, filter: true },
-        {headerName: "Lines Added",   field: "lines_added", sortable: true, filter: true },
-        {headerName: "Lines Removed", field: "lines_removed", sortable: true, filter: true },
-        {headerName: "Commit Total",  field: "commit_total", sortable: true, filter: true }
+        {headerName: "Name",                field: "name", sortable: true, filter: true },
+        {headerName: "Charts",              field: "details1", cellRenderer: chartsCell },
+        {headerName: "Authors (Ranged)",    field: "details2", cellRenderer: authorsRangedCell },
+        {headerName: "Authors (Lifetime)",  field: "details3", cellRenderer: authorsLifetimeCell },
+        {headerName: "Author Total",        field: "author_total", sortable: true, filter: true },
+        {headerName: "Lines Changed",       field: "lines_changed", sortable: true, filter: true },
+        {headerName: "Lines Added",         field: "lines_added", sortable: true, filter: true },
+        {headerName: "Lines Removed",       field: "lines_removed", sortable: true, filter: true },
+        {headerName: "Commit Total",        field: "commit_total", sortable: true, filter: true },
+        {headerName: "Days Active",         field: "days_active", sortable: true, filter: true },
+        {headerName: "Avg Commit Size",     field: "average_commit_size", sortable: true, filter: true },
     ];
 
-    // specify the data
     var rowData = {{ repo_table | safe }};
 
-    // let the grid know which columns and what data to use
     var gridOptions = {
       columnDefs: columnDefs,
       rowData: rowData
     };
 
-  // lookup the container we want the Grid to use
   var eGridDiv = document.querySelector('#myGrid');
-
-  // create the grid passing in the div to use together with the columns & data we want to use
   thisGrid = new agGrid.Grid(eGridDiv, gridOptions);
 
   </script>

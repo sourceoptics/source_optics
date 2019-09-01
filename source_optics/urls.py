@@ -31,7 +31,10 @@ router.register(r'commit', views.CommitViewSet)
 
 urlpatterns = [
 
-    # UI
+    # FIXME: move the app to use the django URL reversing function before changing URL structure.
+    # FIXME: UI - these should all be changed to use query strings, work just needs to be done later.
+    # FIXME: the org parameter is unneccessary when repo is specified.
+
     path('', views.orgs, name='orgs'),
     path('org/<org>/repos/<repos>/start/<start>/end/<end>/intv/<intv>', views.repos, name='repos'),
     path('org/<org>/repo/<repo>/start/<start>/end/<end>/intv/<intv>', views.repo, name='repo'),
@@ -44,14 +47,11 @@ urlpatterns = [
     path('org/<org>/repo/<repo>/start/<start>/end/<end>/graph/key_retention', views.graph_key_retention, name='graph_key_retention'),
     path('org/<org>/repo/<repo>/start/<start>/end/<end>/graph/early_retention', views.graph_early_retention, name='graph_early_retention'),
     path('org/<org>/repo/<repo>/start/<start>/end/<end>/graph/staying_power', views.graph_staying_power, name='graph_staying_power'),
-    path('org/<org>/repo/<repo>/start/<start>/end/<end>/intv/<intv>/report/largest_contributors', views.report_largest_contributors, name='report_largest_contributors'),
+    path('org/<org>/repo/<repo>/start/<start>/end/<end>/intv/<intv>/limit/<limit>/report/authors', views.report_authors, name='report_authors'),
 
     # REST API
     path('api/', include(api_router.urls)),
     path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
-
-    # OBSOLETE
-    # path('report_api/', views.generate_graph),
 
     # Webhooks
     path('webhook', views.webhook_post, name='webhook_post'),
