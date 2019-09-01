@@ -45,6 +45,13 @@ PARSER_RE = re.compile(PARSER_RE_STRING, re.VERBOSE)
 FILES_HACK_REPO = None
 FILES_HACK = dict()
 
+# Regex for handling arbitrary file path renames;
+# `(/)?`: First captured group that matches `/` optionally
+# `(?:\{[^}=]+=>)`: non-captured group to match until `=>`
+# `([^}]+)`: matches the portion upto next `}` (`\}`)
+# In the replacement, only the captured groups are used.
+FILE_PATH_RENAME_RE = re.compile(r'(/)?(?:\{[^}=]+=>)([^}]+)\}')
+
 
 class Commits:
 
@@ -234,25 +241,11 @@ class Commits:
     @classmethod
     def repair_move_path(cls, path):
 
-        # FIXME: this doesn't work because more than just one path segment can appear here
-        # like /{/foo/bar=>baz/blorp}/ so this code still needs upgrades!
-
         # handle details about moves in git log by fixing path elements like /{org=>com}/
         # to just log the file in the final path. This will possibly give users credit for
         # aspects of a move but this something we can explore later. Not sure if it does - MPD.
-        if "{" in path:
-            # DO STUFF
-            tokens = os.path.split(path)
-            results = []
-            for token in tokens:
-                if token.startswith("{") and token.endswith("}") and "=>" in token:
-                    correct = token[1:-1].split("=>")[-1]
-                    results.append(correct)
-                else:
-                    results.append(token)
 
-            return os.path.sep.join(results)
-        return path
+        return FILE_PATH_RENAME_RE.sub(r'\1\2', path)
 
     @classmethod
     def should_process_path(cls, repo, path):
