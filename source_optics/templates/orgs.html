@@ -1,13 +1,11 @@
 {% include 'header.html' %}
 
-<h1>SourceOptics: Organizations</h1>
+<h1>Organizations</h1>
 <table>
     {% for org in orgs %}
-    <tr>
-        <td>
-            <a href="/org/{{ org.pk }}/repos/_/start/{{ start_str }}/end/{{ end_str }}/intv/{{ intv }}">{{ org.name }}</a>
-        </td>
-    </tr>
+    <ul>
+        <li><a href="/org/{{ org.pk }}/repos/_/start/{{ start_str }}/end/{{ end_str }}/intv/{{ intv }}">{{ org.name }}</a></li>
+    </ul>
     {% endfor %}
 </table>
 
