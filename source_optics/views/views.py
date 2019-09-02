@@ -145,27 +145,7 @@ def get_author_table(repo, start=None, end=None, interval=None, limit=None):
                 # this IF is just in case there's an author row and we didn't do a full scan
                 # with the new code yet
                 stat = stats.first()
-
-                stat2 = dict(
-                    author=stat.author.email,
-                    days_active=stat.days_active,
-                    commit_total=stat.commit_total,
-                    average_commit_size=stat.average_commit_size,
-                    lines_changed = stat.lines_changed,
-                    lines_added = stat.lines_added,
-                    lines_removed = stat.lines_removed,
-                    longevity = stat.longevity,
-                    earliest_commit_date = str(stat.earliest_commit_date),
-                    latest_commit_date = str(stat.latest_commit_date),
-                    days_before_joined = stat.days_before_joined,
-                    days_since_seen = stat.days_since_seen
-
-                )
-                # FIXME: this should be a method on Author
-                stat2['files_changed'] = File.objects.select_related('file_changes', 'commit').filter(
-                    repo=repo,
-                    file_changes__commit__author=author,
-                ).distinct('path').count()
+                stat2 = stat.to_author_dict(repo, author)
                 results.append(stat2)
 
 

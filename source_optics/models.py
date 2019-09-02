@@ -495,5 +495,27 @@ class Statistic(models.Model):
         self.days_active = other.days_active
 
 
+    def to_dict(self):
+        return dict(
+            author=self.author.email,
+            days_active=self.days_active,
+            commit_total=self.commit_total,
+            average_commit_size=self.average_commit_size,
+            lines_changed=self.lines_changed,
+            lines_added=self.lines_added,
+            lines_removed=self.lines_removed,
+            longevity=self.longevity,
+            earliest_commit_date=str(self.earliest_commit_date),
+            latest_commit_date=str(self.latest_commit_date),
+            days_before_joined=self.days_before_joined,
+            days_since_seen=self.days_since_seen
+        )
 
-
+    def to_author_dict(self, repo, author):
+        stat2 = self.to_dict()
+        # FIXME: this should be a method on Author
+        stat2['files_changed'] = File.objects.select_related('file_changes', 'commit').filter(
+            repo=repo,
+            file_changes__commit__author=author,
+        ).distinct('path').count()
+        return stat2
