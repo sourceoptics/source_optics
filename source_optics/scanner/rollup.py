@@ -250,6 +250,31 @@ class Rollup:
                 )
 
     @classmethod
+    def start_and_end_dates_for_interval(cls, repo=None, author=None, start=None, interval=None):
+        assert (interval == 'LF' or start is not None)
+        assert interval is not None
+        absolute_first_commit_date = repo.earliest_commit_date()
+        absolute_last_commit_date = repo.latest_commit_date()
+        assert absolute_first_commit_date is not None
+        assert absolute_last_commit_date is not None
+        if interval != LIFETIME:
+            start_day = start.replace(tzinfo=None)
+            end_date = cls.get_end_day(start, interval)
+        else:
+            # lifetime...
+            if author:
+                start_day = repo.earliest_commit_date(author=author)
+                end_date = repo.latest_commit_date(author=author)
+            else:
+                start_day = repo.earliest_commit_date()
+                end_date = repo.latest_commit_date()
+            if start_day is None or end_date is None:
+                # this MAY happen if the author has no commits, but that shouldn't be likely
+                # we'll handle the issue just to be paranoid about it though.
+                return (None, None)
+        return (start, end_date)
+
+    @classmethod
     def compute_interval_rollup(cls, repo=None, author=None, interval=None, start_day=None, total_instances=None):
         """
         Use the daily team stats to generate weekly or monthly rollup stats.
@@ -264,25 +289,10 @@ class Rollup:
         assert repo is not None
         assert interval in [ 'WK', 'MN', 'LF']
 
-        # FIXME: this looks like it should be a method...
-        absolute_first_commit_date = repo.earliest_commit_date()
-        absolute_last_commit_date = repo.latest_commit_date()
-        assert absolute_first_commit_date is not None
-        assert absolute_last_commit_date is not None
-        if interval != LIFETIME:
-            start_day = start_day.replace(tzinfo=None)
-            end_date = cls.get_end_day(start_day, interval)
-        else:
-            # lifetime...
-            if author:
-                start_day = repo.earliest_commit_date(author=author)
-                end_date = repo.latest_commit_date(author=author)
-            else:
-                start_day = repo.earliest_commit_date()
-                end_date = repo.latest_commit_date()
-            if start_day is None or end_date is None:
-                print("**** GLITCH: Author has no commits? ", author)
-                return
+        (start_day, end_date) = cls.start_and_end_dates_for_interval(repo=repo, author=author, start=start_day, interval=interval)
+        if start_day is None:
+            print("**** GLITCH: Author has no commits? ", author)
+            return
 
         days = cls._queryset_for_interval_rollup(repo=repo, author=author, interval=interval, start_day=start_day, end_date=end_date)
 
