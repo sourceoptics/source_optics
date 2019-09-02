@@ -314,20 +314,7 @@ class Rollup:
             days_active=Sum("days_active"),
         )
 
-        # FIXME: move into a function on the FileChange object
-        changes=None
-        if author:
-            changes = File.objects.select_related('file_changes','commit').filter(
-                repo=repo,
-                file_changes__commit__author=author,
-                file_changes__commit__commit_date__range=(start_day, end_date)
-            ).distinct('path')
-        else:
-            changes = File.objects.select_related('file_changes','commit').filter(
-                repo=repo,
-                file_changes__commit__commit_date__range=(start_day, end_date)
-            ).distinct('path')
-        files_changed = changes.count()
+        files_changed = FileChange.change_count(repo=repo, start=start_day, end=end_date, author=author)
 
         avg_commit_size = int(float(data['lines_changed']) / float(data['commit_total']))
 

@@ -248,6 +248,24 @@ class FileChange(models.Model):
             BrinIndex(fields=[ 'file', 'commit' ], name='file_change1')
         ]
 
+    @classmethod
+    def change_count(cls, repo, author=None, start=None, end=None):
+        assert start is not None
+        assert end is not None
+        changes=None
+        if author:
+            changes = File.objects.select_related('file_changes','commit').filter(
+                repo=repo,
+                file_changes__commit__author=author,
+                file_changes__commit__commit_date__range=(start, end)
+            ).distinct('path')
+        else:
+            changes = File.objects.select_related('file_changes','commit').filter(
+                repo=repo,
+                file_changes__commit__commit_date__range=(start, end)
+            ).distinct('path')
+        return changes.count()
+
     def __str__(self):
         return f"FileChange: {self.file.path} (c:{commit.sha})"
 
