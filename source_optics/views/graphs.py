@@ -14,12 +14,14 @@
 #
 # graphs.py - generate altair graphs as HTML snippets given panda dataframe inputs (see dataframes.py)
 
-import altair as alt
-import pandas as pd
-import numpy as np
-from django import template
-import random, string, json
+import json
+import random
+import string
 
+import altair as alt
+import numpy as np
+import pandas as pd
+from django import template
 
 # template used by render_chart below
 TEMPLATE_CHART = """

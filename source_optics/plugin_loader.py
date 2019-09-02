@@ -20,6 +20,7 @@
 #  --------------------------------------------------------------------------
 
 from importlib import import_module
+
 from django.conf import settings
 
 # in the future not all plugin definitions may required and a partially empty plugins
@@ -68,5 +69,3 @@ class PluginLoader(object):
 
     def get_report_api_plugins(self):
         return self.generic_load('report_api')
-
-

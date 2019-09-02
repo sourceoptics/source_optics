@@ -15,25 +15,29 @@
 
 # views.py - code immediately behind all of the web routes.  Renders pages, graphs, and charts.
 
+import datetime
+import json
 import traceback
 from urllib.parse import parse_qs
+
+from django.contrib.auth.models import Group, User
 from django.http import HttpResponse, HttpResponseServerError
-from django.shortcuts import render, redirect
+from django.shortcuts import redirect, render
+from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets
-from django.contrib.auth.models import User, Group
-from source_optics.models import Repository, Organization, Credential, Commit, Author, Statistic, File
+
+from source_optics.models import (Author, Commit, Credential, File,
+                                  Organization, Repository, Statistic)
 from source_optics.serializers import (AuthorSerializer, CommitSerializer,
                                        CredentialSerializer, GroupSerializer,
-                                       OrganizationSerializer, RepositorySerializer,
+                                       OrganizationSerializer,
+                                       RepositorySerializer,
                                        StatisticSerializer, UserSerializer)
 from source_optics.views.webhooks import Webhooks
-import datetime
-from . import dataframes
-from . import graphs
-import json
-from django.utils import timezone
+
+from . import dataframes, graphs
 
 #=====
 # BEGIN REST API
@@ -352,4 +356,3 @@ def webhook_post(request, *args, **kwargs):
         return HttpResponseServerError("webhook processing error")
 
     return HttpResponse("ok", content_type="text/plain")
-

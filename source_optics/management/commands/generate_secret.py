@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import os
+
 from cryptography import fernet
 from django.conf import settings
 from django.core.management.base import BaseCommand

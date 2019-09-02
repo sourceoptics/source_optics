@@ -17,9 +17,11 @@
 # functions and/or multiple files.
 
 import calendar
-from source_optics.models import Statistic, Commit, FileChange, Author, File
 import datetime
+
 from django.utils import timezone
+
+from source_optics.models import Author, Commit, File, FileChange, Statistic
 
 CURRENT_TZ = timezone.get_current_timezone()
 
@@ -460,5 +462,3 @@ class Rollup:
         cls.rollup_team_stats(repo)
         cls.rollup_author_stats(repo)
         cls.finalize_scan(repo)
-
-

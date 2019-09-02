@@ -21,20 +21,21 @@
 import datetime
 import fcntl
 import os
+import shutil
 import sys
 import time
-import shutil
 
 from django.conf import settings
-from django.utils import timezone
 from django.db import transaction
+from django.utils import timezone
 
 from source_optics.scanner.rollup import Rollup
 
-from ..models import Repository, Commit, Statistic
+from ..models import Commit, Repository, Statistic
 from .checkout import Checkout
 from .commits import Commits
 from .ssh_agent import SshAgentManager
+
 
 #
 # Loop that checks for repositories that have been added and ready to scan
@@ -189,12 +190,3 @@ class RepoProcessor:
         cls.compute_repo_aggregrate_stats(repo)
 
         return True
-
-
-
-
-
-
-
-
-

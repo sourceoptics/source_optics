@@ -15,16 +15,18 @@
 
 import re
 
-# FIXME: move each model to a seperate file (not urgent)
-
 from django.conf import settings
 from django.contrib.auth.models import User
+from django.contrib.postgres.indexes import BrinIndex
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.db.models import Max, Sum
 
 from source_optics.scanner.encrypt import SecretsManager
-from django.contrib.postgres.indexes import BrinIndex
-from django.db.models import Sum, Max
+
+# FIXME: move each model to a seperate file (not urgent)
+
+
 
 repo_validator = re.compile(r'[^a-zA-Z0-9._]')
 
@@ -577,4 +579,3 @@ class Statistic(models.Model):
             file_changes__commit__author=author,
         ).distinct('path').count()
         return stat2
-

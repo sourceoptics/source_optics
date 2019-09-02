@@ -10,9 +10,9 @@ import io
 import os
 import re
 import shutil
+import signal
 import subprocess
 import tempfile
-import signal
 
 TIMEOUT = -1  # name of timeout command
 

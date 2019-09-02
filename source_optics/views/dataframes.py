@@ -16,8 +16,10 @@
 # dataframes.py - code behind getting meaningful pandas dataframes (largely for graphing) from Statistic model querysets
 
 import pandas as pd
-from .. models import Statistic, Commit, Author, Repository
 from django.db.models import Count, Sum
+
+from ..models import Author, Commit, Repository, Statistic
+
 
 def get_interval(start, end):
     """
@@ -160,6 +162,3 @@ def stat_series(repo, start=None, end=None, fields=None, by_author=False, interv
 
     totals = _queryset_for_scatter(repo, start=start, end=end, by_author=by_author, interval=interval)
     return _scatter_queryset_to_dataframe(repo, totals, fields)
-
-
-

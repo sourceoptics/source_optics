@@ -78,4 +78,3 @@ class ReportParameters(serializers.Serializer):
     organization_id = serializers.IntegerField(default=None)
     plugin = serializers.CharField(max_length=512, default='repo_summary')
     arguments = serializers.JSONField(default=None)
-

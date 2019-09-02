@@ -13,13 +13,15 @@
 # limitations under the License.
 #
 
-import os
-from django.utils.dateparse import parse_datetime
 import fnmatch
-from ..models import File, FileChange, Commit, Author
-from . import commands
+import os
 import re
+
 from django.conf import settings
+from django.utils.dateparse import parse_datetime
+
+from ..models import Author, Commit, File, FileChange
+from . import commands
 
 # we use git --log with a special one-line format string to capture certain fields
 # we regex across those fields with a custom delimiter to make it easy to find them
