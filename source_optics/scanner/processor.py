@@ -18,7 +18,6 @@
 
 # FIXME: you should be able to choose to run scans, aggregartions, or both, or pick a particular repo or list of repos by name
 
-import datetime
 import fcntl
 import os
 import shutil
@@ -26,7 +25,6 @@ import sys
 import time
 
 from django.conf import settings
-from django.db import transaction
 from django.utils import timezone
 
 from source_optics.scanner.rollup import Rollup
@@ -126,7 +124,6 @@ class RepoProcessor:
 
     @classmethod
     def finalize_commit_scan_info(cls, repo, scan_time_start):
-         scan_time_total = time.clock() - scan_time_start
          repo.force_next_pull = False
          repo.save()
 

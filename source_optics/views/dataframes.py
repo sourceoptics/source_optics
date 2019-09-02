@@ -16,9 +16,9 @@
 # dataframes.py - code behind getting meaningful pandas dataframes (largely for graphing) from Statistic model querysets
 
 import pandas as pd
-from django.db.models import Count, Sum
+from django.db.models import Sum
 
-from ..models import Author, Commit, Repository, Statistic
+from ..models import Statistic
 
 
 def get_interval(start, end):
@@ -42,7 +42,7 @@ def top_authors(repo, start, end, attribute='commit_total', limit=10):
 
     interval = get_interval(start, end)
 
-    authors = []
+    # authors = []
     filter_set = Statistic.objects.filter(
         interval=interval,
         author__isnull=False,

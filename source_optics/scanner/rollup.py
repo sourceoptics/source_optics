@@ -21,7 +21,7 @@ import datetime
 
 from django.utils import timezone
 
-from source_optics.models import Author, Commit, File, FileChange, Statistic
+from source_optics.models import Author, Commit, FileChange, Statistic
 
 CURRENT_TZ = timezone.get_current_timezone()
 

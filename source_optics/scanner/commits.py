@@ -17,7 +17,6 @@ import fnmatch
 import os
 import re
 
-from django.conf import settings
 from django.utils.dateparse import parse_datetime
 
 from ..models import Author, Commit, File, FileChange

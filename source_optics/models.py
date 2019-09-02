@@ -20,7 +20,7 @@ from django.contrib.auth.models import User
 from django.contrib.postgres.indexes import BrinIndex
 from django.core.exceptions import ValidationError
 from django.db import models
-from django.db.models import Max, Sum
+from django.db.models import Sum
 
 from source_optics.scanner.encrypt import SecretsManager
 
@@ -361,7 +361,7 @@ class FileChange(models.Model):
         return qs.count()
 
     def __str__(self):
-        return f"FileChange: {self.file.path} (c:{commit.sha})"
+        return f"FileChange: {self.file.path} {self.file.commit.sha})"
 
 
 # if author = null, entry represents total stats for interval

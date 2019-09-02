@@ -115,8 +115,6 @@ def execute_command(repo, command, input_text=None, env=None, log=True, timeout=
                 # may want some options to terminate early later
                 process.wait()
                 os.killpg(os.getpgid(process.pid), signal.SIGTERM)
-                if collect:
-                    return out
                 return None
 
     process.wait()

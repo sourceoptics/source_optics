@@ -28,7 +28,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets
 
-from source_optics.models import (Author, Commit, Credential, File,
+from source_optics.models import (Author, Commit, Credential,
                                   Organization, Repository, Statistic)
 from source_optics.serializers import (AuthorSerializer, CommitSerializer,
                                        CredentialSerializer, GroupSerializer,
@@ -202,10 +202,10 @@ def _get_scope(request, org=None, repos=None, repo=None, start=None, end=None, i
 
     # FIXME: this should probably be a method on Repository
     if repos and org and repos != '_':
-        repos = repos_filter.split(',')
+        repos = repos.split(',')
         repos = Repository.objects.select_related('organization').filter(organization=org, repos__name__in=repos)
     elif repos and repos != '_':
-        repos = Repository.objects.select_related('organization').filter(repos__name__in=repos_filter)
+        repos = Repository.objects.select_related('organization').filter(repos__name__in=repos)
     elif org:
         repos = Repository.objects.select_related('organization').filter(organization=org)
     else:
