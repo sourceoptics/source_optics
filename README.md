@@ -136,6 +136,3 @@ A few small guidelines to keep things easy to manage.
 4) Any addition of new database fields must also add a Django migration in the same pull request.
 
 Thank you!
-
-![https://twitter.com/sourceoptics](https://img.shields.io/twitter/follow/sourceoptics?style=social)
-
