@@ -13,17 +13,13 @@
 # limitations under the License.
 
 import os
-
 from cryptography import fernet
 from django.conf import settings
 from django.core.management.base import BaseCommand
 
-# FIXME: always create secret if it does not exist
-# FIXME: only create the org if there are no organizations
-
 
 class Command(BaseCommand):
-    help = 'Initializes DB and creates an admin account'
+    help = 'creates a symetric secret for database encryption'
 
     def handle(self, *args, **kwargs):
 

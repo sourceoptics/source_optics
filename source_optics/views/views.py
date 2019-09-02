@@ -1,5 +1,3 @@
-# contributor note: the django UI will be eventually replaced by a new dynamic frontend speaking to the REST API, do not add features
-
 # Copyright 2018 SourceOptics Project Contributors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,13 +13,14 @@
 # limitations under the License.
 #
 
+# views.py - code immediately behind all of the web routes.  Renders pages, graphs, and charts.
+
 import traceback
 from urllib.parse import parse_qs
 from django.http import HttpResponse, HttpResponseServerError
 from django.shortcuts import render, redirect
 from django.views.decorators.csrf import csrf_exempt
 from django_filters.rest_framework import DjangoFilterBackend
-from django_tables2 import RequestConfig
 from rest_framework import viewsets
 from django.contrib.auth.models import User, Group
 from source_optics.models import Repository, Organization, Credential, Commit, Author, Statistic, File
@@ -31,8 +30,6 @@ from source_optics.serializers import (AuthorSerializer, CommitSerializer,
                                        StatisticSerializer, UserSerializer)
 from source_optics.views.webhooks import Webhooks
 import datetime
-from django.db.models import Sum, Max, Value, IntegerField, F
-from django.db.models.expressions import Subquery, OuterRef
 from . import dataframes
 from . import graphs
 import json
@@ -40,6 +37,7 @@ from django.utils import timezone
 
 #=====
 # BEGIN REST API
+# FIXME: move this into a different file + make sure all fields are up to date
 
 class UserViewSet(viewsets.ReadOnlyModelViewSet):
     """
@@ -95,6 +93,8 @@ class AuthorViewSet(viewsets.ReadOnlyModelViewSet):
     filterset_fields = ('email', 'repos')
 
 
+# FIXME: all the current statistic fields aren't here, we should read this from the Statistic model
+# so we don't forget when adding new fields
 class StatisticViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Statistic.objects.all()
     serializer_class = StatisticSerializer
@@ -109,15 +109,11 @@ class StatisticViewSet(viewsets.ReadOnlyModelViewSet):
 # FIXME: move these into another file, like 'tables.py'
 
 def get_author_table(repo, start=None, end=None, interval=None, limit=None):
-
-    # this drives the author tables, both ranged and non-ranged, accessed off the main repo list.
-
-
-    # FIXME: we don't really use the value of interval, we just check if it's not LF (lifetime).
-    # so it really should be a boolean parameter instead
-
-    # FIXME: right now limit is not doing anything, we would want to call order_by commit_total
-    # for the non-aggregate query, and sort by commit_total on the aggregate one.
+    """
+    this drives the author tables, both ranged and non-ranged, accessed off the main repo list.
+    the interval 'LF' shows lifetime stats, but elsewhere we just do daily roundups, so this parameter
+    should really be a boolean.  The limit parameter is not yet used.
+    """
 
     results = []
 
@@ -147,6 +143,11 @@ def get_author_table(repo, start=None, end=None, interval=None, limit=None):
 
 def get_repo_table(repos, start, end):
 
+    """
+    this drives the list of all repos within an organization, showing the statistics for them within the selected
+    time range, along with navigation links.
+    """
+
     results = []
     for repo in repos:
         # FIXME: REFACTOR: most of this entire block should use a method on Statistic
@@ -155,18 +156,6 @@ def get_repo_table(repos, start, end):
         stat2 = Statistic.compute_interval_statistic(stats, interval='DY', repo=repo, author=None, start=start, end=end)
         stat2 = stat2.to_dict()
         stat2['name'] = repo.name
-
-        # this should already be done
-        # FIXME: this is calculated in a few places and should be a method that takes a statistic object or a dict
-        #if stat['commit_total']:
-        #    # prevent division by zero when the repo has not yet been scanned
-        #    stat['average_commit_size'] = int(float(stat['lines_changed']) / float(stat['commit_total']))
-        #else:
-        #    stat['average_commit_size'] = None
-        ## FIXME: this should be a method somewhere, also can we use with a Subquery to make this more efficient?
-        #author_ids = Commit.objects.filter(repo=repo, author__isnull=False, commit_date__range=(start,end)).values_list('author', flat=True).distinct('author')
-        #stat['author_total'] = author_ids.count()
-
         # providing pk's for link columns in the repo chart
         for x in [ 'details1', 'details2', 'details3']:
             stat2[x] = repo.pk
@@ -181,7 +170,7 @@ def get_repo_table(repos, start, end):
 def _get_scope(request, org=None, repos=None, repo=None, start=None, end=None, interval=None, repo_table=False):
 
     """
-    Get objects from the URL parameters
+    Get objects from the URL parameters.
     """
 
     orgs = Organization.objects.all()
@@ -199,7 +188,7 @@ def _get_scope(request, org=None, repos=None, repo=None, start=None, end=None, i
     if start == '_':
         start = None
     elif start is None:
-        # FIXME: flip this if condition so it looks like the above method
+        # FIXME: (minor) flip this if condition so it looks like the above method
         start = end - datetime.timedelta(days=14)
     else:
         start = datetime.datetime.strptime(start, "%Y-%m-%d")
@@ -207,6 +196,7 @@ def _get_scope(request, org=None, repos=None, repo=None, start=None, end=None, i
     if org and org != '_':
         org = Organization.objects.get(pk=int(org))
 
+    # FIXME: this should probably be a method on Repository
     if repos and org and repos != '_':
         repos = repos_filter.split(',')
         repos = Repository.objects.select_related('organization').filter(organization=org, repos__name__in=repos)
@@ -226,7 +216,6 @@ def _get_scope(request, org=None, repos=None, repo=None, start=None, end=None, i
         repos = repos.all(),
         start = start,
         end   = end,
-
         repo = repo,
         intv = interval
     )
@@ -244,58 +233,100 @@ def _get_scope(request, org=None, repos=None, repo=None, start=None, end=None, i
     return (context, repo, start, end)
 
 def _render_graph(request, org=None, repo=None, start=None, end=None, by_author=False, data_method=None, interval=None, graph_method=None):
+    """
+    a helper method used by all the Statistic-based graph rendering view functions.
+    """
     (scope, repo, start, end) = _get_scope(request, org=org, repo=repo, start=start, end=end)
     dataframe = getattr(dataframes, data_method)(repo=repo, start=start, by_author=by_author, end=end, interval=interval)
     scope['graph'] = getattr(graphs, graph_method)(repo=repo, start=start, end=end, df=dataframe)
     return render(request, 'graph.html', context=scope)
 
 def repo(request, org=None, repo=None, start=None, end=None, intv=None):
+    """
+    Generates the index page for a given repo.
+    The index page is mostly a collection of graphs, so perhaps it should be called repo_graphs.html and this method
+    should also be renamed.
+    """
     (scope, repo, start, end) = _get_scope(request, org=org, repo=repo, start=start, end=end, interval=intv)
     return render(request, 'repo.html', context=scope)
 
 def graph_volume(request, org=None, repo=None, start=None, end=None, intv=None):
+    """
+    generates a partial graph which is loaded in the repo graphs page. more comments in graphs.py
+    """
     return _render_graph(request, org=org, repo=repo, start=start, end=end, interval=intv,
         data_method='stat_series', graph_method='volume')
 
 def graph_frequency(request, org=None, repo=None, start=None, end=None, intv=None):
+    """
+    generates a partial graph which is loaded in the repo graphs page. more comments in graphs.py
+    """
     return _render_graph(request, org=org, repo=repo, start=start, end=end, interval=intv,
         data_method='stat_series', graph_method='frequency')
 
 def graph_participation(request, org=None, repo=None, start=None, end=None, intv=None):
+    """
+    generates a partial graph which is loaded in the repo graphs page. more comments in graphs.py
+    """
     return _render_graph(request, org=org, repo=repo, start=start, end=end, interval=intv,
         data_method='stat_series', graph_method='participation')
 
 def graph_largest_contributors(request, org=None, repo=None, start=None, end=None, intv=None):
+    """
+    generates a partial graph which is loaded in the repo graphs page. more comments in graphs.py
+    """
     return _render_graph(request, org=org, repo=repo, start=start, end=end, by_author=True, interval=intv,
         data_method='stat_series', graph_method='largest_contributors')
 
 def graph_granularity(request, org=None, repo=None, start=None, end=None, intv=None):
+    """
+    generates a partial graph which is loaded in the repo graphs page. more comments in graphs.py
+    """
     return _render_graph(request, org=org, repo=repo, start=start, end=end, interval=intv,
         data_method='stat_series', graph_method='granularity')
 
 def graph_key_retention(request, org=None, repo=None, start=None, end=None):
+    """
+    generates a partial graph which is loaded in the repo graphs page. more comments in graphs.py
+    """
     return _render_graph(request, org=org, repo=repo, start=start, end=end, interval='LF', by_author=True,
         data_method='stat_series', graph_method='key_retention')
 
 def graph_early_retention(request, org=None, repo=None, start=None, end=None):
+    """
+    generates a partial graph which is loaded in the repo graphs page. more comments in graphs.py
+    """
     return _render_graph(request, org=org, repo=repo, start=start, end=end, interval='LF', by_author=True,
         data_method='stat_series', graph_method='early_retention')
 
 def graph_staying_power(request, org=None, repo=None, start=None, end=None):
+    """
+    generates a partial graph which is loaded in the repo graphs page. more comments in graphs.py
+    """
     return _render_graph(request, org=org, repo=repo, start=start, end=end, interval='LF', by_author=True,
         data_method='stat_series', graph_method='staying_power')
 
 def report_authors(request, org=None, repo=None, start=None, end=None, intv=None, limit=None):
+    """
+    generates a partial graph which is loaded in the repo graphs page. more comments in graphs.py
+    """
     (scope, repo, start, end) = _get_scope(request, org=org, repo=repo, start=start, end=end, interval=intv)
     data = get_author_table(repo, start=start, end=end, interval=intv, limit=limit)
     scope['author_json'] = json.dumps(data)
     return render(request, 'authors.html', context=scope)
 
 def repos(request, org=None, repos=None, start=None, end=None, intv=None):
+    """
+    generates the list of all repos, with stats and navigation.
+    """
     (scope, repo, start, end) = _get_scope(request, org=org, repos=repos, start=start, end=end, repo_table=True, interval=intv)
     return render(request, 'repos.html', context=scope)
 
 def orgs(request):
+    """
+    the index page for the app, presently, lists all organizations.  This should be morphed to a generic dashboard
+    that also lists the orgs.
+    """
     (scope, repo, start, end) = _get_scope(request)
     return render(request, 'orgs.html', context=scope)
 
@@ -303,8 +334,8 @@ def orgs(request):
 @csrf_exempt
 def webhook_post(request, *args, **kwargs):
     """
-    Receive an incoming webhook and potentially trigger a build using
-    the code in webhooks.py
+    Receive an incoming webhook from something like GitHub and potentially flag a source code repo for a future scan,
+    using the code in webhooks.py
     """
 
     if request.method != 'POST':
@@ -318,7 +349,6 @@ def webhook_post(request, *args, **kwargs):
         Webhooks(request, token).handle()
     except Exception:
         traceback.print_exc()
-        # LOG.error("error processing webhook: %s" % str(e))
         return HttpResponseServerError("webhook processing error")
 
     return HttpResponse("ok", content_type="text/plain")

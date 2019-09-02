@@ -1,10 +1,7 @@
 import fnmatch
-
 from django.core.management.base import BaseCommand, CommandError
 from github import Github
-
 from ...models import Organization, Repository
-
 
 class Command(BaseCommand):
     help = 'creates repo objects from a github API endpoint'

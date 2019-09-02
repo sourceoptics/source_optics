@@ -1,16 +1,14 @@
 
+# graphs.py - generate altair graphs as HTML snippets given panda dataframe inputs (see dataframes.py)
+
 import altair as alt
 import pandas as pd
 import numpy as np
-
-
-# https://github.com/Jesse-jApps/django-altair/blob/master/django_altair/templatetags/django_altair.py
-
 from django import template
 import random, string, json
 
-register = template.Library()
 
+# template used by render_chart below
 TEMPLATE_CHART = """
 <div id="{output_div}"></div>
     <script type="text/javascript">
@@ -31,6 +29,11 @@ TEMPLATE_CHART = """
 """
 
 def render_chart(chart):
+    """
+    wraps an altair chart with the required javascript/html to display that chart
+    """
+
+
     spec = chart.to_dict()
     output_div = '_' + ''.join(random.choices(string.ascii_letters + string.digits, k=7))
     embed_opt = {"mode": "vega-lite", "actions": False}
@@ -38,6 +41,9 @@ def render_chart(chart):
     return template.Template(TEMPLATE_CHART.format(output_div=output_div, spec=json.dumps(spec), embed_opt=json.dumps(embed_opt))).render(c)
 
 def _basic_graph(repo=None, start=None, end=None, df=None, x=None, y=None, tooltips=None, fit=False):
+    """
+    This renders an altair graph around pretty much any combination of two parameters found on a Statistic object.
+    """
 
     if tooltips is None:
         tooltips=['day', 'date', 'commit_total', 'lines_changed', 'author_total']
@@ -76,43 +82,64 @@ def _basic_graph(repo=None, start=None, end=None, df=None, x=None, y=None, toolt
     return render_chart(chart)
 
 def volume(repo=None, start=None, end=None, df=None):
+    """ graphs the number of days since the project started VS the lines changed each day """
     return _basic_graph(repo=repo, start=start, end=end, df=df, x='day', y='lines_changed', fit=True)
 
 def frequency(repo=None, start=None, end=None, df=None):
+    """ graphs the number of days since the project started since the number of commits each day """
     return _basic_graph(repo=repo, start=start, end=end, df=df, x='day', y='commit_total', fit=True)
 
 def participation(repo=None, start=None, end=None, df=None):
+    """ graphs the number of days since the project started since the number of authors that committed each day """
     return _basic_graph(repo=repo, start=start, end=end, df=df, x='day', y='author_total', fit=True)
 
 def granularity(repo=None, start=None, end=None, df=None):
+    """ shows the average commit size for a particular day """
     return _basic_graph(repo=repo, start=start, end=end, df=df, x='day', y='average_commit_size', fit=True)
 
 # FIXME: standardize all the tooltips so they are the same for lifetime graphs, and a different set for non-lifetime graphs
 
 def key_retention(repo=None, start=None, end=None, df=None):
+    """
+    graphs the number of days since we have seen a commit from a user against their line contribution to the project.
+    this can be used to identify contributors that may have lost interest or changed jobs/assignments.
+    """
     # FIXME: earliest_commit_date should be 0-based (earliest_commit_day) from project start so we can apply fit
     return _basic_graph(repo=repo, start=start, end=end, df=df, x='days_since_seen', y='lines_changed',
                         tooltips=['author', 'earliest_commit_date', 'latest_commit_date', 'longevity', 'commit_total', 'lines_changed'], fit=True)
 
 def early_retention(repo=None, start=None, end=None, df=None):
+    """
+    graphs the number of days since project inception before the user offered a commit vs the span of days encompassing user history with
+    the project.  This can be used to tell, over time, whether the project is keeping contributors around better or worse, essentially
+    tracking the rate of change of turnover.
+    """
     # FIXME: earliest_commit_date should be 0-based (earliest_commit_day) from project start so we can apply fit
     # FIXME: terminology between 'first' and 'earliest' and 'last' and 'latest' is redundant/confusing and should be standardized
     return _basic_graph(repo=repo, start=start, end=end, df=df, x='days_before_joined', y='longevity',
                         tooltips=['author', 'earliest_commit_date', 'latest_commit_date', 'longevity', 'commit_total', 'lines_changed'], fit=True)
 
 def staying_power(repo=None, start=None, end=None, df=None):
+    """
+    graphs longevity (as above) against the number of days a user has contributed to a project.  This graph is not time based, but attempts
+    to determine whether there is a relationship between how long a user has been around versus how active they are.  Do contributors with a lot
+    of history commit more than ones who have been around less frequently?  True understanding really warrants a 3D graph vs days_since_joined.
+    """
     return _basic_graph(repo=repo, start=start, end=end, df=df, x='longevity', y='days_active',
                         #x='longevity', y='lines_changed',
                         tooltips=['author', 'earliest_commit_date', 'latest_commit_date', 'longevity', 'commit_total', 'lines_changed'], fit=True)
 
 
 def largest_contributors(repo=None, start=None, end=None, df=None):
+    """
+    this is a scatter plot of the activity of the top authors within the time range.  Selecting a different time range may highlight a different set
+    of authors that were at the top within that particular range, rather than the overall top authors for the lifetime of the project.
+    """
     alt.data_transformers.disable_max_rows()
     chart = alt.Chart(df, height=600, width=600).mark_point().encode(
         x=alt.X('day', scale=alt.Scale(zero=False, clamp=True)),
         y=alt.Y("lines_changed", scale=alt.Scale(zero=False, clamp=True)), #  domain=(0,2000), clamp=True)),
         color='author:N',
-        # size='commit_count:N',
         tooltip = ['day', 'date', 'commit_total', 'lines_changed', 'author' ],
     ).interactive()
     return render_chart(chart)
