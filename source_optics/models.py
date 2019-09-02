@@ -176,7 +176,10 @@ class Author(models.Model):
     def latest_commit_date(self, repo):
         return Commit.objects.filter(author=self, repo=repo).latest("commit_date").commit_date
 
-    def statistics(self, repo, start, end, interval):
+    def statistics(self, repo, start=None, end=None, interval=None):
+        assert start is not None
+        assert end is not None
+        assert interval is not None
         stat = Statistic.objects.filter(
             repo=repo,
             author=self,
@@ -189,6 +192,20 @@ class Author(models.Model):
             commit_total=Sum('commit_total'),
         )
         return stat
+
+    @classmethod
+    def author_count(cls, repo, start=None, end=None):
+        assert repo is not None
+        assert start is not None
+        assert end is not None
+
+        return Commit.objects.filter(
+            author__isnull=False,
+            repo=repo,
+            commit_date__range=(start, end)
+        ).values_list('author', flat=True).distinct('author').count()
+
+
 
 
 class Tag(models.Model):
@@ -329,6 +346,69 @@ class Statistic(models.Model):
         ]
 
     @classmethod
-    def create_file_rollup(cls, start_date, interval, repo, file, data):
-        instance = cls(start_date = start_date, interval = interval, repo = repo, file = file, data = data)
-        return instance
+    def aggregate_data(cls, queryset):
+        return queryset.aggregate(
+            lines_added=Sum("lines_added"),
+            lines_removed=Sum("lines_removed"),
+            lines_changed=Sum("lines_changed"),
+            commit_total=Sum("commit_total"),
+            days_active=Sum("days_active"),
+        )
+
+    @classmethod
+    def compute_interval_statistic(cls, queryset, interval=interval, repo=None, author=None, start=None, end=None):
+
+        # used by rollup.py to derive a rollup interval from another.
+
+        assert start is not None
+        assert end is not None
+        assert repo is not None
+
+        data = Statistic.aggregate_data(queryset)
+        author_count = Author.author_count(repo, start=start, end=end)
+        files_changed = FileChange.change_count(repo=repo, start=start, end=end, author=author)
+        avg_commit_size = Statistic._compute_average_commit_size(data)
+
+        stat = Statistic(
+            start_date=start,
+            interval=interval,
+            repo=repo,
+            author=author,
+            lines_added=data['lines_added'],
+            lines_removed=data['lines_removed'],
+            lines_changed=data['lines_changed'],
+            commit_total=data['commit_total'],
+            days_active=data['days_active'],
+            files_changed=files_changed,
+            average_commit_size=avg_commit_size,
+            author_total=author_count,
+        )
+
+        if interval == 'LF':
+
+            # FIXME: use the methods on the Repo and Author class to get to these values
+            # make sure they are memoized for efficiency as they are executed often
+            all_earliest = repo.earliest_commit_date()
+            all_latest = repo.latest_commit_date()
+            stat.earliest_commit_date = repo.earliest_commit_date(author)
+            stat.latest_commit_date = repo.latest_commit_date(author)
+            stat.days_since_seen = (all_latest - stat.latest_commit_date).days
+            stat.days_before_joined = (stat.earliest_commit_date - all_earliest).days
+            stat.longevity = (stat.latest_commit_date - stat.earliest_commit_date).days
+
+        return stat
+
+    @classmethod
+    def _compute_average_commit_size(cls, data):
+        if isinstance(data, dict):
+            if data['commit_total']:
+                return int(float(data['lines_changed']) / float(data['commit_total']))
+            return 0
+        else:
+            if data.lines_changed:
+                return int(float(data.lines_changed) / float(data.commit_total))
+            return 0
+
+
+
+

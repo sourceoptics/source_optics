@@ -264,11 +264,11 @@ class Rollup:
         assert repo is not None
         assert interval in [ 'WK', 'MN', 'LF']
 
+        # FIXME: this looks like it should be a method...
         absolute_first_commit_date = repo.earliest_commit_date()
         absolute_last_commit_date = repo.latest_commit_date()
         assert absolute_first_commit_date is not None
         assert absolute_last_commit_date is not None
-
         if interval != LIFETIME:
             start_day = start_day.replace(tzinfo=None)
             end_date = cls.get_end_day(start_day, interval)
@@ -286,68 +286,12 @@ class Rollup:
 
         days = cls._queryset_for_interval_rollup(repo=repo, author=author, interval=interval, start_day=start_day, end_date=end_date)
 
-        days2 = Commit.objects.filter(
-            author__isnull=False,
-            repo=repo,
-             # FIXME: use range everywhere
-            commit_date__gte=start_day,
-            commit_date__lte=end_date
-        )
-
-        author_ids = days2.values_list('author', flat=True).distinct('author') # previous attempt to get the author count out of this.
-        author_count = author_ids.count()
-
         if days.count() == 0:
-            print("WARNING: NO HITS: SHOULDN'T BE HERE!: ", author, DAY, repo, cls.aware(start_day), cls.aware(end_date))
-            # FIXME: temporary workaround bc of the file move code, this should probably be fatal
-            # this can happen because the file move support is not quite smart about paths yet and seemingly
-            # does not write FileChange records in those cases, which results in Statistic objects for days being
-            # missing if all edits involved a move.  But we need to verify this.  The opsmop repo has a few examples.
+            print("WARNING: NO HITS: SHOULDN'T BE HERE!: ", author, DAY, repo, start_day, end_date)
+            # FIXME: temporary workaround bc of the file move code - no longer needed?
             return
 
-        # aggregates total stats for the interval
-        data = days.aggregate(
-            lines_added=Sum("lines_added"),
-            lines_removed=Sum("lines_removed"),
-            lines_changed=Sum("lines_changed"),
-            commit_total=Sum("commit_total"),
-            days_active=Sum("days_active"),
-        )
-
-        files_changed = FileChange.change_count(repo=repo, start=start_day, end=end_date, author=author)
-
-        avg_commit_size = int(float(data['lines_changed']) / float(data['commit_total']))
-
-
-        stat = Statistic(
-            start_date=cls.aware(start_day),
-            interval=interval,
-            repo=repo,
-            author=author,
-            lines_added=data['lines_added'],
-            lines_removed=data['lines_removed'],
-            lines_changed=data['lines_changed'],
-            commit_total=data['commit_total'],
-            days_active=data['days_active'],
-            files_changed=files_changed,
-            average_commit_size =avg_commit_size,
-            author_total=author_count, # if author is set, this should be 1, just ignore it
-        )
-
-
-        if interval == LIFETIME:
-
-            # FIXME: use the methods on the Repo and Author class to get to these values
-            # make sure they are memoized for efficiency as they are executed often
-            all_earliest = repo.earliest_commit_date()
-            all_latest = repo.latest_commit_date()
-            stat.earliest_commit_date = repo.earliest_commit_date(author)
-            stat.latest_commit_date = repo.latest_commit_date(author)
-
-            stat.days_since_seen = (all_latest - stat.latest_commit_date).days
-
-            stat.days_before_joined = (stat.earliest_commit_date - all_earliest).days
-            stat.longevity = (stat.latest_commit_date - stat.earliest_commit_date).days
+        stat = Statistic.compute_interval_statistic(days, repo=repo, interval=interval, author=author, start=start_day, end=end_date)
 
         cls.smart_bulk_update(repo=repo, start_day=start_day, author=author, interval=interval, stat=stat, total_instances=total_instances)
 
