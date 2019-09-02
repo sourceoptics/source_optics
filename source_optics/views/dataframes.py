@@ -79,7 +79,11 @@ def _scatter_queryset_to_dataframe(repo, totals, fields):
                 # just renaming this one field for purposes of axes labelling
                 data[f].append(t.start_date)
             elif f == 'day':
-                data[f].append((t.start_date - first_day).days)
+                if t.start_date is not None:
+                    # if condition because lifetime stats have no dates
+                    data[f].append((t.start_date - first_day).days)
+                else:
+                    data[f].append(0)
             elif f == 'author':
                 data[f].append(t.author.email)
             else:

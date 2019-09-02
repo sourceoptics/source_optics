@@ -130,15 +130,13 @@ def get_author_table(repo, start=None, end=None, interval=None, limit=None):
             # FIXME: this should be a function on the statistic object
             stats =  Statistic.queryset_for_range(repo, 'LF', author=author)
             if stats.count():
-                # this IF is just in case there's an author row and we didn't do a full scan
-                # with the new code yet
+                # this IF is just in case there's an author row and we didn't do a full scan with the new code yet
                 stat = stats.first()
                 stat2 = stat.to_author_dict(repo, author)
                 results.append(stat2)
 
         else:
             # interval here as a parameter uses anything but lifetime as 'not lifetime', because this is just a table and not graphs
-            print("DEBUG: AUTHOR=%s" % author)
             stat1 = Statistic.queryset_for_range(repo, author=author, start=start, end=end, interval='DY')
             stat2 = Statistic.compute_interval_statistic(stat1, interval='DY', repo=repo, author=author, start=start, end=end)
             stat2 = stat2.to_dict()
