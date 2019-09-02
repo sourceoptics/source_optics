@@ -1,12 +1,13 @@
 
 ![](https://raw.githubusercontent.com/sourceoptics/source_optics/master/source_optics/static/logo_bg.png?s=400)
 
+![](https://img.shields.io/badge/dynotherms-connected-blue) ![](https://img.shields.io/badge/infracells-up-green) ![](https://img.shields.io/badge/megathrusters-go-green)
+
 Source Optics
 =============
 
 Source Optics is an advanced source code repository dashboard, focused on understanding
 evolving code activity in an organization and the teams that work on them.
-
 
 It should be equally relevant to many types of users including:
 
@@ -136,5 +137,5 @@ A few small guidelines to keep things easy to manage.
 
 Thank you!
 
-
+![https://twitter.com/sourceoptics](https://img.shields.io/twitter/url/https/sourceoptics?style=social)
 
