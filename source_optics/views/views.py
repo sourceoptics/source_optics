@@ -132,9 +132,6 @@ def get_author_table(repo, start=None, end=None, interval=None, limit=None):
             repo=repo
         ).distinct('author').values_list('author', flat=True)
 
-    print("authors", authors)
-    print("COUNT=%s" % authors.count())
-
     for author in authors:
         if interval == 'LF':
             # we don't use aggregate
