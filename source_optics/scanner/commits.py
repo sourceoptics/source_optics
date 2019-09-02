@@ -1,4 +1,4 @@
-# Copyright 2018 SourceOptics Project Contributors
+# Copyright 2018-2019 SourceOptics Project Contributors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -56,7 +56,7 @@ FILE_PATH_RENAME_RE = re.compile(r'(/)?(?:\{[^}=]+=>)([^}]+)\}')
 class Commits:
 
     """
-    This class clones a repository (GIT) using a provided URL and credential
+    This class clones a repository (git) using a provided URL and credential
     and proceeds to execute git log on it to scan its data
     """
 
@@ -87,6 +87,12 @@ class Commits:
 
     @classmethod
     def bulk_create(cls, total_commits, total_files, total_file_changes):
+        """
+        we keep a list of the three types of objects and only create them periodically,
+        to prevent from doing too many database transactions.  The batch size here is fairly
+        arbitrary.
+        """
+
         # by not ignoring conflicts, we can test whether our scanner "overwork" code is correct
         # use -F to try a full test from scratch
         if len(total_commits):
@@ -103,7 +109,8 @@ class Commits:
     def process_commits(cls, repo, repo_dir, mode='Commit'):
 
         """
-        Uses git log to gather the commit data for a repository
+        Uses git log to gather the commit data for a repository.  This is run three times in three different
+        modes over the same git log output.  See usage in processor.py.
         """
 
         cmd_string = 'git rev-list --all --count'
@@ -128,6 +135,9 @@ class Commits:
         global GLITCH_COUNT
 
         def handler(line):
+            """
+            this code processes every line from the output
+            """
 
             nonlocal last_commit
             nonlocal count
@@ -167,12 +177,13 @@ class Commits:
 
         return True
 
-    # This assumes that commits (and their effect on files) will not be processed
-    # more than once. It is on the scanner (the caller) to never scan commits
-    # more than once.
-    # ------------------------------------------------------------------
+
     @classmethod
     def create_file(cls, full_path, commit, la, lr, binary, mode, total_files, total_file_changes):
+        """
+        After we have recorded commits, this function creates either Files or FileChange objects
+        depending on what scanner pass we are running through.
+        """
 
         assert commit is not None
         assert mode in [ 'File', 'FileChange' ]
@@ -216,6 +227,11 @@ class Commits:
     @classmethod
     def matches(self, needle, haystack, exact=False, trim_dot=False):
 
+        """
+        This function is used by the source code filtering feature to see if a file path
+        matches an expression or not.
+        """
+
         #  user input may be inconsistent about trailing slashes so be flexible
         if haystack.endswith("/"):
             haystack = haystack[:-1]
@@ -241,6 +257,9 @@ class Commits:
 
     @classmethod
     def has_matches(cls, needles, haystack, exact=False, trim_dot=False):
+        """
+        tests whether a file pattern has any one of multiple matches
+        """
 
         for needle in needles:
             if cls.matches(needle, haystack, exact=exact, trim_dot=trim_dot):
@@ -253,11 +272,11 @@ class Commits:
 
     @classmethod
     def repair_move_path(cls, path):
-
-        # handle details about moves in git log by fixing path elements like /{org=>com}/
-        # to just log the file in the final path. This will possibly give users credit for
-        # aspects of a move but this something we can explore later. Not sure if it does - MPD.
-
+        """
+        handles details about moves in git log by fixing path elements like /{org=>com}/
+        to just log the file in the final path. This will possibly give users credit for
+        aspects of a move but this something we can explore later. Not sure if it does - MPD.
+        """
         return FILE_PATH_RENAME_RE.sub(r'\1\2', path)
 
     @classmethod

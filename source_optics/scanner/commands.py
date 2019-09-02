@@ -19,6 +19,11 @@ TIMEOUT = -1  # name of timeout command
 ansi_escape = re.compile(r'(\x9B|\x1B\[)[0-?]*[ -/]*[@-~]')
 
 def get_timeout():
+
+    """
+    returns the timeout command for the platform
+    """
+
     global TIMEOUT
     if TIMEOUT != -1:
         return TIMEOUT
@@ -38,7 +43,6 @@ def execute_command(repo, command, input_text=None, env=None, log=True, timeout=
     Execute a command (a list or string) with input_text as input, appending
     the output of all commands to the build log.
     """
-
 
     prev = None
     if chdir:
@@ -130,6 +134,10 @@ def execute_command(repo, command, input_text=None, env=None, log=True, timeout=
     return None
 
 def answer_file(answer):
+    """
+    writes a dumb script that echos the string when executed
+    """
+    # FIXME: verify this is being used anymore?
     (_, fname) = tempfile.mkstemp()
     fh = open(fname, "w")
     fh.write("#!/bin/bash\n")

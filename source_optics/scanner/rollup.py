@@ -1,4 +1,4 @@
-# Copyright 2018 SourceOptics Project Contributors
+# Copyright 2018-2019 SourceOptics Project Contributors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,10 +17,7 @@
 # functions and/or multiple files.
 
 import calendar
-from django.db.models import Sum, Max
-from django.utils import timezone
 from source_optics.models import Statistic, Commit, FileChange, Author, File
-from dateutil import rrule
 import datetime
 from django.utils import timezone
 
@@ -40,15 +37,25 @@ LIFETIME = 'LF'
 #
 class Rollup:
 
-    # FIXME: this should be called 'now', not 'today' and really should be a function
-    today = timezone.now() # tz=timezone.utc)
+    """
+    The rollup class is responsible for building the statistics table.  First it computes
+    daily totals by looking at commits and file change records recorded by the Commit class.
+    From there, we can work on Weekly rollups and Monthly rollups of that data.  These are still
+    time ranged. Lifetime rollups also exist, but are NOT time ranged (obviously?). And all of
+    these types of rollups exist for each author and if the author is None, that represents an
+    entire repository.  It's a lot of calculation, which is why this is all a backend CLI
+    command and not done within the life of a request. Performance upgrades can always be
+    made and are always welcome - the thing that will make the system do the most work is
+    repositories with thousands of authors, scaling with commits doesn't really increase
+    the amount of queries performed, though a very long source code history does
+    take a little longer than a shorter one.
+    """
+
+    today = timezone.now()
 
     @classmethod
     def aware(cls, date):
-        # we previously had timezones turned on but they just cause trouble...
-        # try:
-        #    return timezone.make_aware(date, timezone.utc)
-        #except:
+        # FIXME: we can eliminate this function, it doesn't do anything anymore
         return date
 
     @classmethod
@@ -165,6 +172,10 @@ class Rollup:
 
     @classmethod
     def _queryset_for_interval_rollup(cls, repo=None, author=None, interval=None, start_day=None, end_date=None):
+        """
+        returns the queryset needed to select Statistic rows for a weekly, monthly, or lifetime rollup, which may or may not be
+        author specific.
+        """
 
         if author is None:
             if interval != LIFETIME:
@@ -201,6 +212,9 @@ class Rollup:
 
     @classmethod
     def start_and_end_dates_for_interval(cls, repo=None, author=None, start=None, interval=None):
+        """
+        Given a start date, what is the end date for the interval?
+        """
         assert (interval == 'LF' or start is not None)
         assert interval is not None
         absolute_first_commit_date = repo.earliest_commit_date()
@@ -258,18 +272,26 @@ class Rollup:
 
     @classmethod
     def get_authors_for_repo(cls, repo):
+        """
+        Return the authors involved in the repo
+        """
+        # FIXME: is this used, or should we just use a method in models.py? I think we have one already.
         assert repo is not None
-        # FIXME: better query here would be nice, this probably isn't too efficient with 5000 authors
         author_ids = Commit.objects.filter(repo=repo).values_list("author", flat=True).distinct().all()
         authors = Author.objects.filter(pk__in=[author_ids]).all()
         return authors
 
     @classmethod
     def get_earliest_commit_date(cls, repo, author):
+        # FIXME: this should really be memozed, it is called way too much.  We should do that
+        # in the model class and then eliminate this function.
         return repo.earliest_commit_date(author)
 
     @classmethod
     def bulk_create(cls, total_instances):
+        """
+        Creates a bunch of statistic objects that have been queued up for insertion.
+        """
         # by not ignoring conflicts, we can test whether our scanner "overwork" code is correct
         # use -F to try a full test from scratch
         Statistic.objects.bulk_create(total_instances, 100, ignore_conflicts=False)
@@ -277,11 +299,17 @@ class Rollup:
 
     @classmethod
     def finalize_scan(cls, repo):
+        """
+        Flags a scan as completed.
+        """
         repo.last_scanned = cls.today
         repo.save()
 
     @classmethod
     def rollup_team_stats(cls, repo):
+        """
+        Computes the day, week, month, and lifetime stats for a repo, but on a team basis, not a per author basis.
+        """
 
         commits = Commit.objects.filter(repo=repo)
 
@@ -326,6 +354,12 @@ class Rollup:
 
     @classmethod
     def rollup_author_stats(cls, repo):
+        """
+        Computes the day, week, month, and lifetime stats for a repo, for all authors in that repo.  Contrast
+        with rollup_team_stats.
+        """
+
+        # FIXME: very long function, refactor/simplify.
 
         total_instances = []
 

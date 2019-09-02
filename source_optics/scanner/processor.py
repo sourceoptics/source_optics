@@ -1,4 +1,4 @@
-# Copyright 2018 SourceOptics Project Contributors
+# Copyright 2018-2019 SourceOptics Project Contributors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -66,6 +66,9 @@ class RepoProcessor:
 
     @classmethod
     def scan(cls, organization_filter=None, repository_filter=None, force_nuclear_rescan=False):
+        """
+        The main method behind the repo scanning CLI command.
+        """
 
         # REFACTOR: this lock should be a context manager (aka 'with')
         lock_handle = cls.lock()
@@ -88,6 +91,10 @@ class RepoProcessor:
 
     @classmethod
     def force_nuclear_rescan(cls, repo):
+        """
+        A nuclear rescan is "-F", which deletes a lot of  objects and starts over with an erased
+        repo.  It is more for testing/debugging than production usage.
+        """
         repo.last_scanned = None
         repo.force_next_pull = True
         Commit.objects.filter(repo=repo).delete() # cascade everything else
@@ -143,7 +150,7 @@ class RepoProcessor:
         return True
 
     @classmethod
-    # @transaction.atomic
+    # @transaction.atomic - FIXME: disabled for testing, I think? Or why?
     def process_repo(cls, repo, agent_manager, force_nuclear_rescan):
 
         if force_nuclear_rescan or repo.force_nuclear_rescan:

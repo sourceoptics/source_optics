@@ -1,4 +1,4 @@
-# Copyright 2018 SourceOptics Project Contributors
+# Copyright 2018-2019 SourceOptics Project Contributors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,7 +15,8 @@
 
 import re
 
-# FIXME: remove non-database behavior from this module
+# FIXME: move each model to a seperate file (not urgent)
+
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError

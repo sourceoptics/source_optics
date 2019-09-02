@@ -1,4 +1,4 @@
-# Copyright 2018 SourceOptics Project Contributors
+# Copyright 2018-2019 SourceOptics Project Contributors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -25,11 +25,11 @@ GIT_TYPES = ["https://", "http://"]
 #
 class Checkout:
 
-    # -----------------------------------------------------------------
-    # Adds the github username into the URL, taken from Vespene code
-
     @classmethod
     def fix_repo_url(cls, repo):
+        """
+        adds the github username into the URL
+        """
         cred = repo.organization.credential
         repo_url = repo.url
         if not cred or not cred.username:
@@ -41,18 +41,14 @@ class Checkout:
                     return "%s%s@%s" % (prefix, cred.username, repo_url)
         return repo_url
 
-
-    # ------------------------------------------------------------------
-    # Clones the repo if it doesn't exist in the work folder and pulls if it does
-
-
     @classmethod
     def clone_repo(cls, repo, work_dir):
-
+        """
+        Clones the repo if it doesn't exist in the work folder and pulls if it does
+        """
 
         key_mgmt = None
         options = ""
-        repo_url = repo.url # FIXME: remove these short variables
         cred = repo.organization.credential
         repo_url = cls.fix_repo_url(repo)
         dest_git = os.path.join(work_dir, ".git")
@@ -69,7 +65,7 @@ class Checkout:
 
             prev = os.getcwd()
             os.chdir(work_dir)
-            # FIXME: command wrapper should take an optional cwd
+            # FIXME: command wrapper should take an optional cwd to make this cleaner
 
             try:
                 commands.execute_command(repo, "git pull", timeout=200, env=key_mgmt)
@@ -88,7 +84,6 @@ class Checkout:
             commands.execute_command(repo, "mkdir -p %s" % work_dir, log=True, timeout=5)
 
             # on-disk repo doesn't exist yet, need to clone
-            # FIXME: refactor into smaller functions
 
             key_mgmt = None
             cmd = f"git clone {repo_url} {work_dir} {options}"

@@ -1,14 +1,25 @@
-#  Copyright 2018, Michael DeHaan LLC
-#  License: Apache License Version 2.0
+# Copyright 2018-2019 SourceOptics Project Contributors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
 #  -------------------------------------------------------------------------
 #  plugin_loader.py - generic mechanism to load plugins used by all
-#  types of plugins in Vespene. Some plugins return lists, others
+#  types of plugins. Some plugins return lists, others
 #  return dictionaries, it depends on whether they are typically accessed
 #  by name or just wrap lots of behaviors which stack additively.
 #  --------------------------------------------------------------------------
 
 from importlib import import_module
-
 from django.conf import settings
 
 # in the future not all plugin definitions may required and a partially empty plugins
