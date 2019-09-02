@@ -1,3 +1,6 @@
+
+![](https://raw.githubusercontent.com/sourceoptics/source_optics/master/source_optics/static/logo_bg.png?s=400)
+
 Source Optics
 =============
 
