@@ -137,5 +137,5 @@ A few small guidelines to keep things easy to manage.
 
 Thank you!
 
-![https://twitter.com/sourceoptics](https://img.shields.io/twitter/url/https/sourceoptics?style=social)
+![https://twitter.com/sourceoptics](https://img.shields.io/twitter/follow/sourceoptics?style=social)
 
