@@ -22,6 +22,8 @@ from django.utils import timezone
 from source_optics.models import Statistic, Commit, FileChange, Author, File
 from dateutil import rrule
 import datetime
+from django.utils import timezone
+
 CURRENT_TZ = timezone.get_current_timezone()
 
 intervals =  Statistic.INTERVALS
@@ -39,7 +41,7 @@ LIFETIME = 'LF'
 class Rollup:
 
     # FIXME: this should be called 'now', not 'today' and really should be a function
-    today = datetime.datetime.now() # tz=timezone.utc)
+    today = timezone.now() # tz=timezone.utc)
 
     @classmethod
     def aware(cls, date):
@@ -76,6 +78,7 @@ class Rollup:
 
         # FIXME: all this code should be cleaned up.
 
+        # FIXME: add a method here like "should_update_statistic"
         update = False
         if interval == DAY:
             if cls.today == start_day:
@@ -108,17 +111,7 @@ class Rollup:
             else:
                 # just assuming this can't match more than one, not doing 'get' as exceptions are be slower
                 old_stat = stats.first()
-                old_stat.lines_added=stat.lines_added
-                old_stat.lines_removed=stat.lines_removed
-                old_stat.lines_changed=stat.lines_changed
-                old_stat.commit_total=stat.commit_total
-                old_stat.files_changed=stat.files_changed
-                old_stat.author_total=stat.author_total
-                old_stat.earliest_commit_date=stat.earliest_commit_date
-                old_stat.latest_commit_date=stat.latest_commit_date
-                old_stat.days_since_seen=stat.days_since_seen
-                old_stat.days_before_joined=stat.days_before_joined
-                old_stat.days_active=stat.days_active
+                old_stat.copy_fields_for_update(stat)
                 old_stat.save()
 
         if not update:
@@ -131,69 +124,26 @@ class Rollup:
         Generate rollup stats for everything the team did on a given day
         """
 
-        # FIXME: all this code should be cleaned up.
+        end_date = cls.get_end_day(start_day, DAY)
 
+        file_change_count = FileChange.change_count(repo, author=author, start=start_day, end=end_date)
 
-        all_commits = Commit.objects.filter(
-            repo=repo
-        )
-        author_commits = Commit.objects.filter(
-            repo=repo,
-            author=author
-        )
-
-        file_changes = None
-        if not author:
-            file_changes = FileChange.objects.select_related('commit').filter(
-                commit__commit_date__year=start_day.year,
-                commit__commit_date__month=start_day.month,
-                commit__commit_date__day=start_day.day,
-            )
-        else:
-            file_changes = FileChange.objects.select_related('commit', 'author').filter(
-                commit__commit_date__year=start_day.year,
-                commit__commit_date__month=start_day.month,
-                commit__commit_date__day=start_day.day,
-                commit__author=author
-            )
-
-        if file_changes.count() == 0:
-            # FIXME: this occurs because we don't track git move paths perfectly and lose edits
-            # that happen at the same time.  Fixing the rename code will fix this.
-            print("***************** GLITCH ******************* ")
+        if file_change_count == 0:
+            # this looks like a merge commit, FIXME: it would be a good idea to validate that this is 100% true.
+            print("-- skipping potential merge commit --")
             return
 
-        # FIXME: probably not the most efficient way to do this
-        commits = file_changes.values_list('commit', flat=True).distinct().all()
-        files = file_changes.values_list('file', flat=True).distinct().all()
-        authors = Commit.objects.filter(pk__in=commits).values_list('author', flat=True).distinct().all()
-
-        # FIXME: this may still be incorrect?
-
-        authors_count = len(authors)
+        if not author:
+            authors_count = Author.author_count(repo, start=start_day, end=end_date)
+        else:
+            authors_count = 1
 
         # Aggregate values from query set for rollup
-        data = file_changes.aggregate(lines_added=Sum("lines_added"), lines_removed = Sum("lines_removed"))
-        commit_total = len(commits)
-        files_changed = len(files)
-        lines_added = data['lines_added']
-        lines_removed = data['lines_removed']
-        lines_changed = lines_added + lines_removed
 
-        # FIXME: if start_day is today, we need to delete the current stat
+        data = FileChange.aggregate_stats(repo, author=author, start=start_day, end=end_date)
 
-        # BOOKMARK longevity
-        DEFAULT_SCATTER_FIELDS = ['date',
-                                  'day', 'lines_changed', 'commit_total', 'author_total', 'average_commit_size',
-                                  'earliest_commit_date', 'latest_commit_date', 'days_since_seen',
-                                  'days_before_joined', 'first_commit_day', 'last_commit_day', 'longevity',
-                                  'days_active']
-
-        # FIXME: move these to use methods on the Author/Repo object, which should be already there.
-        # FIXME: usage here is notably inefficient as we make this query a *lot*, so we really should memoize it.
-
-        avg_commit_size = int(float(lines_changed) / float(commit_total))
-
+        # FIXME: if start_day is today, we need to UPDATE the current stat? - verify if the bulk_update code deals with this?
+        # FIXME: model code method below is rather inefficient, does this matter?
 
         # Create total rollup row for the day
         stat = Statistic(
@@ -201,13 +151,13 @@ class Rollup:
             interval=DAY,
             repo=repo,
             author=author,
-            lines_added=lines_added,
-            lines_removed=lines_removed,
-            lines_changed=lines_changed,
-            commit_total=commit_total,
-            files_changed=files_changed,
+            lines_added=data['lines_added'],
+            lines_removed=data['lines_removed'],
+            lines_changed=data['lines_changed'],
+            commit_total= data['commit_total'],
+            files_changed=data['files_changed'],
             author_total=authors_count,
-            average_commit_size=avg_commit_size,
+            average_commit_size=data['average_commit_size'],
             days_active=1,
         )
 
@@ -290,7 +240,7 @@ class Rollup:
         assert interval in [ 'WK', 'MN', 'LF']
 
         (start_day, end_date) = cls.start_and_end_dates_for_interval(repo=repo, author=author, start=start_day, interval=interval)
-        if start_day is None:
+        if start_day is None and interval != 'LF':
             print("**** GLITCH: Author has no commits? ", author)
             return
 
@@ -339,6 +289,7 @@ class Rollup:
 
         total_instances = []
         for start_day in commit_days:
+
             if repo.last_scanned and start_day < repo.last_scanned:
                 break
             # FIXME: if after the last_scanned date
@@ -390,6 +341,7 @@ class Rollup:
             print("(RAS1) compiling contributor stats: %s/%s" % (author_count, author_total))
 
             commit_days = commits.datetimes('commit_date', 'day', order='ASC')
+
             # print("author commit days: ", author, commit_days)
 
             for start_day in commit_days:

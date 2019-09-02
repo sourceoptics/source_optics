@@ -36,6 +36,7 @@ from django.db.models.expressions import Subquery, OuterRef
 from . import dataframes
 from . import graphs
 import json
+from django.utils import timezone
 
 #=====
 # BEGIN REST API
@@ -265,7 +266,7 @@ def _get_scope(request, org=None, repos=None, repo=None, start=None, end=None, i
     elif end is not None:
         end = datetime.datetime.strptime(end, "%Y-%m-%d")
     else:
-        end = datetime.datetime.now()
+        end = timezone.now()
 
     if start == '_':
         start = None

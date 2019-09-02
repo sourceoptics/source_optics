@@ -62,6 +62,13 @@ class Commits:
 
     @classmethod
     def get_file(cls, repo, path, filename):
+
+        """
+        provide a lookup of File objects for repo/path/filename tuples to
+        prevent excessive database access. This cache is only kept around
+        for the current repository
+        """
+
         global FILES_HACK_REPO
         global FILES_HACK
         if FILES_HACK_REPO != repo.name:
@@ -69,11 +76,14 @@ class Commits:
             FILES_HACK_REPO = repo.name
             files = File.objects.filter(repo=repo).all()
             for fobj in files:
+                assert fobj is not None
                 key = os.path.join(fobj.path, fobj.name)
                 FILES_HACK[key] = fobj
-        else:
-            original = os.path.join(path, filename)
-            return FILES_HACK[original]
+
+        original = os.path.join(path, filename)
+        result = FILES_HACK[original]
+        assert result is not None
+        return result
 
     @classmethod
     def bulk_create(cls, total_commits, total_files, total_file_changes):
@@ -147,6 +157,7 @@ class Commits:
 
             else:
                 if mode != 'Commit':
+                    assert last_commit is not None
                     cls.handle_file_information(repo, line, last_commit, mode, total_files, total_file_changes)
                 return True
 
@@ -162,6 +173,9 @@ class Commits:
     # ------------------------------------------------------------------
     @classmethod
     def create_file(cls, full_path, commit, la, lr, binary, mode, total_files, total_file_changes):
+
+        assert commit is not None
+        assert mode in [ 'File', 'FileChange' ]
 
         fname = os.path.basename(full_path)
 
@@ -187,10 +201,9 @@ class Commits:
 
             file = cls.get_file(commit.repo, path, fname)
 
-            # FIXME: I think this is because of the fix_path function and moves, so a temporary hack only!
             if file is None:
-                print("********************* GLITCH: %s/%s" % (path, fname))
-                return
+                # this shouldn't happen, but if we get here the parser has a bug.
+                raise Exception("FATAL, MISSING FILE RECORD, SHOULDN'T BE HERE!")
 
             total_file_changes.append(FileChange(
                     commit=commit,
@@ -209,8 +222,6 @@ class Commits:
         if needle.endswith("/"):
             needle = needle[:-1]
 
-
-
         if trim_dot:
             # for extension checking, do not require the user input to be ".mp4" to mean "mp4"
             haystack = haystack.replace(".","")
@@ -221,6 +232,8 @@ class Commits:
             return fnmatch.fnmatch(haystack, needle)
         elif exact:
             # we are processing an extension, require an exact match
+
+
             return haystack == needle
         else:
             # we are processing paths, not extensions, so just require it to start with the substring
@@ -249,6 +262,12 @@ class Commits:
 
     @classmethod
     def should_process_path(cls, repo, path):
+        """
+        Repository configuration supports filtering based on path, to decide to index or not-index
+        certain files.  This might be used to only index a 'src/' directory or otherwise not
+        index a directory called 'docs/', and is off by default.  This function handles
+        a decision on whether to process a path.
+        """
 
         org = repo.organization
         directory_allow = repo.scanner_directory_allow_list or org.scanner_directory_allow_list

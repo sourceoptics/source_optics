@@ -196,14 +196,20 @@ class Author(models.Model):
     @classmethod
     def author_count(cls, repo, start=None, end=None):
         assert repo is not None
-        assert start is not None
-        assert end is not None
 
-        return Commit.objects.filter(
-            author__isnull=False,
-            repo=repo,
-            commit_date__range=(start, end)
-        ).values_list('author', flat=True).distinct('author').count()
+
+        if start is not None:
+            qs = Commit.objects.filter(
+                author__isnull=False,
+                repo=repo,
+                commit_date__range=(start, end)
+            )
+        else:
+            qs = Commit.objects.filter(
+                author__isnull=False,
+                repo=repo
+            )
+        return qs.values_list('author', flat=True).distinct('author').count()
 
 
 
@@ -232,6 +238,29 @@ class Commit(models.Model):
             BrinIndex(fields=['author_date', 'author', 'repo'], name='commit2'),
         ]
 
+    @classmethod
+    def queryset_for_range(cls, repo, author=None, start=None, end=None):
+        if author:
+            if start:
+                return cls.objects.filter(
+                    repo=repo,
+                    author=author,
+                    commit_date__range=(start, end)
+                )
+            else:
+                return cls.objects.filter(
+                    repo=repo,
+                    author=author
+                )
+        else:
+            if start:
+                return cls.objects.filter(
+                    repo=repo,
+                    commit_date__range=(start, end)
+                )
+            else:
+                return cls.object.filter(repo=repo)
+
     def __str__(self):
         return f"Commit: {self.sha} (r:{self.repo.name})"
 
@@ -248,6 +277,22 @@ class File(models.Model):
         indexes = [
             BrinIndex(fields=[ 'repo', 'name', 'path' ], name='file1')
         ]
+
+    @classmethod
+    def queryset_for_range(cls, repo, author=None, start=None, end=None):
+        assert start is not None
+        assert end is not None
+        if author:
+            return File.objects.select_related('file_changes','commit').filter(
+                repo=repo,
+                file_changes__commit__author=author,
+                file_changes__commit__commit_date__range=(start, end)
+            )
+        else:
+            return File.objects.select_related('file_changes','commit').filter(
+                repo=repo,
+                file_changes__commit__commit_date__range=(start, end)
+            )
 
     def __str__(self):
         return f"File: ({self.repo}) {self.path}/{self.name})"
@@ -266,22 +311,46 @@ class FileChange(models.Model):
         ]
 
     @classmethod
-    def change_count(cls, repo, author=None, start=None, end=None):
-        assert start is not None
-        assert end is not None
-        changes=None
+    def queryset_for_range(cls, repo, author=None, start=None, end=None):
+        # FIXME: not the most efficient query
         if author:
-            changes = File.objects.select_related('file_changes','commit').filter(
-                repo=repo,
-                file_changes__commit__author=author,
-                file_changes__commit__commit_date__range=(start, end)
-            ).distinct('path')
+            if start:
+                return FileChange.objects.select_related('commit','file').filter(
+                    commit__author=author,
+                    commit__repo=repo,
+                    commit__commit_date__range=(start, end)
+                )
+            else:
+                return FileChange.objects.select_related('commit','file').filter(
+                    commit__author=author,
+                    commit__repo=repo,
+                )
         else:
-            changes = File.objects.select_related('file_changes','commit').filter(
-                repo=repo,
-                file_changes__commit__commit_date__range=(start, end)
-            ).distinct('path')
-        return changes.count()
+            if start:
+                return FileChange.objects.select_related('commit','file').filter(
+                    commit__repo=repo,
+                    commit__commit_date__range=(start, end)
+                )
+            else:
+                return FileChange.objects.select_related('commit', 'file').filter(commit__repo=repo)
+
+    @classmethod
+    def aggregate_stats(cls, repo, author=None, start=None, end=None):
+        # the placement of this method is a little misleading as it deals in files, file changes, and commits
+        # it likely could be a lot more efficient by building a custom SQL query here
+        qs = cls.queryset_for_range(repo, author=author, start=start, end=end)
+        files = File.queryset_for_range(repo, author=author, start=start, end=end)
+        stats = qs.aggregate(lines_added=Sum("lines_added"), lines_removed = Sum("lines_removed"))
+        stats['commit_total'] = qs.values_list('commit', flat=True).distinct().count()
+        stats['files_changed'] = files.count()
+        stats['lines_changed'] = stats['lines_added'] + stats['lines_removed']
+        stats['average_commit_size'] = Statistic._compute_average_commit_size(stats)
+        return stats
+
+    @classmethod
+    def change_count(cls, repo, author=None, start=None, end=None):
+        qs = cls.queryset_for_range(repo, author=author, start=start, end=end)
+        return qs.count()
 
     def __str__(self):
         return f"FileChange: {self.file.path} (c:{commit.sha})"
@@ -360,8 +429,9 @@ class Statistic(models.Model):
 
         # used by rollup.py to derive a rollup interval from another.
 
-        assert start is not None
-        assert end is not None
+        if interval != 'LF':
+            assert start is not None
+            assert end is not None
         assert repo is not None
 
         data = Statistic.aggregate_data(queryset)
@@ -408,6 +478,21 @@ class Statistic(models.Model):
             if data.lines_changed:
                 return int(float(data.lines_changed) / float(data.commit_total))
             return 0
+
+    def copy_fields_for_update(self, other):
+        # TODO: make this list of fields gathered automatically from the model so maintaince
+        # of this function isn't required?  Get all Int + Date fields, basically
+        self.lines_added = other.lines_added
+        self.lines_removed = other.lines_removed
+        self.lines_changed = other.lines_changed
+        self.commit_total = other.commit_total
+        self.files_changed = other.files_changed
+        self.author_total = other.author_total
+        self.earliest_commit_date = other.earliest_commit_date
+        self.latest_commit_date = other.latest_commit_date
+        self.days_since_seen = other.days_since_seen
+        self.days_before_joined = other.days_before_joined
+        self.days_active = other.days_active
 
 
 
