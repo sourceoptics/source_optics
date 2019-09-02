@@ -121,26 +121,14 @@ def get_author_table(repo, start=None, end=None, interval=None, limit=None):
 
     results = []
 
-    if interval != 'LF':
-        # FIXME: this should be a method on Author
-        authors = Commit.objects.filter(
-            commit_date__range=(start, end),
-            repo=repo
-        ).distinct('author').values_list('author', flat=True)
-    else:
-        authors = Commit.objects.filter(
-            repo=repo
-        ).distinct('author').values_list('author', flat=True)
+    authors = Author.authors(repo, start, end)
 
     for author in authors:
+        author = Author.objects.get(pk=author)
         if interval == 'LF':
             # we don't use aggregate
             # FIXME: this should be a function on the statistic object
-            stats = Statistic.objects.filter(
-                author=author,
-                interval='LF',
-                repo=repo
-            )
+            stats =  Statistic.queryset_for_range(repo, 'LF', author=author)
             if stats.count():
                 # this IF is just in case there's an author row and we didn't do a full scan
                 # with the new code yet
@@ -148,42 +136,13 @@ def get_author_table(repo, start=None, end=None, interval=None, limit=None):
                 stat2 = stat.to_author_dict(repo, author)
                 results.append(stat2)
 
-
         else:
-            # FIXME: move into functions on the statistic object
-            author = Author.objects.get(pk=author)
-            stats = Statistic.objects.select_related('author').filter(
-                repo = repo,
-                author = author,
-                start_date__range = (start, end),
-                interval = 'DY'
-            )
-            stat2 = stats.aggregate(
-                days_active=Sum('days_active'),
-                commit_total=Sum('commit_total'),
-                lines_changed=Sum('lines_changed'),
-                lines_added=Sum('lines_added'),
-                lines_removed=Sum('lines_removed')
-            )
+            # interval here as a parameter uses anything but lifetime as 'not lifetime', because this is just a table and not graphs
+            print("DEBUG: AUTHOR=%s" % author)
+            stat1 = Statistic.queryset_for_range(repo, author=author, start=start, end=end, interval='DY')
+            stat2 = Statistic.compute_interval_statistic(stat1, interval='DY', repo=repo, author=author, start=start, end=end)
+            stat2 = stat2.to_dict()
             stat2['author'] = author.email
-
-            # FIXME: extra queries are going to be pretty slow for a large number of authors, we may want to only
-            # include it when the limit is low.
-            stat2['files_changed'] = File.objects.select_related('file_changes', 'commit').filter(
-                repo=repo,
-                file_changes__commit__author=author,
-                file_changes__commit__commit_date__range=(start, end)
-            ).distinct('path').count()
-
-            # we had to use aggregate
-            # FIXME: as written elsewhere, this should be a function on statistic that takes a stat or a dict
-            if stat2['lines_changed']:
-                stat2['average_commit_size'] = int(float(stat2['lines_changed']) / float(stat2['commit_total']))
-            else:
-                stat2['average_commit_size'] = None
-
-                # FIXME: we should add files_changed to these after all of this is validated
-                # it should be quite useful in author graphs but also the main repo list.
             results.append(stat2)
     return results
 
@@ -192,35 +151,29 @@ def get_repo_table(repos, start, end):
 
     results = []
     for repo in repos:
-        stat = Statistic.objects.order_by('repo__name').select_related('repository').filter(
-            repo=repo,
-            interval='DY',
-            start_date__range=(start,end),
-            author__isnull=True,
-        ).aggregate(
-            lines_changed=Sum('lines_changed'),
-            lines_added=Sum('lines_added'),
-            lines_removed=Sum('lines_removed'),
-            author_total=Sum('author_total'),
-            commit_total=Sum('commit_total'),
-            days_active=Sum('days_active')
-        )
-        stat['name'] = repo.name
+        # FIXME: REFACTOR: most of this entire block should use a method on Statistic
+
+        stats = Statistic.queryset_for_range(repo, author=None, interval='DY', start=start, end=end)
+        stat2 = Statistic.compute_interval_statistic(stats, interval='DY', repo=repo, author=None, start=start, end=end)
+        stat2 = stat2.to_dict()
+        stat2['name'] = repo.name
+
+        # this should already be done
         # FIXME: this is calculated in a few places and should be a method that takes a statistic object or a dict
-        if stat['commit_total']:
-            # prevent division by zero when the repo has not yet been scanned
-            stat['average_commit_size'] = int(float(stat['lines_changed']) / float(stat['commit_total']))
-        else:
-            stat['average_commit_size'] = None
-        # FIXME: this should be a method somewhere, also can we use with a Subquery to make this more efficient?
-        author_ids = Commit.objects.filter(repo=repo, author__isnull=False, commit_date__range=(start,end)).values_list('author', flat=True).distinct('author')
-        stat['author_total'] = author_ids.count()
+        #if stat['commit_total']:
+        #    # prevent division by zero when the repo has not yet been scanned
+        #    stat['average_commit_size'] = int(float(stat['lines_changed']) / float(stat['commit_total']))
+        #else:
+        #    stat['average_commit_size'] = None
+        ## FIXME: this should be a method somewhere, also can we use with a Subquery to make this more efficient?
+        #author_ids = Commit.objects.filter(repo=repo, author__isnull=False, commit_date__range=(start,end)).values_list('author', flat=True).distinct('author')
+        #stat['author_total'] = author_ids.count()
 
         # providing pk's for link columns in the repo chart
         for x in [ 'details1', 'details2', 'details3']:
-            stat[x] = repo.pk
+            stat2[x] = repo.pk
 
-        results.append(stat)
+        results.append(stat2)
 
     results = sorted(results, key=lambda x: x['name'])
 

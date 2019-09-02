@@ -194,7 +194,7 @@ class Author(models.Model):
         return stat
 
     @classmethod
-    def author_count(cls, repo, start=None, end=None):
+    def authors(cls, repo, start=None, end=None):
         assert repo is not None
 
 
@@ -209,7 +209,12 @@ class Author(models.Model):
                 author__isnull=False,
                 repo=repo
             )
-        return qs.values_list('author', flat=True).distinct('author').count()
+        return qs.values_list('author', flat=True).distinct('author')
+
+    @classmethod
+    def author_count(cls, repo, start=None, end=None):
+        return cls.authors(repo, start=start, end=end).count()
+
 
 
 
@@ -439,6 +444,10 @@ class Statistic(models.Model):
         files_changed = FileChange.change_count(repo=repo, start=start, end=end, author=author)
         avg_commit_size = Statistic._compute_average_commit_size(data)
 
+        if author and isinstance(author, int):
+            # FIXME: find where this is happening and make sure the system returns objects.
+            author = Author.objects.get(pk=author)
+
         stat = Statistic(
             start_date=start,
             interval=interval,
@@ -468,6 +477,7 @@ class Statistic(models.Model):
 
         return stat
 
+
     @classmethod
     def _compute_average_commit_size(cls, data):
         if isinstance(data, dict):
@@ -493,11 +503,45 @@ class Statistic(models.Model):
         self.days_since_seen = other.days_since_seen
         self.days_before_joined = other.days_before_joined
         self.days_active = other.days_active
+        self.average_commit_size = other.average_commit_size
+
+    @classmethod
+    def queryset_for_range(cls, repo, interval, author=None, start=None, end=None):
+        assert repo is not None
+        stats = Statistic.objects.select_related('author')
+        if interval == 'LF':
+            if author:
+                return stats.filter(
+                    author=author,
+                    interval='LF',
+                    repo=repo
+                )
+            else:
+                return stats.filter(
+                    author__isnull=True,
+                    repo=repo,
+                    interval='LF',
+
+                )
+        else:
+            if author:
+                return stats.filter(
+                    author=author,
+                    interval=interval,
+                    repo=repo,
+                    start_date__range=(start, end)
+                )
+            else:
+                return stats.filter(
+                    author__isnull=True,
+                    interval=interval,
+                    repo=repo,
+                    start_date__range=(start, end)
+                )
 
 
     def to_dict(self):
-        return dict(
-            author=self.author.email,
+        result = dict(
             days_active=self.days_active,
             commit_total=self.commit_total,
             average_commit_size=self.average_commit_size,
@@ -508,10 +552,23 @@ class Statistic(models.Model):
             earliest_commit_date=str(self.earliest_commit_date),
             latest_commit_date=str(self.latest_commit_date),
             days_before_joined=self.days_before_joined,
-            days_since_seen=self.days_since_seen
+            days_since_seen=self.days_since_seen,
+            author_total=self.author_total,
+            files_changed=self.files_changed,
+
         )
+        if self.author:
+            result['author']=self.author.email
+        else:
+            result['author']=None
+        return result
+
 
     def to_author_dict(self, repo, author):
+
+        # this is somewhat similar to the views.py aggregrate needs but slightly different,
+        # as we refactor, try to consolidate the duplication.
+
         stat2 = self.to_dict()
         # FIXME: this should be a method on Author
         stat2['files_changed'] = File.objects.select_related('file_changes', 'commit').filter(
@@ -519,3 +576,4 @@ class Statistic(models.Model):
             file_changes__commit__author=author,
         ).distinct('path').count()
         return stat2
+
