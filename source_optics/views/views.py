@@ -36,6 +36,7 @@ from source_optics.serializers import (AuthorSerializer, CommitSerializer,
                                        RepositorySerializer,
                                        StatisticSerializer, UserSerializer)
 from source_optics.views.webhooks import Webhooks
+import source_optics.models as models
 
 from . import dataframes, graphs
 
@@ -124,7 +125,6 @@ def get_author_table(repo, start=None, end=None, interval=None, limit=None):
     authors = Author.authors(repo, start, end)
 
     for author in authors:
-        author = Author.objects.get(pk=author)
         if interval == 'LF':
             # we don't use aggregate
             # FIXME: this should be a function on the statistic object
@@ -172,6 +172,8 @@ def get_repo_table(repos, start, end):
 
 
 def _get_scope(request, org=None, repos=None, repo=None, start=None, end=None, interval=None, repo_table=False):
+
+    models.cache_clear()
 
     """
     Get objects from the URL parameters.

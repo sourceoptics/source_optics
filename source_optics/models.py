@@ -13,6 +13,7 @@
 # limitations under the License.
 #
 
+import functools
 import re
 
 from django.conf import settings
@@ -26,13 +27,17 @@ from source_optics.scanner.encrypt import SecretsManager
 
 # FIXME: move each model to a seperate file (not urgent)
 
-
-
 repo_validator = re.compile(r'[^a-zA-Z0-9._]')
 
 def validate_repo_name(value):
     if re.search(repo_validator, value):
         raise ValidationError("%s is not a valid repo name" % value)
+
+def cache_clear():
+    Organization.cache_clear()
+    Repository.cache_clear()
+    FileChange.cache_clear()
+    Author.cache_clear()
 
 class Organization(models.Model):
 
@@ -54,6 +59,7 @@ class Organization(models.Model):
     def __str__(self):
         return self.name
 
+    @functools.lru_cache(maxsize=128, typed=False)
     def get_working_directory(self):
         path = settings.CHECKOUT_DIRECTORY
 
@@ -61,6 +67,10 @@ class Organization(models.Model):
             path = self.checkout_path_override
 
         return path
+
+    @classmethod
+    def cache_clear(cls):
+        cls.get_working_directory.cache_clear()
 
 class Credential(models.Model):
 
@@ -136,7 +146,8 @@ class Repository(models.Model):
     def __str__(self):
         return self.name
 
-
+    # this is only used in the scanner, so LRU cache should be ok.
+    @functools.lru_cache(maxsize=128, typed=False)
     def earliest_commit_date(self, author=None):
 
         # FIXME: duplication with Author class below, remove the author option
@@ -151,6 +162,8 @@ class Repository(models.Model):
             return commits.earliest("commit_date").commit_date
         return None
 
+    # this is only used in the scanner, so LRU cache should be ok.
+    @functools.lru_cache(maxsize=128, typed=False)
     def latest_commit_date(self, author=None):
 
         # FIXME: duplication with Author class below, remove the author option
@@ -164,8 +177,19 @@ class Repository(models.Model):
             return commits.latest("commit_date").commit_date
         return None
 
-    def author_ids(self, start, end):
-        return [ x[0] for x in Commit.objects.filter(repo=self, commit_date__range=(start, end)).values_list('author').distinct() ]
+    @functools.lru_cache(maxsize=128, typed=False)
+    def author_ids(self, start=None, end=None):
+        if start:
+            return [ x[0] for x in Commit.objects.filter(repo=self, commit_date__range=(start, end)).values_list('author').distinct() ]
+        else:
+            return [ x[0] for x in Commit.objects.filter(repo=self).values_list('author').distinct() ]
+
+
+    @classmethod
+    def cache_clear(cls):
+        cls.author_ids.cache_clear()
+        cls.earliest_commit_date.cache_clear()
+        cls.latest_commit_date.cache_clear()
 
 class Author(models.Model):
     email = models.CharField(db_index=True, max_length=512, unique=True, blank=False, null=True)
@@ -173,11 +197,20 @@ class Author(models.Model):
     def __str__(self):
         return f"Author: {self.email}"
 
+    @functools.lru_cache(maxsize=128, typed=False)
     def earliest_commit_date(self, repo):
         return Commit.objects.filter(author=self, repo=repo).earliest("commit_date").commit_date
 
+    @functools.lru_cache(maxsize=128, typed=False)
     def latest_commit_date(self, repo):
         return Commit.objects.filter(author=self, repo=repo).latest("commit_date").commit_date
+
+    @classmethod
+    def cache_clear(cls):
+        cls.earliest_commit_date.cache_clear()
+        cls.latest_commit_date.cache_clear()
+        cls.authors.cache_clear()
+        cls.author_count.cache_clear()
 
     def statistics(self, repo, start=None, end=None, interval=None):
         assert start is not None
@@ -197,9 +230,12 @@ class Author(models.Model):
         return stat
 
     @classmethod
+    @functools.lru_cache(maxsize=128, typed=False)
     def authors(cls, repo, start=None, end=None):
         assert repo is not None
 
+        # FIXME: some duplication with the method in Repo, we should retire that other method
+        # FIXME: this can be written more clearly and efficiently with a related field, right?
 
         if start is not None:
             qs = Commit.objects.filter(
@@ -212,13 +248,20 @@ class Author(models.Model):
                 author__isnull=False,
                 repo=repo
             )
-        return qs.values_list('author', flat=True).distinct('author')
+        author_ids = qs.values_list('author', flat=True).distinct('author')
+        return Author.objects.filter(pk__in=author_ids)
 
     @classmethod
+    @functools.lru_cache(maxsize=128, typed=False)
     def author_count(cls, repo, start=None, end=None):
         return cls.authors(repo, start=start, end=end).count()
 
-
+    @functools.lru_cache(maxsize=128, typed=False)
+    def files_changed(self, repo):
+        return File.objects.select_related('file_changes', 'commit').filter(
+            repo=repo,
+            file_changes__commit__author=self,
+        ).distinct('path').count()
 
 
 
@@ -356,9 +399,14 @@ class FileChange(models.Model):
         return stats
 
     @classmethod
+    @functools.lru_cache(maxsize=128, typed=False)
     def change_count(cls, repo, author=None, start=None, end=None):
         qs = cls.queryset_for_range(repo, author=author, start=start, end=end)
         return qs.count()
+
+    @classmethod
+    def cache_clear(cls):
+        cls.change_count.cache_clear()
 
     def __str__(self):
         return f"FileChange: {self.file.path} {self.file.commit.sha})"
@@ -573,9 +621,5 @@ class Statistic(models.Model):
         # as we refactor, try to consolidate the duplication.
 
         stat2 = self.to_dict()
-        # FIXME: this should be a method on Author
-        stat2['files_changed'] = File.objects.select_related('file_changes', 'commit').filter(
-            repo=repo,
-            file_changes__commit__author=author,
-        ).distinct('path').count()
+        stat2['files_changed'] = author.files_changed(repo)
         return stat2

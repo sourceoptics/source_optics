@@ -22,6 +22,7 @@ import datetime
 from django.utils import timezone
 
 from source_optics.models import Author, Commit, FileChange, Statistic
+import source_optics.models as models
 
 CURRENT_TZ = timezone.get_current_timezone()
 
@@ -263,8 +264,7 @@ class Rollup:
         days = cls._queryset_for_interval_rollup(repo=repo, author=author, interval=interval, start_day=start_day, end_date=end_date)
 
         if days.count() == 0:
-            print("WARNING: NO HITS: SHOULDN'T BE HERE!: ", author, DAY, repo, start_day, end_date)
-            # FIXME: temporary workaround bc of the file move code - no longer needed?
+            # probably just a merge commit today, be cool about it and skip this one.
             return
 
         stat = Statistic.compute_interval_statistic(days, repo=repo, interval=interval, author=author, start=start_day, end=end_date)
@@ -273,15 +273,13 @@ class Rollup:
 
 
     @classmethod
+
     def get_authors_for_repo(cls, repo):
         """
         Return the authors involved in the repo
         """
-        # FIXME: is this used, or should we just use a method in models.py? I think we have one already.
-        assert repo is not None
-        author_ids = Commit.objects.filter(repo=repo).values_list("author", flat=True).distinct().all()
-        authors = Author.objects.filter(pk__in=[author_ids]).all()
-        return authors
+        return Author.authors(repo)
+
 
     @classmethod
     def get_earliest_commit_date(cls, repo, author):
@@ -327,6 +325,7 @@ class Rollup:
             cls.compute_daily_rollup(repo=repo, start_day=start_day, total_instances=total_instances)
 
         cls.bulk_create(total_instances)
+        models.cache_clear()
 
         commit_weeks = commits.datetimes('commit_date', 'week', order='ASC')
 
@@ -337,7 +336,9 @@ class Rollup:
 
             print("(RTS2) compiling team stats: week=%s" % start_day)
             cls.compute_interval_rollup(repo=repo, start_day=start_day, interval=WEEK, total_instances=total_instances)
+
         cls.bulk_create(total_instances)
+        models.cache_clear()
 
         commit_months = commits.datetimes('commit_date', 'month', order='ASC')
 
@@ -353,6 +354,7 @@ class Rollup:
         cls.compute_interval_rollup(repo=repo, start_day=None, interval=LIFETIME, total_instances=total_instances)
 
         cls.bulk_create(total_instances)
+        models.cache_clear()
 
     @classmethod
     def rollup_author_stats(cls, repo):
@@ -390,6 +392,7 @@ class Rollup:
                 cls.bulk_create(total_instances)
 
         cls.bulk_create(total_instances)
+        models.cache_clear()
 
 
         author_count = 0
@@ -413,6 +416,7 @@ class Rollup:
                 cls.compute_interval_rollup(repo=repo, author=author, interval=WEEK, start_day=start_day, total_instances=total_instances)
 
         cls.bulk_create(total_instances)
+        models.cache_clear()
 
         author_count = 0
 
@@ -433,6 +437,7 @@ class Rollup:
                 cls.bulk_create(total_instances)
 
         cls.bulk_create(total_instances)
+        models.cache_clear()
 
         author_count = 0
 
@@ -444,6 +449,7 @@ class Rollup:
             cls.compute_interval_rollup(repo=repo, author=author, interval=LIFETIME, start_day=None, total_instances=total_instances)
 
         cls.bulk_create(total_instances)
+        models.cache_clear()
 
 
     @classmethod
