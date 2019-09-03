@@ -132,6 +132,7 @@ def get_author_table(repo, start=None, end=None, interval=None, limit=None):
             if stats.count():
                 # this IF is just in case there's an author row and we didn't do a full scan with the new code yet
                 stat = stats.first()
+                # FIXME: this is expensive, if we can get this data in one query and interlace the stat it will be MUCH faster
                 stat2 = stat.to_author_dict(repo, author)
                 results.append(stat2)
 
@@ -223,7 +224,8 @@ def _get_scope(request, org=None, repos=None, repo=None, start=None, end=None, i
         start = start,
         end   = end,
         repo = repo,
-        intv = interval
+        intv = interval,
+        title = "Source Optics"
     )
 
     if start and end:
@@ -254,6 +256,7 @@ def repo(request, org=None, repo=None, start=None, end=None, intv=None):
     should also be renamed.
     """
     (scope, repo, start, end) = _get_scope(request, org=org, repo=repo, start=start, end=end, interval=intv)
+    scope['title'] = "Source Optics: %s repo (graphs)" % repo.name
     return render(request, 'repo.html', context=scope)
 
 def graph_volume(request, org=None, repo=None, start=None, end=None, intv=None):
@@ -318,6 +321,7 @@ def report_authors(request, org=None, repo=None, start=None, end=None, intv=None
     """
     (scope, repo, start, end) = _get_scope(request, org=org, repo=repo, start=start, end=end, interval=intv)
     data = get_author_table(repo, start=start, end=end, interval=intv, limit=limit)
+    scope['title'] = "Source Optics: %s repo: (authors report)" % repo.name
     scope['author_json'] = json.dumps(data)
     return render(request, 'authors.html', context=scope)
 
@@ -326,6 +330,8 @@ def repos(request, org=None, repos=None, start=None, end=None, intv=None):
     generates the list of all repos, with stats and navigation.
     """
     (scope, repo, start, end) = _get_scope(request, org=org, repos=repos, start=start, end=end, repo_table=True, interval=intv)
+    org = Organization.objects.get(pk=org)
+    scope['title'] = "Source Optics: %s organization" % org.name
     return render(request, 'repos.html', context=scope)
 
 def orgs(request):
@@ -334,6 +340,7 @@ def orgs(request):
     that also lists the orgs.
     """
     (scope, repo, start, end) = _get_scope(request)
+    scope['title'] = "Source Optics: index"
     return render(request, 'orgs.html', context=scope)
 
 
