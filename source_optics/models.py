@@ -392,10 +392,12 @@ class FileChange(models.Model):
         qs = cls.queryset_for_range(repo, author=author, start=start, end=end)
         files = File.queryset_for_range(repo, author=author, start=start, end=end)
         stats = qs.aggregate(lines_added=Sum("lines_added"), lines_removed = Sum("lines_removed"))
+        # FIXME: there is duplication here with the Statistic class and we should figure out how to fix that.
+        # FIXME: the qs call should use a LRU cache wrapped method. Isn't there a method in Commit?
         stats['commit_total'] = qs.values_list('commit', flat=True).distinct().count()
+        # FIXME: this should also have a LRU - use the file count method in File
         stats['files_changed'] = files.count()
         stats['lines_changed'] = stats['lines_added'] + stats['lines_removed']
-        stats['average_commit_size'] = Statistic._compute_average_commit_size(stats)
         return stats
 
     @classmethod
@@ -437,6 +439,7 @@ class Statistic(models.Model):
     interval = models.TextField(max_length=5, choices=INTERVALS)
     repo = models.ForeignKey(Repository, on_delete=models.CASCADE, null=True, related_name='repo')
     author = models.ForeignKey(Author, on_delete=models.CASCADE, blank=True, null=True, related_name='author')
+
     lines_added = models.IntegerField(blank = True, null = True)
     lines_removed = models.IntegerField(blank = True, null = True)
     lines_changed = models.IntegerField(blank = True, null = True)
@@ -445,6 +448,11 @@ class Statistic(models.Model):
     author_total = models.IntegerField(blank = True, null = True)
     days_active = models.IntegerField(blank=True, null=False, default=0)
     average_commit_size = models.IntegerField(blank=True, null=True, default=0)
+
+    commits_per_day = models.FloatField(blank=True, null=True, default=0)
+    files_changed_per_day = models.FloatField(blank=True, null=True, default=0)
+    lines_changed_per_day = models.FloatField(blank=True, null=True, default=0)
+
 
     # the following stats are only going to be valid for LIFETIME ('LF') intervals
     earliest_commit_date = models.DateTimeField(blank=True, null=True)
@@ -493,7 +501,6 @@ class Statistic(models.Model):
         data = Statistic.aggregate_data(queryset)
         author_count = Author.author_count(repo, start=start, end=end)
         files_changed = FileChange.change_count(repo=repo, start=start, end=end, author=author)
-        avg_commit_size = Statistic._compute_average_commit_size(data)
 
         if author and isinstance(author, int):
             # FIXME: find where this is happening and make sure the system returns objects.
@@ -510,14 +517,20 @@ class Statistic(models.Model):
             commit_total=data['commit_total'],
             days_active=data['days_active'],
             files_changed=files_changed,
-            average_commit_size=avg_commit_size,
             author_total=author_count,
         )
 
+        stat.compute_derived_values()
+
         if interval == 'LF':
 
-            # FIXME: use the methods on the Repo and Author class to get to these values
-            # make sure they are memoized for efficiency as they are executed often
+            # we can only provide these for lifetime intervals because they don't entirely
+            # make sense without the full history, for instance, 'earliest commit' would
+            # not be within the time range. we *COULD* change this, and denormalize the system
+            # where every row has this data, but it would massively slow down the scanner to
+            # update every single row on every scan - and that's bad. Hence just updating
+            # the lifetime rows.
+
             all_earliest = repo.earliest_commit_date()
             all_latest = repo.latest_commit_date()
             stat.earliest_commit_date = repo.earliest_commit_date(author)
@@ -528,17 +541,28 @@ class Statistic(models.Model):
 
         return stat
 
+    def compute_derived_values(self):
+        self.average_commit_size = Statistic._div_safe(self, 'lines_changed', 'commit_total')
+        self.commits_per_day = Statistic._div_safe(self, 'commit_total', 'days_active')
+        self.lines_changed_per_day = Statistic._div_safe(self, 'lines_changed', 'days_active')
+        self.files_changed_per_day = Statistic._div_safe(self, 'files_changed', 'days_active')
 
     @classmethod
-    def _compute_average_commit_size(cls, data):
+    def _div_safe(cls, data, left, right):
+        # FIXME: more of a question - these are float fields, do we want this, or should we make them int fields?
+        # we're casting anyway at this point.
         if isinstance(data, dict):
-            if data['commit_total']:
-                return int(float(data['lines_changed']) / float(data['commit_total']))
-            return 0
+            # FIXME: when done refactoring, I would think we'd only have objects, and this part
+            # would no longer be needed.
+            if data[right]:
+                return int(float(data[left]) / float(data[right]))
+            else:
+                return 0
         else:
-            if data.lines_changed:
-                return int(float(data.lines_changed) / float(data.commit_total))
-            return 0
+            if getattr(data, right):
+                return int(float(getattr(data,left)) / float(getattr(data,right)))
+            else:
+                return 0
 
     def copy_fields_for_update(self, other):
         # TODO: make this list of fields gathered automatically from the model so maintaince
@@ -555,6 +579,9 @@ class Statistic(models.Model):
         self.days_before_joined = other.days_before_joined
         self.days_active = other.days_active
         self.average_commit_size = other.average_commit_size
+        self.commits_per_day = other.commits_per_day
+        self.lines_changed_per_day = other.lines_changed_per_day
+        self.files_changed_per_day = other.files_changed_per_day
 
     @classmethod
     def queryset_for_range(cls, repo, interval, author=None, start=None, end=None):
@@ -606,7 +633,9 @@ class Statistic(models.Model):
             days_since_seen=self.days_since_seen,
             author_total=self.author_total,
             files_changed=self.files_changed,
-
+            files_changed_per_day=self.files_changed_per_day,
+            lines_changed_per_day=self.lines_changed_per_day,
+            commits_per_day=self.commits_per_day
         )
         if self.author:
             result['author']=self.author.email
@@ -617,9 +646,12 @@ class Statistic(models.Model):
 
     def to_author_dict(self, repo, author):
 
-        # this is somewhat similar to the views.py aggregrate needs but slightly different,
-        # as we refactor, try to consolidate the duplication.
+        # FIXME: this is somewhat similar to the views.py aggregrate needs but slightly different,
+        # as we refactor, try to consolidate the duplication. This is only used for lifetime
+        # reports, that don't use the interval summing code, but can't we just sum the lifetime
+        # stat as an interval of one? I think we can.  This means the extra DB lookups are redundant.
 
         stat2 = self.to_dict()
+        # there's a LRU cache around this, but is there a better way to do this?
         stat2['files_changed'] = author.files_changed(repo)
         return stat2

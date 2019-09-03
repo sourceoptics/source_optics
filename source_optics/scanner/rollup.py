@@ -167,9 +167,11 @@ class Rollup:
             commit_total= data['commit_total'],
             files_changed=data['files_changed'],
             author_total=authors_count,
-            average_commit_size=data['average_commit_size'],
             days_active=1,
         )
+
+        stat.compute_derived_values()
+
 
         cls.smart_bulk_update(repo=repo, start_day=start_day, author=author, interval=DAY, stat=stat, total_instances=total_instances)
 
