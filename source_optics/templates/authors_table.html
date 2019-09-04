@@ -14,9 +14,8 @@
 
     var columnDefs = [
         {headerName: "Author",              field: "author", sortable: true, filter: true },
-        {headerName: "Lines Changed",       field: "lines_changed", sortable: true, filter: true },
-        {headerName: "Lines Added",         field: "lines_added", sortable: true, filter: true },
-        {headerName: "Lines Removed",       field: "lines_removed", sortable: true, filter: true },
+        {headerName: "Added+Removed",       field: "lines_changed", sortable: true, filter: true },
+        {headerName: "Added-Removed",       field: "bias", sortable: true, filter: true },
         {headerName: "Commit Total",        field: "commit_total", sortable: true, filter: true },
         {headerName: "Files Changed",       field: "files_changed", sortable: true, filter: true },
         {headerName: "Days Active",         field: "days_active", sortable: true, filter: true },

@@ -54,12 +54,13 @@ def top_authors(repo, start, end, attribute='commit_total', limit=10):
     return author_ids
 
 
-def _queryset_for_scatter(repo, start=None, end=None, by_author=False, interval='DY'):
+def _queryset_for_scatter(repo, start=None, end=None, by_author=False, interval='DY', limit_top_authors=False):
 
     """
     Returns a queryset of statistics usable for a scatter plot.
     FIXME: this is only slightly different from the methods in models.py, because it doesn't yet use the top_authors data. Add the option
     with a limit=-1 (default) parameter.
+    # FIXME: clean all this up.
     """
 
     totals = None
@@ -78,17 +79,27 @@ def _queryset_for_scatter(repo, start=None, end=None, by_author=False, interval=
                 author__isnull=True
             )
     else:
-        top = top_authors(repo, start, end)
+        top = None
+        if limit_top_authors:
+            top = top_authors(repo, start, end)
         if interval != 'LF':
-            totals = Statistic.objects.select_related('repo', 'author').filter(
-                interval=interval,
-                repo=repo,
-                author__pk__in=top,
-                start_date__range=(start, end)
-            )
+            if limit_top_authors:
+                totals = Statistic.objects.select_related('repo', 'author').filter(
+                    interval=interval,
+                    repo=repo,
+                    author__pk__in=top,
+                    start_date__range=(start, end)
+                )
+            else:
+                totals = Statistic.objects.select_related('repo', 'author').filter(
+                    interval=interval,
+                    repo=repo,
+                    author__isnull=False,
+                    start_date__range=(start, end)
+                )
         else:
             # note, this is used for slightly DIFFERENT purposes in the final graphs, so doesn't restrict
-            # to the top authors list. If this ever becomes important, it might need to change.
+            # to the top authors list. If this ever becomes important, it might need to change
             totals = Statistic.objects.select_related('repo', 'author').filter(
                 interval=interval,
                 repo=repo,
@@ -130,18 +141,17 @@ def _scatter_queryset_to_dataframe(repo, totals, fields):
                 data[f].append(t.author.email)
             else:
                 data[f].append(getattr(t, f))
-
     return pd.DataFrame(data, columns=fields)
 
 DEFAULT_SCATTER_FIELDS = [
-    'date', 'day', 'lines_changed', 'commit_total', 'author_total', 'average_commit_size',
+    'date', 'day', 'lines_changed', 'commit_total', 'author_total', 'average_commit_size', 'flux', 'files_changed', 'bias'
 ]
 LIFETIME_ONLY_SCATTER_FIELDS = [
      'earliest_commit_date', 'latest_commit_date', 'days_since_seen',
      'days_before_joined', 'longevity', 'days_active'
 ]
 
-def stat_series(repo, start=None, end=None, fields=None, by_author=False, interval=None):
+def stat_series(repo, start=None, end=None, fields=None, by_author=False, interval=None, limit_top_authors=False):
 
     """
     The public function in this file (FIXME: convert the rest to _functions) that returns
@@ -160,5 +170,5 @@ def stat_series(repo, start=None, end=None, fields=None, by_author=False, interv
         if by_author:
             fields.append('author')
 
-    totals = _queryset_for_scatter(repo, start=start, end=end, by_author=by_author, interval=interval)
+    totals = _queryset_for_scatter(repo, start=start, end=end, by_author=by_author, interval=interval, limit_top_authors=limit_top_authors)
     return _scatter_queryset_to_dataframe(repo, totals, fields)

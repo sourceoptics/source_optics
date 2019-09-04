@@ -55,6 +55,25 @@ def render_chart(chart):
     c = template.Context()
     return template.Template(TEMPLATE_CHART.format(output_div=output_div, spec=json.dumps(spec), embed_opt=json.dumps(embed_opt))).render(c)
 
+def _add_fit(df, x, y, chart):
+    if len(df.index) <= 0:
+        return chart
+    # only show the curve if it is turned on and there is data to apply the curve to.
+
+    # Build a dataframe with the fitted data
+    poly_data = pd.DataFrame({'xfit': np.linspace(df[x].min(), df[x].max(), 500)})
+    for degree in [1,3,5]:
+        poly_data[str(degree)] = np.poly1d(np.polyfit(df[x], df[y], degree))(poly_data['xfit'])
+    polynomial_fit = alt.Chart(poly_data).transform_fold(
+        ['1', '3', '5'],
+        as_=['degree', 'yfit']
+    ).mark_line().encode(
+        x='xfit:Q',
+        y='yfit:Q',
+        color='degree:N'
+    )
+    return chart + polynomial_fit
+
 def _basic_graph(repo=None, start=None, end=None, df=None, x=None, y=None, tooltips=None, fit=False):
     """
     This renders an altair graph around pretty much any combination of two parameters found on a Statistic object.
@@ -74,25 +93,8 @@ def _basic_graph(repo=None, start=None, end=None, df=None, x=None, y=None, toolt
         tooltip=tooltips,
     ).interactive()
 
-
-    if fit and len(df.index) > 0:
-        # only show the curve if it is turned on and there is data to apply the curve to.
-
-        # Build a dataframe with the fitted data
-        poly_data = pd.DataFrame({'xfit': np.linspace(df[x].min(), df[x].max(), 500)})
-        for degree in [1,3,5]:
-            poly_data[str(degree)] = np.poly1d(np.polyfit(df[x], df[y], degree))(poly_data['xfit'])
-
-        polynomial_fit = alt.Chart(poly_data).transform_fold(
-            ['1', '3', '5'],
-            as_=['degree', 'yfit']
-        ).mark_line().encode(
-            x='xfit:Q',
-            y='yfit:Q',
-            color='degree:N'
-        )
-
-        chart = chart + polynomial_fit
+    if fit:
+        chart = _add_fit(df, x, y, chart)
 
     return render_chart(chart)
 
@@ -111,6 +113,37 @@ def participation(repo=None, start=None, end=None, df=None):
 def granularity(repo=None, start=None, end=None, df=None):
     """ shows the average commit size for a particular day """
     return _basic_graph(repo=repo, start=start, end=end, df=df, x='day', y='average_commit_size', fit=True)
+
+def bias_impact(repo=None, start=None, end=None, df=None):
+    # FIXME: helper functon!
+    alt.data_transformers.disable_max_rows()
+    chart = alt.Chart(df, height=600, width=600).mark_point().encode(
+        x=alt.X('bias', scale=alt.Scale(zero=False, clamp=True)),
+        y=alt.Y("lines_changed", scale=alt.Scale(zero=True, clamp=True)), #  domain=(0,2000), clamp=True)),
+        # FIXME: standardize tooltips!
+        tooltip = ['day', 'date', 'commit_total', 'lines_changed', 'author' ],
+    ).interactive()
+    chart = _add_fit(df, 'bias', 'lines_changed', chart)
+    return render_chart(chart)
+
+def flux_impact(repo=None, start=None, end=None, df=None):
+    # FIXME: helper functon!
+    alt.data_transformers.disable_max_rows()
+    chart = alt.Chart(df, height=600, width=600).mark_point().encode(
+        x=alt.X('flux', scale=alt.Scale(zero=True, clamp=True)),
+        y=alt.Y("lines_changed", scale=alt.Scale(zero=True, clamp=True)), #  domain=(0,2000), clamp=True)),
+        # FIXME: standardize tooltips!
+        tooltip = ['day', 'date', 'commit_total', 'lines_changed', 'author' ],
+    ).interactive()
+    chart = _add_fit(df, 'flux', 'lines_changed', chart)
+    return render_chart(chart)
+
+def bias_time(repo=None, start=None, end=None, df=None):
+    # FIXME: the function 'basic_graph' should be called 'time_graph'
+    return _basic_graph(repo=repo, start=start, end=end, df=df, x='day', y='bias', fit=True)
+
+def files_time(repo=None, start=None, end=None, df=None):
+    return _basic_graph(repo=repo, start=start, end=end, df=df, x='day', y='files_changed', fit=True)
 
 # FIXME: standardize all the tooltips so they are the same for lifetime graphs, and a different set for non-lifetime graphs
 
@@ -141,7 +174,6 @@ def staying_power(repo=None, start=None, end=None, df=None):
     of history commit more than ones who have been around less frequently?  True understanding really warrants a 3D graph vs days_since_joined.
     """
     return _basic_graph(repo=repo, start=start, end=end, df=df, x='longevity', y='days_active',
-                        #x='longevity', y='lines_changed',
                         tooltips=['author', 'earliest_commit_date', 'latest_commit_date', 'longevity', 'commit_total', 'lines_changed'], fit=True)
 
 

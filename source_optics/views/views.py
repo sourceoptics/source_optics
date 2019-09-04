@@ -240,12 +240,17 @@ def _get_scope(request, org=None, repos=None, repo=None, start=None, end=None, i
 
     return (context, repo, start, end)
 
-def _render_graph(request, org=None, repo=None, start=None, end=None, by_author=False, data_method=None, interval=None, graph_method=None):
+def _render_graph(request, org=None, repo=None, start=None, end=None, by_author=False, data_method=None,
+                  interval=None, graph_method=None, limit_top_authors=False):
     """
     a helper method used by all the Statistic-based graph rendering view functions.
     """
     (scope, repo, start, end) = _get_scope(request, org=org, repo=repo, start=start, end=end)
-    dataframe = getattr(dataframes, data_method)(repo=repo, start=start, by_author=by_author, end=end, interval=interval)
+    if by_author and limit_top_authors:
+        # FIXME: a bit of a mess here, but not all data frame methods take this parameter
+        dataframe = getattr(dataframes, data_method)(repo=repo, start=start, by_author=by_author, end=end, interval=interval, limit_top_authors=True)
+    else:
+        dataframe = getattr(dataframes, data_method)(repo=repo, start=start, by_author=by_author, end=end, interval=interval)
     scope['graph'] = getattr(graphs, graph_method)(repo=repo, start=start, end=end, df=dataframe)
     return render(request, 'graph.html', context=scope)
 
@@ -284,7 +289,7 @@ def graph_largest_contributors(request, org=None, repo=None, start=None, end=Non
     """
     generates a partial graph which is loaded in the repo graphs page. more comments in graphs.py
     """
-    return _render_graph(request, org=org, repo=repo, start=start, end=end, by_author=True, interval=intv,
+    return _render_graph(request, org=org, repo=repo, start=start, end=end, by_author=True, limit_top_authors=True, interval=intv,
         data_method='stat_series', graph_method='largest_contributors')
 
 def graph_granularity(request, org=None, repo=None, start=None, end=None, intv=None):
@@ -314,6 +319,25 @@ def graph_staying_power(request, org=None, repo=None, start=None, end=None):
     """
     return _render_graph(request, org=org, repo=repo, start=start, end=end, interval='LF', by_author=True,
         data_method='stat_series', graph_method='staying_power')
+
+def graph_bias_impact(request, org=None, repo=None, start=None, end=None):
+    return _render_graph(request, org=org, repo=repo, start=start, end=end, interval='WK', by_author=True,
+        data_method='stat_series', graph_method='bias_impact')
+
+def graph_files_time(request, org=None, repo=None, start=None, intv=None, end=None):
+    """
+    generates a partial graph which is loaded in the repo graphs page. more comments in graphs.py
+    """
+    return _render_graph(request, org=org, repo=repo, start=start, end=end, interval=intv,
+        data_method='stat_series', graph_method='files_time')
+
+def graph_bias_time(request, org=None, repo=None, start=None, intv=None, end=None):
+    """
+    generates a partial graph which is loaded in the repo graphs page. more comments in graphs.py
+    """
+    return _render_graph(request, org=org, repo=repo, start=start, end=end, interval=intv,
+        data_method='stat_series', graph_method='bias_time')
+
 
 def report_authors(request, org=None, repo=None, start=None, end=None, intv=None, limit=None):
     """

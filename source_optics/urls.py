@@ -47,6 +47,10 @@ urlpatterns = [
     path('org/<org>/repo/<repo>/start/<start>/end/<end>/graph/key_retention', views.graph_key_retention, name='graph_key_retention'),
     path('org/<org>/repo/<repo>/start/<start>/end/<end>/graph/early_retention', views.graph_early_retention, name='graph_early_retention'),
     path('org/<org>/repo/<repo>/start/<start>/end/<end>/graph/staying_power', views.graph_staying_power, name='graph_staying_power'),
+    path('org/<org>/repo/<repo>/start/<start>/end/<end>/graph/bias_impact', views.graph_bias_impact, name='graph_bias_impact'),
+    path('org/<org>/repo/<repo>/start/<start>/end/<end>/intv/<intv>/graph/bias_time', views.graph_bias_time, name='graph_bias_time'),
+    path('org/<org>/repo/<repo>/start/<start>/end/<end>/intv/<intv>/graph/files_time', views.graph_files_time, name='graph_files_time'),
+
     path('org/<org>/repo/<repo>/start/<start>/end/<end>/intv/<intv>/limit/<limit>/report/authors', views.report_authors, name='report_authors'),
 
     # REST API

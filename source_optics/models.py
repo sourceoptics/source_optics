@@ -452,7 +452,8 @@ class Statistic(models.Model):
     commits_per_day = models.FloatField(blank=True, null=True, default=0)
     files_changed_per_day = models.FloatField(blank=True, null=True, default=0)
     lines_changed_per_day = models.FloatField(blank=True, null=True, default=0)
-
+    bias = models.IntegerField(blank=True, null=True, default=0)
+    flux = models.FloatField(blank=True, null=True, default=0)
 
     # the following stats are only going to be valid for LIFETIME ('LF') intervals
     earliest_commit_date = models.DateTimeField(blank=True, null=True)
@@ -546,6 +547,11 @@ class Statistic(models.Model):
         self.commits_per_day = Statistic._div_safe(self, 'commit_total', 'days_active')
         self.lines_changed_per_day = Statistic._div_safe(self, 'lines_changed', 'days_active')
         self.files_changed_per_day = Statistic._div_safe(self, 'files_changed', 'days_active')
+        self.flux = Statistic._div_safe(self, 'lines_changed', 'files_changed')
+        if self.lines_added and self.lines_removed:
+            self.bias = self.lines_added - self.lines_removed
+        else:
+            self.bias = 0
 
     @classmethod
     def _div_safe(cls, data, left, right):
@@ -582,6 +588,8 @@ class Statistic(models.Model):
         self.commits_per_day = other.commits_per_day
         self.lines_changed_per_day = other.lines_changed_per_day
         self.files_changed_per_day = other.files_changed_per_day
+        self.bias = other.bias
+        self.flux = other.flux
 
     @classmethod
     def queryset_for_range(cls, repo, interval, author=None, start=None, end=None):
@@ -635,7 +643,9 @@ class Statistic(models.Model):
             files_changed=self.files_changed,
             files_changed_per_day=self.files_changed_per_day,
             lines_changed_per_day=self.lines_changed_per_day,
-            commits_per_day=self.commits_per_day
+            commits_per_day=self.commits_per_day,
+            bias=self.bias,
+            flux=self.flux
         )
         if self.author:
             result['author']=self.author.email
