@@ -47,8 +47,6 @@ def render_chart(chart):
     """
     wraps an altair chart with the required javascript/html to display that chart
     """
-
-
     spec = chart.to_dict()
     output_div = '_' + ''.join(random.choices(string.ascii_letters + string.digits, k=7))
     embed_opt = {"mode": "vega-lite", "actions": False}

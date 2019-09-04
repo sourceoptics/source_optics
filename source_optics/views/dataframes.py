@@ -148,7 +148,6 @@ def _scatter_queryset_to_dataframe(repo, totals, fields, just_data=False):
             else:
                 data[f].append(getattr(t, f))
     if not just_data:
-        print("keys=%s" % data.keys())
         return pd.DataFrame(data, columns=fields)
     else:
         return (data, fields)
@@ -184,3 +183,5 @@ def author_time_series(repo, start=None, end=None, interval=None):
 def top_author_time_series(repo, start=None, end=None, interval=None):
     return _stat_series(repo, start=start, end=end, interval=interval, by_author=True, limit_top_authors=True)
 
+# TODO: make a method that returns the top_author_time_series but makes an 11th author which is the aggregrate of all authors not in
+# the top author list.  We will then use *THAT* data for pie charts and stacked bars.
