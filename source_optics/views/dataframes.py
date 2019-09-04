@@ -54,7 +54,7 @@ def top_authors(repo, start, end, attribute='commit_total', limit=10):
     return author_ids
 
 
-def _queryset_for_scatter(repo, start=None, end=None, by_author=False, interval='DY', limit_top_authors=False):
+def _interval_queryset(repo, start=None, end=None, by_author=False, interval='DY', limit_top_authors=False):
 
     """
     Returns a queryset of statistics usable for a scatter plot.
@@ -73,11 +73,17 @@ def _queryset_for_scatter(repo, start=None, end=None, by_author=False, interval=
                 start_date__range=(start, end)
             )
         else:
-            totals = Statistic.objects.select_related('repo').filter(
-                interval=interval,
-                repo=repo,
-                author__isnull=True
-            )
+            if start is None or end is None:
+                totals = Statistic.objects.select_related('repo').filter(
+                    interval=interval,
+                    repo=repo,
+                    author__isnull=True
+                )
+            else:
+                totals = Statistic.objects.select_related('repo').filter(
+                    interval=interval,
+                    repo=repo,
+                )
     else:
         top = None
         if limit_top_authors:
@@ -98,17 +104,19 @@ def _queryset_for_scatter(repo, start=None, end=None, by_author=False, interval=
                     start_date__range=(start, end)
                 )
         else:
-            # note, this is used for slightly DIFFERENT purposes in the final graphs, so doesn't restrict
-            # to the top authors list. If this ever becomes important, it might need to change
             totals = Statistic.objects.select_related('repo', 'author').filter(
                 interval=interval,
                 repo=repo,
                 author__isnull=False
-                # author__pk__in=top
             )
+            if start and end:
+                totals = totals.filter(author__commits__commit_date__range=(start,end))
+            if limit_top_authors:
+                totals = totals.filter(author__pk__in=top)
+
     return totals.order_by('author','start_date')
 
-def _scatter_queryset_to_dataframe(repo, totals, fields, just_data=False):
+def _interval_queryset_to_dataframe(repo, totals, fields, just_data=False):
 
     """
     Convert a queryset of statistic objects as returned by the above function
@@ -173,8 +181,8 @@ def _stat_series(repo, start=None, end=None, fields=None, by_author=False, inter
         if by_author:
             fields.append('author')
 
-    totals = _queryset_for_scatter(repo, start=start, end=end, by_author=by_author, interval=interval, limit_top_authors=limit_top_authors)
-    return _scatter_queryset_to_dataframe(repo, totals, fields)
+    totals = _interval_queryset(repo, start=start, end=end, by_author=by_author, interval=interval, limit_top_authors=limit_top_authors)
+    return _interval_queryset_to_dataframe(repo, totals, fields)
 
 def team_time_series(repo, start=None, end=None, interval=None):
     return _stat_series(repo, start=start, end=end, interval=interval)
@@ -187,7 +195,3 @@ def top_author_time_series(repo, start=None, end=None, interval=None):
 
 # TODO: make a method that returns the top_author_time_series but makes an 11th author which is the aggregrate of all authors not in
 # the top author list.  We will then use *THAT* data for pie charts and stacked bars.
-
-# TODO: still need to see if we can modify Statistics code so that earliest_commit_date / latest are on all objects
-# compute derived records with F expressions on aggregration.
-# https://stackoverflow.com/questions/45593440/how-to-execute-arithmetic-operations-between-model-fields-in-django

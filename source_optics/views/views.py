@@ -124,6 +124,9 @@ def get_author_table(repo, start=None, end=None, interval=None, limit=None):
 
     results = []
 
+    if interval != 'LF':
+        interval = 'DY'
+
     authors = Author.authors(repo, start, end)
 
     for author in authors:
@@ -140,7 +143,7 @@ def get_author_table(repo, start=None, end=None, interval=None, limit=None):
         #else:
         #    # interval here as a parameter uses anything but lifetime as 'not lifetime', because this is just a table and not graphs
         stat1 = Statistic.queryset_for_range(repo, author=author, start=start, end=end, interval=interval)
-        stat2 = Statistic.compute_interval_statistic(stat1, interval='DY', repo=repo, author=author, start=start, end=end)
+        stat2 = Statistic.compute_interval_statistic(stat1, interval=interval, repo=repo, author=author, start=start, end=end)
         stat2 = stat2.to_dict()
         stat2['author'] = author.email
         if stat2['lines_changed']:
@@ -326,7 +329,7 @@ def graph_commitment(request, org=None, repo=None, start=None, end=None, intv=No
 def graph_early_retention(request, org=None, repo=None, start=None, end=None, intv=None):
     (scope, repo, start, end) = _get_scope(request, org=org, repo=repo, start=start, end=end)
     df = dataframes.author_time_series(repo, start=start, end=end, interval=intv)
-    scope['graph'] = graphs.scatter_plot(df=df, x='earliest_commit_day', y='commit_total', fit=True, author=True)
+    scope['graph'] = graphs.scatter_plot(df=df, x='latest_commit_day', y='commit_total', fit=True, author=True)
     return render(request, 'graph.html', context=scope)
 
 def graph_staying_power(request, org=None, repo=None, start=None, end=None, intv=None):
