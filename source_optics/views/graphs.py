@@ -55,7 +55,7 @@ def render_chart(chart):
     c = template.Context()
     return template.Template(TEMPLATE_CHART.format(output_div=output_div, spec=json.dumps(spec), embed_opt=json.dumps(embed_opt))).render(c)
 
-def _add_fit(df, x, y, chart):
+def add_fit(df, x, y, chart):
     if len(df.index) <= 0:
         return chart
     # only show the curve if it is turned on and there is data to apply the curve to.
@@ -74,7 +74,7 @@ def _add_fit(df, x, y, chart):
     )
     return chart + polynomial_fit
 
-def _basic_graph(repo=None, start=None, end=None, df=None, x=None, y=None, tooltips=None, fit=False):
+def scatter_plot(repo=None, start=None, end=None, df=None, x=None, y=None, tooltips=None, fit=False):
     """
     This renders an altair graph around pretty much any combination of two parameters found on a Statistic object.
     """
@@ -87,6 +87,7 @@ def _basic_graph(repo=None, start=None, end=None, df=None, x=None, y=None, toolt
 
 
     alt.data_transformers.disable_max_rows()
+
     chart = alt.Chart(df, height=600, width=600).mark_point().encode(
         x=alt.X(x, scale=alt.Scale(zero=False, clamp=True)), #, scale=alt.Scale(zero=False, clamp=True)),
         y=alt.Y(y, scale=alt.Scale(zero=False, clamp=True)), #, scale=alt.Scale(zero=False, clamp=True)),
@@ -94,81 +95,6 @@ def _basic_graph(repo=None, start=None, end=None, df=None, x=None, y=None, toolt
     ).interactive()
 
     if fit:
-        chart = _add_fit(df, x, y, chart)
+        chart = add_fit(df, x, y, chart)
 
-    return render_chart(chart)
-
-def volume(repo=None, start=None, end=None, df=None):
-    """ graphs the number of days since the project started VS the lines changed each day """
-    return _basic_graph(repo=repo, start=start, end=end, df=df, x='day', y='lines_changed', fit=True)
-
-def frequency(repo=None, start=None, end=None, df=None):
-    """ graphs the number of days since the project started since the number of commits each day """
-    return _basic_graph(repo=repo, start=start, end=end, df=df, x='day', y='commit_total', fit=True)
-
-def participation(repo=None, start=None, end=None, df=None):
-    """ graphs the number of days since the project started since the number of authors that committed each day """
-    return _basic_graph(repo=repo, start=start, end=end, df=df, x='day', y='author_total', fit=True)
-
-def granularity(repo=None, start=None, end=None, df=None):
-    """ shows the average commit size for a particular day """
-    return _basic_graph(repo=repo, start=start, end=end, df=df, x='day', y='average_commit_size', fit=True)
-
-def bias_impact(repo=None, start=None, end=None, df=None):
-    # FIXME: helper functon!
-    alt.data_transformers.disable_max_rows()
-    chart = alt.Chart(df, height=600, width=600).mark_point().encode(
-        x=alt.X('bias', scale=alt.Scale(zero=False, clamp=True)),
-        y=alt.Y("lines_changed", scale=alt.Scale(zero=True, clamp=True)), #  domain=(0,2000), clamp=True)),
-        # FIXME: standardize tooltips!
-        tooltip = ['day', 'date', 'commit_total', 'lines_changed', 'author' ],
-    ).interactive()
-    chart = _add_fit(df, 'bias', 'lines_changed', chart)
-    return render_chart(chart)
-
-def bias_time(repo=None, start=None, end=None, df=None):
-    # FIXME: the function 'basic_graph' should be called 'time_graph'
-    return _basic_graph(repo=repo, start=start, end=end, df=df, x='day', y='bias', fit=True)
-
-def files_time(repo=None, start=None, end=None, df=None):
-    return _basic_graph(repo=repo, start=start, end=end, df=df, x='day', y='files_changed', fit=True)
-
-# FIXME: standardize all the tooltips so they are the same for lifetime graphs, and a different set for non-lifetime graphs
-
-def key_retention(repo=None, start=None, end=None, df=None):
-    """
-    graphs the number of days since we have seen a commit from a user against their line contribution to the project.
-    this can be used to identify contributors that may have lost interest or changed jobs/assignments.
-    """
-    return _basic_graph(repo=repo, start=start, end=end, df=df, x='days_since_seen', y='lines_changed',
-                        tooltips=['author', 'earliest_commit_date', 'latest_commit_date', 'longevity', 'commit_total', 'lines_changed'], fit=True)
-
-def commitment(repo=None, start=None, end=None, df=None):
-    """
-    how does loyalty translate to volume?
-    """
-    return _basic_graph(repo=repo, start=start, end=end, df=df, x='earliest_commit_day', y='commitment',
-                        tooltips=['author', 'earliest_commit_date', 'latest_commit_date', 'longevity', 'commit_total', 'lines_changed'], fit=True)
-
-def early_retention(repo=None, start=None, end=None, df=None):
-    return _basic_graph(repo=repo, start=start, end=end, df=df, x='earliest_commit_day', y='longevity',
-                        tooltips=['author', 'earliest_commit_date', 'latest_commit_date', 'longevity', 'commit_total', 'lines_changed'], fit=True)
-
-def staying_power(repo=None, start=None, end=None, df=None):
-    return _basic_graph(repo=repo, start=start, end=end, df=df, x='latest_commit_day', y='longevity',
-                        tooltips=['author', 'earliest_commit_date', 'latest_commit_date', 'longevity', 'commit_total', 'lines_changed'], fit=True)
-
-
-def largest_contributors(repo=None, start=None, end=None, df=None):
-    """
-    this is a scatter plot of the activity of the top authors within the time range.  Selecting a different time range may highlight a different set
-    of authors that were at the top within that particular range, rather than the overall top authors for the lifetime of the project.
-    """
-    alt.data_transformers.disable_max_rows()
-    chart = alt.Chart(df, height=600, width=600).mark_point().encode(
-        x=alt.X('day', scale=alt.Scale(zero=False, clamp=True)),
-        y=alt.Y("lines_changed", scale=alt.Scale(zero=False, clamp=True)), #  domain=(0,2000), clamp=True)),
-        color='author:N',
-        tooltip = ['day', 'date', 'commit_total', 'lines_changed', 'author' ],
-    ).interactive()
     return render_chart(chart)

@@ -37,8 +37,10 @@ from source_optics.serializers import (AuthorSerializer, CommitSerializer,
                                        StatisticSerializer, UserSerializer)
 from source_optics.views.webhooks import Webhooks
 import source_optics.models as models
-
 from . import dataframes, graphs
+import altair as alt
+import numpy as np
+import pandas as pd
 
 #=====
 # BEGIN REST API
@@ -267,83 +269,77 @@ def repo(request, org=None, repo=None, start=None, end=None, intv=None):
     return render(request, 'repo.html', context=scope)
 
 def graph_volume(request, org=None, repo=None, start=None, end=None, intv=None):
-    """
-    generates a partial graph which is loaded in the repo graphs page. more comments in graphs.py
-    """
-    return _render_graph(request, org=org, repo=repo, start=start, end=end, interval=intv,
-        data_method='stat_series', graph_method='volume')
+    (scope, repo, start, end) = _get_scope(request, org=org, repo=repo, start=start, end=end)
+    df = dataframes.stat_series(repo, start=start, end=end, interval=intv)
+    scope['graph'] = graphs.scatter_plot(repo=repo, start=start, end=end, df=df, x='day', y='lines_changed', fit=True)
+    return render(request, 'graph.html', context=scope)
 
 def graph_frequency(request, org=None, repo=None, start=None, end=None, intv=None):
-    """
-    generates a partial graph which is loaded in the repo graphs page. more comments in graphs.py
-    """
-    return _render_graph(request, org=org, repo=repo, start=start, end=end, interval=intv,
-        data_method='stat_series', graph_method='frequency')
+    (scope, repo, start, end) = _get_scope(request, org=org, repo=repo, start=start, end=end)
+    df = dataframes.stat_series(repo, start=start, end=end, interval=intv)
+    scope['graph'] = graphs.scatter_plot(repo=repo, start=start, end=end, df=df, x='day', y='commit_total', fit=True)
+    return render(request, 'graph.html', context=scope)
 
 def graph_participation(request, org=None, repo=None, start=None, end=None, intv=None):
-    """
-    generates a partial graph which is loaded in the repo graphs page. more comments in graphs.py
-    """
-    return _render_graph(request, org=org, repo=repo, start=start, end=end, interval=intv,
-        data_method='stat_series', graph_method='participation')
+    (scope, repo, start, end) = _get_scope(request, org=org, repo=repo, start=start, end=end)
+    df = dataframes.stat_series(repo, start=start, end=end, interval=intv)
+    scope['graph'] = graphs.scatter_plot(repo=repo, start=start, end=end, df=df, x='day', y='author_total', fit=True)
+    return render(request, 'graph.html', context=scope)
 
 def graph_largest_contributors(request, org=None, repo=None, start=None, end=None, intv=None):
-    """
-    generates a partial graph which is loaded in the repo graphs page. more comments in graphs.py
-    """
-    return _render_graph(request, org=org, repo=repo, start=start, end=end, by_author=True, limit_top_authors=True, interval=intv,
-        data_method='stat_series', graph_method='largest_contributors')
+    (scope, repo, start, end) = _get_scope(request, org=org, repo=repo, start=start, end=end)
+    df = dataframes.stat_series(repo, start=start, end=end, interval=intv, by_author=True, limit_top_authors=True)
+    scope['graph'] = graphs.scatter_plot(repo=repo, start=start, end=end, df=df, x='day', y='commit_total', fit=True)
+    return render(request, 'graph.html', context=scope)
 
 def graph_granularity(request, org=None, repo=None, start=None, end=None, intv=None):
-    """
-    generates a partial graph which is loaded in the repo graphs page. more comments in graphs.py
-    """
-    return _render_graph(request, org=org, repo=repo, start=start, end=end, interval=intv,
-        data_method='stat_series', graph_method='granularity')
+    (scope, repo, start, end) = _get_scope(request, org=org, repo=repo, start=start, end=end)
+    df = dataframes.stat_series(repo, start=start, end=end, interval=intv)
+    scope['graph'] = graphs.scatter_plot(repo=repo, start=start, end=end, df=df, x='day', y='average_commit_size', fit=True)
+    return render(request, 'graph.html', context=scope)
 
 def graph_key_retention(request, org=None, repo=None, start=None, end=None):
-    """
-    generates a partial graph which is loaded in the repo graphs page. more comments in graphs.py
-    """
-    return _render_graph(request, org=org, repo=repo, start=start, end=end, interval='LF', by_author=True,
-        data_method='stat_series', graph_method='key_retention')
-
-def graph_commitment(request, org=None, repo=None, start=None, end=None):
-    return _render_graph(request, org=org, repo=repo, start=start, end=end, interval='LF', by_author=True,
-        data_method='stat_series', graph_method='commitment')
-
-def graph_early_retention(request, org=None, repo=None, start=None, end=None):
-    """
-    generates a partial graph which is loaded in the repo graphs page. more comments in graphs.py
-    """
-    return _render_graph(request, org=org, repo=repo, start=start, end=end, interval='LF', by_author=True,
-        data_method='stat_series', graph_method='early_retention')
-
-def graph_staying_power(request, org=None, repo=None, start=None, end=None):
-    """
-    generates a partial graph which is loaded in the repo graphs page. more comments in graphs.py
-    """
-    return _render_graph(request, org=org, repo=repo, start=start, end=end, interval='LF', by_author=True,
-        data_method='stat_series', graph_method='staying_power')
-
-def graph_bias_impact(request, org=None, repo=None, start=None, end=None):
-    return _render_graph(request, org=org, repo=repo, start=start, end=end, interval='WK', by_author=True,
-        data_method='stat_series', graph_method='bias_impact')
+    (scope, repo, start, end) = _get_scope(request, org=org, repo=repo, start=start, end=end)
+    df = dataframes.stat_series(repo, start=start, end=end, interval='LF', by_author=True)
+    scope['graph'] = graphs.scatter_plot(repo=repo, start=start, end=end, df=df, x='earliest_commit_day', y='longevity', fit=True)
+    return render(request, 'graph.html', context=scope)
 
 def graph_files_time(request, org=None, repo=None, start=None, intv=None, end=None):
-    """
-    generates a partial graph which is loaded in the repo graphs page. more comments in graphs.py
-    """
-    return _render_graph(request, org=org, repo=repo, start=start, end=end, interval=intv,
-        data_method='stat_series', graph_method='files_time')
+    (scope, repo, start, end) = _get_scope(request, org=org, repo=repo, start=start, end=end)
+    df = dataframes.stat_series(repo, start=start, end=end, interval=intv, by_author=True)
+    scope['graph'] = graphs.scatter_plot(repo=repo, start=start, end=end, df=df, x='day', y='files_changed', fit=True)
+    return render(request, 'graph.html', context=scope)
 
 def graph_bias_time(request, org=None, repo=None, start=None, intv=None, end=None):
-    """
-    generates a partial graph which is loaded in the repo graphs page. more comments in graphs.py
-    """
-    return _render_graph(request, org=org, repo=repo, start=start, end=end, interval=intv,
-        data_method='stat_series', graph_method='bias_time')
+    (scope, repo, start, end) = _get_scope(request, org=org, repo=repo, start=start, end=end)
+    df = dataframes.stat_series(repo, start=start, end=end, interval=intv)
+    scope['graph'] = graphs.scatter_plot(repo=repo, start=start, end=end, df=df, x='day', y='bias', fit=True)
+    return render(request, 'graph.html', context=scope)
 
+
+def graph_commitment(request, org=None, repo=None, start=None, end=None):
+    (scope, repo, start, end) = _get_scope(request, org=org, repo=repo, start=start, end=end)
+    df = dataframes.stat_series(repo, start=start, end=end, interval='LF', by_author=True)
+    scope['graph'] = graphs.scatter_plot(repo=repo, start=start, end=end, df=df, x='earliest_commit_day', y='commitment', fit=True)
+    return render(request, 'graph.html', context=scope)
+
+def graph_early_retention(request, org=None, repo=None, start=None, end=None):
+    (scope, repo, start, end) = _get_scope(request, org=org, repo=repo, start=start, end=end)
+    df = dataframes.stat_series(repo, start=start, end=end, interval='LF', by_author=True)
+    scope['graph'] = graphs.scatter_plot(repo=repo, start=start, end=end, df=df, x='earliest_commit_day', y='commit_total', fit=True)
+    return render(request, 'graph.html', context=scope)
+
+def graph_staying_power(request, org=None, repo=None, start=None, end=None):
+    (scope, repo, start, end) = _get_scope(request, org=org, repo=repo, start=start, end=end)
+    df = dataframes.stat_series(repo, start=start, end=end, interval='LF', by_author=True)
+    scope['graph'] = graphs.scatter_plot(repo=repo, start=start, end=end, df=df, x='latest_commit_day', y='longevity', fit=True)
+    return render(request, 'graph.html', context=scope)
+
+def graph_bias_impact(request, org=None, repo=None, start=None, end=None):
+    (scope, repo, start, end) = _get_scope(request, org=org, repo=repo, start=start, end=end)
+    df = dataframes.stat_series(repo, start=start, end=end, interval='LF', by_author=True)
+    scope['graph'] = graphs.scatter_plot(repo=repo, start=start, end=end, df=df, x='bias', y='lines_changed', fit=True)
+    return render(request, 'graph.html', context=scope)
 
 def report_authors(request, org=None, repo=None, start=None, end=None, intv=None, limit=None):
     """
