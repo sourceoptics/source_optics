@@ -1,7 +1,5 @@
 <div id="myGrid" class="ag-theme-balham"></div>
 
-// interval={{ intv }}
-
   <script type="text/javascript" charset="utf-8">
     // specify the columns
 
@@ -11,6 +9,8 @@
     }
 
     // FIXME: days active sounds like a great stat to have! Let's add it.
+
+  <!-- FIXME: this table is getting HUGE, do we need multiple table links especially for the lifetime version? -->
 
     var columnDefs = [
         {headerName: "Author",              field: "author", sortable: true, filter: true },
@@ -26,6 +26,7 @@
 
         {% if intv == 'LF' %}
         ,{headerName: "Longevity",          field: "longevity", sortable: true, filter: true },
+        {headerName: "Commitment",          field: "commitment", sortable: true, filter: true },
         {headerName: "Earliest Commit",    field: "earliest_commit_date", sortable: true, filter: true },
         {headerName: "Latest Commit",      field: "latest_commit_date", sortable: true, filter: true },
 

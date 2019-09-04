@@ -45,6 +45,7 @@ urlpatterns = [
     path('org/<org>/repo/<repo>/start/<start>/end/<end>/intv/<intv>/graph/largest_contributors', views.graph_largest_contributors, name='graph_largest_contributors'),
     path('org/<org>/repo/<repo>/start/<start>/end/<end>/intv/<intv>/graph/granularity', views.graph_granularity, name='graph_granularity'),
     path('org/<org>/repo/<repo>/start/<start>/end/<end>/graph/key_retention', views.graph_key_retention, name='graph_key_retention'),
+    path('org/<org>/repo/<repo>/start/<start>/end/<end>/graph/commitment', views.graph_commitment, name='graph_commitment'),
     path('org/<org>/repo/<repo>/start/<start>/end/<end>/graph/early_retention', views.graph_early_retention, name='graph_early_retention'),
     path('org/<org>/repo/<repo>/start/<start>/end/<end>/graph/staying_power', views.graph_staying_power, name='graph_staying_power'),
     path('org/<org>/repo/<repo>/start/<start>/end/<end>/graph/bias_impact', views.graph_bias_impact, name='graph_bias_impact'),

@@ -137,6 +137,12 @@ def _scatter_queryset_to_dataframe(repo, totals, fields):
                     data[f].append((t.start_date - first_day).days)
                 else:
                     data[f].append(0)
+            elif f == 'earliest_commit_day':
+                if t.earliest_commit_date is not None:
+                    data[f].append((t.earliest_commit_date - first_day).days)
+            elif f == 'latest_commit_day':
+                if t.latest_commit_date is not None:
+                    data[f].append((t.latest_commit_date - first_day).days)
             elif f == 'author':
                 data[f].append(t.author.email)
             else:
@@ -144,11 +150,12 @@ def _scatter_queryset_to_dataframe(repo, totals, fields):
     return pd.DataFrame(data, columns=fields)
 
 DEFAULT_SCATTER_FIELDS = [
-    'date', 'day', 'lines_changed', 'commit_total', 'author_total', 'average_commit_size', 'flux', 'files_changed', 'bias'
+    'date', 'day', 'lines_changed', 'commit_total', 'author_total', 'average_commit_size', 'flux', 'files_changed', 'bias', 'commitment'
 ]
 LIFETIME_ONLY_SCATTER_FIELDS = [
      'earliest_commit_date', 'latest_commit_date', 'days_since_seen',
-     'days_before_joined', 'longevity', 'days_active'
+     'days_before_joined', 'longevity', 'days_active',
+    'latest_commit_day', 'earliest_commit_day'
 ]
 
 def stat_series(repo, start=None, end=None, fields=None, by_author=False, interval=None, limit_top_authors=False):

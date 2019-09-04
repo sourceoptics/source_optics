@@ -454,6 +454,7 @@ class Statistic(models.Model):
     lines_changed_per_day = models.FloatField(blank=True, null=True, default=0)
     bias = models.IntegerField(blank=True, null=True, default=0)
     flux = models.FloatField(blank=True, null=True, default=0)
+    commitment = models.FloatField(blank=True, null=True, default=0)
 
     # the following stats are only going to be valid for LIFETIME ('LF') intervals
     earliest_commit_date = models.DateTimeField(blank=True, null=True)
@@ -538,7 +539,8 @@ class Statistic(models.Model):
             stat.latest_commit_date = repo.latest_commit_date(author)
             stat.days_since_seen = (all_latest - stat.latest_commit_date).days
             stat.days_before_joined = (stat.earliest_commit_date - all_earliest).days
-            stat.longevity = (stat.latest_commit_date - stat.earliest_commit_date).days
+            stat.longevity = (stat.latest_commit_date - stat.earliest_commit_date).days + 1
+            stat.commitment = (stat.days_active / (1 + stat.longevity))
 
         return stat
 
@@ -590,6 +592,7 @@ class Statistic(models.Model):
         self.files_changed_per_day = other.files_changed_per_day
         self.bias = other.bias
         self.flux = other.flux
+        self.commitment = other.commitment
 
     @classmethod
     def queryset_for_range(cls, repo, interval, author=None, start=None, end=None):
@@ -627,6 +630,8 @@ class Statistic(models.Model):
 
 
     def to_dict(self):
+        # FIXME: this really should take the interval as a parameter, such that it can not
+        # supply statistics that don't make sense if the interval != lifetime ('LF').
         result = dict(
             days_active=self.days_active,
             commit_total=self.commit_total,
@@ -645,7 +650,8 @@ class Statistic(models.Model):
             lines_changed_per_day=self.lines_changed_per_day,
             commits_per_day=self.commits_per_day,
             bias=self.bias,
-            flux=self.flux
+            flux=self.flux,
+            commitment=self.commitment
         )
         if self.author:
             result['author']=self.author.email

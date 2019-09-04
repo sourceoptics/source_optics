@@ -240,6 +240,8 @@ def _get_scope(request, org=None, repos=None, repo=None, start=None, end=None, i
 
     return (context, repo, start, end)
 
+# FIXME: way too much duplication here, make this nice
+
 def _render_graph(request, org=None, repo=None, start=None, end=None, by_author=False, data_method=None,
                   interval=None, graph_method=None, limit_top_authors=False):
     """
@@ -305,6 +307,10 @@ def graph_key_retention(request, org=None, repo=None, start=None, end=None):
     """
     return _render_graph(request, org=org, repo=repo, start=start, end=end, interval='LF', by_author=True,
         data_method='stat_series', graph_method='key_retention')
+
+def graph_commitment(request, org=None, repo=None, start=None, end=None):
+    return _render_graph(request, org=org, repo=repo, start=start, end=end, interval='LF', by_author=True,
+        data_method='stat_series', graph_method='commitment')
 
 def graph_early_retention(request, org=None, repo=None, start=None, end=None):
     """

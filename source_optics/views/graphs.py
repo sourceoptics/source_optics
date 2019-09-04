@@ -126,18 +126,6 @@ def bias_impact(repo=None, start=None, end=None, df=None):
     chart = _add_fit(df, 'bias', 'lines_changed', chart)
     return render_chart(chart)
 
-def flux_impact(repo=None, start=None, end=None, df=None):
-    # FIXME: helper functon!
-    alt.data_transformers.disable_max_rows()
-    chart = alt.Chart(df, height=600, width=600).mark_point().encode(
-        x=alt.X('flux', scale=alt.Scale(zero=True, clamp=True)),
-        y=alt.Y("lines_changed", scale=alt.Scale(zero=True, clamp=True)), #  domain=(0,2000), clamp=True)),
-        # FIXME: standardize tooltips!
-        tooltip = ['day', 'date', 'commit_total', 'lines_changed', 'author' ],
-    ).interactive()
-    chart = _add_fit(df, 'flux', 'lines_changed', chart)
-    return render_chart(chart)
-
 def bias_time(repo=None, start=None, end=None, df=None):
     # FIXME: the function 'basic_graph' should be called 'time_graph'
     return _basic_graph(repo=repo, start=start, end=end, df=df, x='day', y='bias', fit=True)
@@ -152,28 +140,22 @@ def key_retention(repo=None, start=None, end=None, df=None):
     graphs the number of days since we have seen a commit from a user against their line contribution to the project.
     this can be used to identify contributors that may have lost interest or changed jobs/assignments.
     """
-    # FIXME: earliest_commit_date should be 0-based (earliest_commit_day) from project start so we can apply fit
     return _basic_graph(repo=repo, start=start, end=end, df=df, x='days_since_seen', y='lines_changed',
                         tooltips=['author', 'earliest_commit_date', 'latest_commit_date', 'longevity', 'commit_total', 'lines_changed'], fit=True)
 
+def commitment(repo=None, start=None, end=None, df=None):
+    """
+    how does loyalty translate to volume?
+    """
+    return _basic_graph(repo=repo, start=start, end=end, df=df, x='earliest_commit_day', y='commitment',
+                        tooltips=['author', 'earliest_commit_date', 'latest_commit_date', 'longevity', 'commit_total', 'lines_changed'], fit=True)
+
 def early_retention(repo=None, start=None, end=None, df=None):
-    """
-    graphs the number of days since project inception before the user offered a commit vs the span of days encompassing user history with
-    the project.  This can be used to tell, over time, whether the project is keeping contributors around better or worse, essentially
-    tracking the rate of change of turnover.
-    """
-    # FIXME: earliest_commit_date should be 0-based (earliest_commit_day) from project start so we can apply fit
-    # FIXME: terminology between 'first' and 'earliest' and 'last' and 'latest' is redundant/confusing and should be standardized
-    return _basic_graph(repo=repo, start=start, end=end, df=df, x='days_before_joined', y='longevity',
+    return _basic_graph(repo=repo, start=start, end=end, df=df, x='earliest_commit_day', y='longevity',
                         tooltips=['author', 'earliest_commit_date', 'latest_commit_date', 'longevity', 'commit_total', 'lines_changed'], fit=True)
 
 def staying_power(repo=None, start=None, end=None, df=None):
-    """
-    graphs longevity (as above) against the number of days a user has contributed to a project.  This graph is not time based, but attempts
-    to determine whether there is a relationship between how long a user has been around versus how active they are.  Do contributors with a lot
-    of history commit more than ones who have been around less frequently?  True understanding really warrants a 3D graph vs days_since_joined.
-    """
-    return _basic_graph(repo=repo, start=start, end=end, df=df, x='longevity', y='days_active',
+    return _basic_graph(repo=repo, start=start, end=end, df=df, x='latest_commit_day', y='longevity',
                         tooltips=['author', 'earliest_commit_date', 'latest_commit_date', 'longevity', 'commit_total', 'lines_changed'], fit=True)
 
 
