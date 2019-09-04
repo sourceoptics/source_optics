@@ -4,7 +4,7 @@
 <table>
     {% for org in orgs %}
     <ul>
-        <li><a href="/org/{{ org.pk }}/repos/_/start/{{ start_str }}/end/{{ end_str }}/intv/{{ intv }}">{{ org.name }}</a></li>
+        <li><a href="/org/{{ org.pk }}/repos/_/?start={{ start_str }}&end={{ end_str }}&intv={{ intv }}">{{ org.name }}</a></li>
     </ul>
     {% endfor %}
 </table>

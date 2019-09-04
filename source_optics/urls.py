@@ -36,23 +36,23 @@ urlpatterns = [
     # FIXME: the org parameter is unneccessary when repo is specified.
 
     path('', views.orgs, name='orgs'),
-    path('org/<org>/repos/<repos>/start/<start>/end/<end>/intv/<intv>', views.repos, name='repos'),
-    path('org/<org>/repo/<repo>/start/<start>/end/<end>/intv/<intv>', views.repo, name='repo'),
+    path('org/<org>/repos/<repos>/', views.repos, name='repos'),
+    path('org/<org>/repo/<repo>/', views.repo, name='repo'),
     # TODO: use the reverse url function vs having these URLs directly in templates
-    path('org/<org>/repo/<repo>/start/<start>/end/<end>/intv/<intv>/graph/volume', views.graph_volume, name='graph_volume'),
-    path('org/<org>/repo/<repo>/start/<start>/end/<end>/intv/<intv>/graph/frequency', views.graph_frequency, name='graph_frequency'),
-    path('org/<org>/repo/<repo>/start/<start>/end/<end>/intv/<intv>/graph/participation', views.graph_participation, name='graph_participation'),
-    path('org/<org>/repo/<repo>/start/<start>/end/<end>/intv/<intv>/graph/largest_contributors', views.graph_largest_contributors, name='graph_largest_contributors'),
-    path('org/<org>/repo/<repo>/start/<start>/end/<end>/intv/<intv>/graph/granularity', views.graph_granularity, name='graph_granularity'),
-    path('org/<org>/repo/<repo>/start/<start>/end/<end>/intv/<intv>/graph/key_retention', views.graph_key_retention, name='graph_key_retention'),
-    path('org/<org>/repo/<repo>/start/<start>/end/<end>/intv/<intv>/graph/commitment', views.graph_commitment, name='graph_commitment'),
-    path('org/<org>/repo/<repo>/start/<start>/end/<end>/intv/<intv>/graph/early_retention', views.graph_early_retention, name='graph_early_retention'),
-    path('org/<org>/repo/<repo>/start/<start>/end/<end>/intv/<intv>/graph/staying_power', views.graph_staying_power, name='graph_staying_power'),
-    path('org/<org>/repo/<repo>/start/<start>/end/<end>/intv/<intv>/graph/bias_impact', views.graph_bias_impact, name='graph_bias_impact'),
-    path('org/<org>/repo/<repo>/start/<start>/end/<end>/intv/<intv>/graph/bias_time', views.graph_bias_time, name='graph_bias_time'),
-    path('org/<org>/repo/<repo>/start/<start>/end/<end>/intv/<intv>/graph/files_time', views.graph_files_time, name='graph_files_time'),
+    path('org/<org>/repo/<repo>/graph/volume', views.graph_volume, name='graph_volume'),
+    path('org/<org>/repo/<repo>/graph/frequency', views.graph_frequency, name='graph_frequency'),
+    path('org/<org>/repo/<repo>/graph/participation', views.graph_participation, name='graph_participation'),
+    path('org/<org>/repo/<repo>/graph/largest_contributors', views.graph_largest_contributors, name='graph_largest_contributors'),
+    path('org/<org>/repo/<repo>/graph/granularity', views.graph_granularity, name='graph_granularity'),
+    path('org/<org>/repo/<repo>/graph/key_retention', views.graph_key_retention, name='graph_key_retention'),
+    path('org/<org>/repo/<repo>/graph/commitment', views.graph_commitment, name='graph_commitment'),
+    path('org/<org>/repo/<repo>/graph/early_retention', views.graph_early_retention, name='graph_early_retention'),
+    path('org/<org>/repo/<repo>/graph/staying_power', views.graph_staying_power, name='graph_staying_power'),
+    path('org/<org>/repo/<repo>/graph/bias_impact', views.graph_bias_impact, name='graph_bias_impact'),
+    path('org/<org>/repo/<repo>/graph/bias_time', views.graph_bias_time, name='graph_bias_time'),
+    path('org/<org>/repo/<repo>/graph/files_time', views.graph_files_time, name='graph_files_time'),
 
-    path('org/<org>/repo/<repo>/start/<start>/end/<end>/intv/<intv>/limit/<limit>/report/authors', views.report_authors, name='report_authors'),
+    path('org/<org>/repo/<repo>/report/authors', views.report_authors, name='report_authors'),
 
     # REST API
     path('api/', include(api_router.urls)),

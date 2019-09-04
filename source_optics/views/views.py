@@ -130,18 +130,6 @@ def get_author_table(repo, start=None, end=None, interval=None, limit=None):
     authors = Author.authors(repo, start, end)
 
     for author in authors:
-        #if interval == 'LF':
-        #    # we don't use aggregate
-        #    # FIXME: this should be a function on the statistic object
-        #    stats =  Statistic.queryset_for_range(repo, 'LF', author=author)
-        #    if stats.count():
-        #        # this IF is just in case there's an author row and we didn't do a full scan with the new code yet
-        #        stat = stats.first()
-        #        # FIXME: this is expensive, if we can get this data in one query and interlace the stat it will be MUCH faster
-        #        stat2 = stat.to_author_dict(repo, author)
-        #        results.append(stat2)
-        #else:
-        #    # interval here as a parameter uses anything but lifetime as 'not lifetime', because this is just a table and not graphs
         stat1 = Statistic.queryset_for_range(repo, author=author, start=start, end=end, interval=interval)
         stat2 = Statistic.compute_interval_statistic(stat1, interval=interval, repo=repo, author=author, start=start, end=end)
         stat2 = stat2.to_dict()
@@ -178,7 +166,11 @@ def get_repo_table(repos, start, end):
     return json.dumps(results)
 
 
-def _get_scope(request, org=None, repos=None, repo=None, start=None, end=None, interval=None, repo_table=False):
+def _get_scope(request, org=None, repos=None, repo=None, repo_table=False):
+
+    start = request.GET.get('start', None)
+    end = request.GET.get('end', None)
+    interval = request.GET.get('intv', None)
 
     models.cache_clear()
 
@@ -191,18 +183,14 @@ def _get_scope(request, org=None, repos=None, repo=None, start=None, end=None, i
     if interval is None:
         interval='WK'
 
-    if end == '_':
-        end = None
+    if end == '_' or not end:
+        end = timezone.now()
     elif end is not None:
         end = datetime.datetime.strptime(end, "%Y-%m-%d")
-    else:
-        end = timezone.now()
+    end = end + datetime.timedelta(days=1) # start of tomorrow
 
-    if start == '_':
-        start = None
-    elif start is None:
-        # FIXME: (minor) flip this if condition so it looks like the above method
-        start = end - datetime.timedelta(days=14)
+    if start == '_' or not start:
+        start = datetime.datetime.strptime("1970-01-01", "%Y-%m-%d")
     else:
         start = datetime.datetime.strptime(start, "%Y-%m-%d")
 
@@ -244,122 +232,107 @@ def _get_scope(request, org=None, repos=None, repo=None, start=None, end=None, i
     if repo_table:
         context['repo_table'] = get_repo_table(repos, start, end)
 
-    return (context, repo, start, end)
+    return (context, repo, start, end, interval)
 
-# FIXME: way too much duplication here, make this nice
-
-def _render_graph(request, org=None, repo=None, start=None, end=None, by_author=False, data_method=None,
-                  interval=None, graph_method=None, limit_top_authors=False):
-    """
-    a helper method used by all the Statistic-based graph rendering view functions.
-    """
-    (scope, repo, start, end) = _get_scope(request, org=org, repo=repo, start=start, end=end)
-    if by_author and limit_top_authors:
-        # FIXME: a bit of a mess here, but not all data frame methods take this parameter
-        dataframe = getattr(dataframes, data_method)(repo=repo, start=start, by_author=by_author, end=end, interval=interval, limit_top_authors=True)
-    else:
-        dataframe = getattr(dataframes, data_method)(repo=repo, start=start, by_author=by_author, end=end, interval=interval)
-    scope['graph'] = getattr(graphs, graph_method)(repo=repo, start=start, end=end, df=dataframe)
-    return render(request, 'graph.html', context=scope)
-
-def repo(request, org=None, repo=None, start=None, end=None, intv=None):
+def repo(request, org=None, repo=None):
     """
     Generates the index page for a given repo.
     The index page is mostly a collection of graphs, so perhaps it should be called repo_graphs.html and this method
     should also be renamed.
     """
-    (scope, repo, start, end) = _get_scope(request, org=org, repo=repo, start=start, end=end, interval=intv)
+    (scope, repo, start, end, intv) = _get_scope(request, org=org, repo=repo)
     scope['title'] = "Source Optics: %s repo (graphs)" % repo.name
     return render(request, 'repo.html', context=scope)
 
-def graph_volume(request, org=None, repo=None, start=None, end=None, intv=None):
-    (scope, repo, start, end) = _get_scope(request, org=org, repo=repo, start=start, end=end)
+def graph_volume(request, org=None, repo=None):
+    (scope, repo, start, end, intv) = _get_scope(request, org=org, repo=repo)
     df = dataframes.team_time_series(repo, start=start, end=end, interval=intv)
     scope['graph'] = graphs.scatter_plot(df=df, x='day', y='lines_changed', fit=True)
     return render(request, 'graph.html', context=scope)
 
-def graph_frequency(request, org=None, repo=None, start=None, end=None, intv=None):
-    (scope, repo, start, end) = _get_scope(request, org=org, repo=repo, start=start, end=end)
+def graph_frequency(request, org=None, repo=None):
+    (scope, repo, start, end, intv) = _get_scope(request, org=org, repo=repo)
     df = dataframes.team_time_series(repo, start=start, end=end, interval=intv)
     scope['graph'] = graphs.scatter_plot(df=df, x='day', y='commit_total', fit=True)
     return render(request, 'graph.html', context=scope)
 
-def graph_participation(request, org=None, repo=None, start=None, end=None, intv=None):
-    (scope, repo, start, end) = _get_scope(request, org=org, repo=repo, start=start, end=end)
+def graph_participation(request, org=None, repo=None):
+    (scope, repo, start, end, intv) = _get_scope(request, org=org, repo=repo)
     df = dataframes.team_time_series(repo, start=start, end=end, interval=intv)
     scope['graph'] = graphs.scatter_plot(df=df, x='day', y='author_total', fit=True)
     return render(request, 'graph.html', context=scope)
 
-def graph_largest_contributors(request, org=None, repo=None, start=None, end=None, intv=None):
-    (scope, repo, start, end) = _get_scope(request, org=org, repo=repo, start=start, end=end)
+def graph_largest_contributors(request, org=None, repo=None):
+    (scope, repo, start, end, intv) = _get_scope(request, org=org, repo=repo)
     df = dataframes.top_author_time_series(repo, start=start, end=end, interval=intv)
     scope['graph'] = graphs.scatter_plot(df=df, x='day', y='commit_total', color='author:N', author=True)
     return render(request, 'graph.html', context=scope)
 
-def graph_granularity(request, org=None, repo=None, start=None, end=None, intv=None):
-    (scope, repo, start, end) = _get_scope(request, org=org, repo=repo, start=start, end=end)
+def graph_granularity(request, org=None, repo=None):
+    (scope, repo, start, end, intv) = _get_scope(request, org=org, repo=repo)
     df = dataframes.team_time_series(repo, start=start, end=end, interval=intv)
     scope['graph'] = graphs.scatter_plot(df=df, x='day', y='average_commit_size', fit=True)
     return render(request, 'graph.html', context=scope)
 
-def graph_key_retention(request, org=None, repo=None, start=None, end=None, intv=None):
-    (scope, repo, start, end) = _get_scope(request, org=org, repo=repo, start=start, end=end)
+def graph_key_retention(request, org=None, repo=None):
+    (scope, repo, start, end, intv) = _get_scope(request, org=org, repo=repo)
     df = dataframes.author_time_series(repo, start=start, end=end, interval=intv)
     scope['graph'] = graphs.scatter_plot(df=df, x='earliest_commit_day', y='longevity', fit=True, author=True)
     return render(request, 'graph.html', context=scope)
 
-def graph_files_time(request, org=None, repo=None, start=None, end=None, intv=None):
-    (scope, repo, start, end) = _get_scope(request, org=org, repo=repo, start=start, end=end)
+def graph_files_time(request, org=None, repo=None):
+    (scope, repo, start, end, intv) = _get_scope(request, org=org, repo=repo)
     df = dataframes.author_time_series(repo, start=start, end=end, interval=intv)
     scope['graph'] = graphs.scatter_plot(df=df, x='day', y='files_changed', fit=True, author=True)
     return render(request, 'graph.html', context=scope)
 
-def graph_bias_time(request, org=None, repo=None, start=None, end=None, intv=None):
-    (scope, repo, start, end) = _get_scope(request, org=org, repo=repo, start=start, end=end)
+def graph_bias_time(request, org=None, repo=None):
+    (scope, repo, start, end, intv) = _get_scope(request, org=org, repo=repo)
     df = dataframes.author_time_series(repo, start=start, end=end, interval=intv)
     scope['graph'] = graphs.scatter_plot(df=df, x='day', y='bias', fit=True, author=True)
     return render(request, 'graph.html', context=scope)
 
-def graph_commitment(request, org=None, repo=None, start=None, end=None, intv=None):
-    (scope, repo, start, end) = _get_scope(request, org=org, repo=repo, start=start, end=end)
+def graph_commitment(request, org=None, repo=None):
+    (scope, repo, start, end, intv) = _get_scope(request, org=org, repo=repo)
     df = dataframes.author_time_series(repo, start=start, end=end, interval=intv)
     scope['graph'] = graphs.scatter_plot(df=df, x='earliest_commit_day', y='commitment', fit=True, author=True)
     return render(request, 'graph.html', context=scope)
 
-def graph_early_retention(request, org=None, repo=None, start=None, end=None, intv=None):
-    (scope, repo, start, end) = _get_scope(request, org=org, repo=repo, start=start, end=end)
+def graph_early_retention(request, org=None, repo=None):
+    (scope, repo, start, end, intv) = _get_scope(request, org=org, repo=repo)
     df = dataframes.author_time_series(repo, start=start, end=end, interval=intv)
     scope['graph'] = graphs.scatter_plot(df=df, x='latest_commit_day', y='commit_total', fit=True, author=True)
     return render(request, 'graph.html', context=scope)
 
-def graph_staying_power(request, org=None, repo=None, start=None, end=None, intv=None):
-    (scope, repo, start, end) = _get_scope(request, org=org, repo=repo, start=start, end=end)
+def graph_staying_power(request, org=None, repo=None):
+    (scope, repo, start, end, intv) = _get_scope(request, org=org, repo=repo)
     df = dataframes.author_time_series(repo, start=start, end=end, interval=intv)
     scope['graph'] = graphs.scatter_plot(df=df, x='latest_commit_day', y='longevity', fit=True, author=True)
     return render(request, 'graph.html', context=scope)
 
-def graph_bias_impact(request, org=None, repo=None, start=None, end=None, intv=None):
-    (scope, repo, start, end) = _get_scope(request, org=org, repo=repo, start=start, end=end)
+def graph_bias_impact(request, org=None, repo=None):
+    (scope, repo, start, end, intv) = _get_scope(request, org=org, repo=repo)
     df = dataframes.author_time_series(repo, start=start, end=end, interval=intv)
     scope['graph'] = graphs.scatter_plot(df=df, x='bias', y='lines_changed', fit=True, author=True)
     return render(request, 'graph.html', context=scope)
 
-def report_authors(request, org=None, repo=None, start=None, end=None, intv=None, limit=None):
+def report_authors(request, org=None, repo=None):
     """
     generates a partial graph which is loaded in the repo graphs page. more comments in graphs.py
     """
-    (scope, repo, start, end) = _get_scope(request, org=org, repo=repo, start=start, end=end, interval=intv)
+    limit = None # not used yet
+    (scope, repo, start, end, intv) = _get_scope(request, org=org, repo=repo)
     data = get_author_table(repo, start=start, end=end, interval=intv, limit=limit)
     scope['title'] = "Source Optics: %s repo: (authors report)" % repo.name
     scope['author_count'] = len(data)
     scope['author_json'] = json.dumps(data)
     return render(request, 'authors.html', context=scope)
 
-def repos(request, org=None, repos=None, start=None, end=None, intv=None):
+def repos(request, org=None, repos=None):
     """
     generates the list of all repos, with stats and navigation.
     """
-    (scope, repo, start, end) = _get_scope(request, org=org, repos=repos, start=start, end=end, repo_table=True, interval=intv)
+    (scope, repo, start, end, intv) = _get_scope(request, org=org, repos=repos, repo_table=True)
     org = Organization.objects.get(pk=org)
     scope['title'] = "Source Optics: %s organization" % org.name
     return render(request, 'repos.html', context=scope)
@@ -369,7 +342,7 @@ def orgs(request):
     the index page for the app, presently, lists all organizations.  This should be morphed to a generic dashboard
     that also lists the orgs.
     """
-    (scope, repo, start, end) = _get_scope(request)
+    (scope, repo, start, end, intv) = _get_scope(request)
     scope['title'] = "Source Optics: index"
     return render(request, 'orgs.html', context=scope)
 

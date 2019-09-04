@@ -8,69 +8,62 @@
 <!-- TODO: move these comments to tooltips with an info block and we can have more inline help. -->
 <i>How does the rate of change of code morph over time?</i>
 
-<div data-loader="ajax" data-src="/org/{{ org.pk }}/repo/{{ repo.pk }}/start/{{ start_str }}/end/{{ end_str }}/intv/{{ intv }}/graph/volume">loading</div>
+<div data-loader="ajax" data-src="/org/{{ org.pk }}/repo/{{ repo.pk }}/graph/volume?start={{ start_str}}&end={{ end_str}}&intf={{ intv }}">loading</div>
 
 <hr/>
 
 <h2>Frequency</h2>
 <i>How does the number of commits morph over time?</i>
 
-<div data-loader="ajax" data-src="/org/{{ org.pk }}/repo/{{ repo.pk }}/start/{{ start_str }}/end/{{ end_str }}/intv/{{ intv }}/graph/frequency">loading</div>
+<div data-loader="ajax" data-src="/org/{{ org.pk }}/repo/{{ repo.pk }}/graph/frequency?start={{ start_str}}&end={{ end_str}}&intf={{ intv }}">loading</div>
 
 <h2>Largest Contributors</h2>
 <i>For the top contributors, who is most active at what times?</i>
 
-<div data-loader="ajax" data-src="/org/{{ org.pk }}/repo/{{ repo.pk }}/start/{{ start_str }}/end/{{ end_str }}/intv/{{ intv }}/graph/largest_contributors">loading</div>
-
-<!-- WORK IN PROGRESS: could include snippet of author chart here
-<div data-loader="ajax" data-src="/org/{{ org.pk }}/repo/{{ repo.pk }}/start/{{ start_str }}/end/{{ end_str }}/intv/{{ intv }}//limit/10/report/authors">loading</div>
--->
+<div data-loader="ajax" data-src="/org/{{ org.pk }}/repo/{{ repo.pk }}/graph/largest_contributors?start={{ start_str}}&end={{ end_str}}&intf={{ intv }}">loading</div>
 
 <h2>Participation</h2>
 <i>How many people worked on this project within the time period?</i>
 
-<div data-loader="ajax" data-src="/org/{{ org.pk }}/repo/{{ repo.pk }}/start/{{ start_str }}/end/{{ end_str }}/intv/{{ intv }}/graph/participation">loading</div>
+<div data-loader="ajax" data-src="/org/{{ org.pk }}/repo/{{ repo.pk }}/graph/participation?start={{ start_str}}&end={{ end_str}}&intf={{ intv }}">loading</div>
 
 <h2>Development Character Analysis</h2>
 <i>How has commit size changed over time?</i>
 
-<div data-loader="ajax" data-src="/org/{{ org.pk }}/repo/{{ repo.pk }}/start/{{ start_str }}/end/{{ end_str }}/intv/{{ intv }}/graph/granularity">loading</div>
+<div data-loader="ajax" data-src="/org/{{ org.pk }}/repo/{{ repo.pk }}/graph/granularity?start={{ start_str}}&end={{ end_str}}&intf={{ intv }}">loading</div>
 
 <hr/>
 
-<div data-loader="ajax" data-src="/org/{{ org.pk }}/repo/{{ repo.pk }}/start/{{ start_str }}/end/{{ end_str }}//intv/{{ intv }}/graph/bias_impact">loading</div>
+<div data-loader="ajax" data-src="/org/{{ org.pk }}/repo/{{ repo.pk }}/graph/bias_impact?start={{ start_str}}&end={{ end_str}}&intf={{ intv }}">loading</div>
 
 <h2>Bias Over Time</h2>
 <i>Bias is Additions-Removals. Is the repository trending more towards additions, deletions, or surgical edits?</i>
 
-<div data-loader="ajax" data-src="/org/{{ org.pk }}/repo/{{ repo.pk }}/start/{{ start_str }}/end/{{ end_str }}/intv/{{ intv }}/graph/bias_time">loading</div>
+<div data-loader="ajax" data-src="/org/{{ org.pk }}/repo/{{ repo.pk }}/graph/bias_time?start={{ start_str}}&end={{ end_str}}&intf={{ intv }}">loading</div>
 
 <h2>Files Changed Over Time</h2>
 <i>Is the number of files changing stabilizing?</i>
 
-<div data-loader="ajax" data-src="/org/{{ org.pk }}/repo/{{ repo.pk }}/start/{{ start_str }}/end/{{ end_str }}/intv/{{ intv }}/graph/files_time">loading</div>
+<div data-loader="ajax" data-src="/org/{{ org.pk }}/repo/{{ repo.pk }}/graph/files_time?start={{ start_str}}&end={{ end_str}}&intf={{ intv }}">loading</div>
 
 <hr/>
 
-<h1>Lifetime Graphs</h1>
-<i>Note: The following repository-character graphs are ignorning the selected time range.</i>
-
-<h2>Key Contributor Retention (Lifetime)</h2>
+<h2>Key Contributor Retention</h2>
 <i>At what points did this project possibly lose significant code contributors?</i>
 
-<div data-loader="ajax" data-src="/org/{{ org.pk }}/repo/{{ repo.pk }}/start/{{ start_str }}/end/{{ end_str }}/intv/LF/graph/key_retention">loading</div>
+<div data-loader="ajax" data-src="/org/{{ org.pk }}/repo/{{ repo.pk }}/graph/key_retention?start={{ start_str}}&end={{ end_str}}&intf=LF">loading</div>
 
 <h2>Commitment Over Time</h2>
 
-<div data-loader="ajax" data-src="/org/{{ org.pk }}/repo/{{ repo.pk }}/start/{{ start_str }}/end/{{ end_str }}/intv/LF/graph/commitment">loading</div>
+<div data-loader="ajax" data-src="/org/{{ org.pk }}/repo/{{ repo.pk }}/graph/commitment?start={{ start_str}}&end={{ end_str}}&intf=LF">loading</div>
 
 <h2>Early Retention</h2>
 
-<div data-loader="ajax" data-src="/org/{{ org.pk }}/repo/{{ repo.pk }}/start/{{ start_str }}/end/{{ end_str }}/intv/LF/graph/early_retention">loading</div>
+<div data-loader="ajax" data-src="/org/{{ org.pk }}/repo/{{ repo.pk }}/graph/early_retention?start={{ start_str}}&end={{ end_str}}&intf=LF">loading</div>
 
 <h2>Staying Power</h2>
 
-<div data-loader="ajax" data-src="/org/{{ org.pk }}/repo/{{ repo.pk }}/start/{{ start_str }}/end/{{ end_str }}/intv/LF/graph/staying_power">loading</div>
+<div data-loader="ajax" data-src="/org/{{ org.pk }}/repo/{{ repo.pk }}/graph/staying_power?start={{ start_str}}&end={{ end_str}}&intf=LF">loading</div>
 
 <br/>
 <br/>
