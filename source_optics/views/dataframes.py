@@ -148,6 +148,7 @@ def _scatter_queryset_to_dataframe(repo, totals, fields, just_data=False):
             else:
                 data[f].append(getattr(t, f))
     if not just_data:
+        print("keys=%s" % data.keys())
         return pd.DataFrame(data, columns=fields)
     else:
         return (data, fields)
@@ -167,7 +168,7 @@ def _stat_series(repo, start=None, end=None, fields=None, by_author=False, inter
     if fields is None:
         fields = Statistic.GRAPHABLE_FIELDS[:]
         if interval == 'LF':
-            fields.extend(Statistic.GRAPHABLE_FIELDS_LIFETIME)
+            fields.extend(Statistic.GRAPHABLE_FIELDS_LIFETIME[:])
         if by_author:
             fields.append('author')
 

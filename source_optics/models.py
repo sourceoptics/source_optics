@@ -436,7 +436,8 @@ class Statistic(models.Model):
         'latest_commit_date',
         'days_since_seen',
         'days_before_joined',
-        'longevity', 'days_active',
+        'longevity',
+        'days_active',
         'latest_commit_day',
         'earliest_commit_day'
     ]

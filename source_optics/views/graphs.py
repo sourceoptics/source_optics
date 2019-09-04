@@ -74,7 +74,7 @@ def add_fit(df, x, y, chart):
     )
     return chart + polynomial_fit
 
-def scatter_plot(df=None, x=None, y=None, author=False, fit=False):
+def scatter_plot(df=None, x=None, y=None, color=None, author=False, fit=False):
     """
     This renders an altair graph around pretty much any combination of two parameters found on a Statistic object.
     """
@@ -90,11 +90,17 @@ def scatter_plot(df=None, x=None, y=None, author=False, fit=False):
 
     alt.data_transformers.disable_max_rows()
 
-    chart = alt.Chart(df, height=600, width=600).mark_point().encode(
-        x=alt.X(x, scale=alt.Scale(zero=False, clamp=True)), #, scale=alt.Scale(zero=False, clamp=True)),
-        y=alt.Y(y, scale=alt.Scale(zero=False, clamp=True)), #, scale=alt.Scale(zero=False, clamp=True)),
-        tooltip=tooltips,
-    ).interactive()
+    if color:
+        chart = alt.Chart(df, height=600, width=600).mark_point().encode(
+            x=alt.X(x, scale=alt.Scale(zero=False, clamp=True)), #, scale=alt.Scale(zero=False, clamp=True)),
+            y=alt.Y(y, scale=alt.Scale(zero=False, clamp=True)), #, scale=alt.Scale(zero=False, clamp=True)),
+            color=color
+        ).interactive()
+    else:
+        chart = alt.Chart(df, height=600, width=600).mark_point().encode(
+            x=alt.X(x, scale=alt.Scale(zero=False, clamp=True)),  # , scale=alt.Scale(zero=False, clamp=True)),
+            y=alt.Y(y, scale=alt.Scale(zero=False, clamp=True)),  # , scale=alt.Scale(zero=False, clamp=True)),
+        ).interactive()
 
     if fit:
         chart = add_fit(df, x, y, chart)

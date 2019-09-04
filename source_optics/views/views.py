@@ -289,7 +289,7 @@ def graph_participation(request, org=None, repo=None, start=None, end=None, intv
 def graph_largest_contributors(request, org=None, repo=None, start=None, end=None, intv=None):
     (scope, repo, start, end) = _get_scope(request, org=org, repo=repo, start=start, end=end)
     df = dataframes.top_author_time_series(repo, start=start, end=end, interval=intv)
-    scope['graph'] = graphs.scatter_plot(df=df, x='day', y='commit_total', fit=True, author=True)
+    scope['graph'] = graphs.scatter_plot(df=df, x='day', y='commit_total', color='author:N', fit=True, author=True)
     return render(request, 'graph.html', context=scope)
 
 def graph_granularity(request, org=None, repo=None, start=None, end=None, intv=None):
@@ -306,7 +306,7 @@ def graph_key_retention(request, org=None, repo=None, start=None, end=None):
 
 def graph_files_time(request, org=None, repo=None, start=None, intv=None, end=None):
     (scope, repo, start, end) = _get_scope(request, org=org, repo=repo, start=start, end=end)
-    df = dataframes.author_time_series(repo, start=start, end=end, interval=intve)
+    df = dataframes.author_time_series(repo, start=start, end=end, interval=intv)
     scope['graph'] = graphs.scatter_plot(df=df, x='day', y='files_changed', fit=True, author=True)
     return render(request, 'graph.html', context=scope)
 
