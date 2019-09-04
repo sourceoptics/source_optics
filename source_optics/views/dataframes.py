@@ -108,7 +108,7 @@ def _queryset_for_scatter(repo, start=None, end=None, by_author=False, interval=
             )
     return totals.order_by('author','start_date')
 
-def _scatter_queryset_to_dataframe(repo, totals, fields):
+def _scatter_queryset_to_dataframe(repo, totals, fields, just_data=False):
 
     """
     Convert a queryset of statistic objects as returned by the above function
@@ -147,18 +147,12 @@ def _scatter_queryset_to_dataframe(repo, totals, fields):
                 data[f].append(t.author.email)
             else:
                 data[f].append(getattr(t, f))
-    return pd.DataFrame(data, columns=fields)
+    if not just_data:
+        return pd.DataFrame(data, columns=fields)
+    else:
+        return (data, fields)
 
-DEFAULT_SCATTER_FIELDS = [
-    'date', 'day', 'lines_changed', 'commit_total', 'author_total', 'average_commit_size', 'flux', 'files_changed', 'bias', 'commitment'
-]
-LIFETIME_ONLY_SCATTER_FIELDS = [
-     'earliest_commit_date', 'latest_commit_date', 'days_since_seen',
-     'days_before_joined', 'longevity', 'days_active',
-    'latest_commit_day', 'earliest_commit_day'
-]
-
-def stat_series(repo, start=None, end=None, fields=None, by_author=False, interval=None, limit_top_authors=False):
+def _stat_series(repo, start=None, end=None, fields=None, by_author=False, interval=None, limit_top_authors=False):
 
     """
     The public function in this file (FIXME: convert the rest to _functions) that returns
@@ -171,11 +165,21 @@ def stat_series(repo, start=None, end=None, fields=None, by_author=False, interv
         interval = get_interval(start, end)
 
     if fields is None:
-        fields = DEFAULT_SCATTER_FIELDS[:]
+        fields = Statistic.GRAPHABLE_FIELDS[:]
         if interval == 'LF':
-            fields.extend(LIFETIME_ONLY_SCATTER_FIELDS)
+            fields.extend(Statistic.GRAPHABLE_FIELDS_LIFETIME)
         if by_author:
             fields.append('author')
 
     totals = _queryset_for_scatter(repo, start=start, end=end, by_author=by_author, interval=interval, limit_top_authors=limit_top_authors)
     return _scatter_queryset_to_dataframe(repo, totals, fields)
+
+def team_time_series(repo, start=None, end=None, interval=None):
+    return _stat_series(repo, start=start, end=end, interval=interval)
+
+def author_time_series(repo, start=None, end=None, interval=None):
+    return _stat_series(repo, start=start, end=end, interval=interval, by_author=True)
+
+def top_author_time_series(repo, start=None, end=None, interval=None):
+    return _stat_series(repo, start=start, end=end, interval=interval, by_author=True, limit_top_authors=True)
+

@@ -419,22 +419,35 @@ class FileChange(models.Model):
 
 class Statistic(models.Model):
 
+    GRAPHABLE_FIELDS = [
+        'date',
+        'day',
+        'lines_changed',
+        'commit_total',
+        'author_total',
+        'average_commit_size',
+        'flux',
+        'files_changed',
+        'bias',
+        'commitment'
+    ]
+    GRAPHABLE_FIELDS_LIFETIME = [
+        'earliest_commit_date',
+        'latest_commit_date',
+        'days_since_seen',
+        'days_before_joined',
+        'longevity', 'days_active',
+        'latest_commit_day',
+        'earliest_commit_day'
+    ]
+
     INTERVALS = (
         ('DY', 'Day'),
         ('WK', 'Week'),
         ('MN', 'Month'),
         ('LF', 'Lifetime')
     )
-    # FIXME: unused - can remove, right?
-    #ATTRIBUTES = (
-    #    ('commit_total', "Total Commits"),
-    #    ('lines_added', "Lines Added"),
-    #    ('lines_removed', "Lines Removed"),
-    #    ('lines_changed', "Lines Changed"),
-    #    ('files_changed', "Files Changed"),
-    #    ('author_total', "Total Authors"),
-    #    )
-        
+
     start_date = models.DateTimeField(blank=False, null=True)
     interval = models.TextField(max_length=5, choices=INTERVALS)
     repo = models.ForeignKey(Repository, on_delete=models.CASCADE, null=True, related_name='repo')

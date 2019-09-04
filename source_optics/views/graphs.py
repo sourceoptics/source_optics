@@ -74,13 +74,15 @@ def add_fit(df, x, y, chart):
     )
     return chart + polynomial_fit
 
-def scatter_plot(df=None, x=None, y=None, tooltips=None, fit=False):
+def scatter_plot(df=None, x=None, y=None, author=False, fit=False):
     """
     This renders an altair graph around pretty much any combination of two parameters found on a Statistic object.
     """
 
-    if tooltips is None:
-        tooltips=['day', 'date', 'commit_total', 'lines_changed', 'author_total']
+    tooltips=['date', 'commit_total', 'lines_changed', 'author_total']
+    if author:
+        tooltips.extend(['author'])
+    # FIXME: we should pass in the interval, and add longevity/etc when interval==LF.
 
     if fit and x=='date':
         x='day'
