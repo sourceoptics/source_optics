@@ -23,7 +23,7 @@ It can help answer basic questions such as:
 * what are the contribution dynamics around these projects
 * which projects are growing or decreasing in activity
 * who is working on what projects
-* how much work is being applied to different projects
+* how much work effort is being applied, by whom, to different projects
 
 Features include:
 
@@ -87,9 +87,12 @@ Usage
 
 (Also described in INSTALL.md)
 
-Once installed and running, add in data via Django admin, ex: http://servername/admin
+Once installed and running, add in data with the Django admin UI, ex: http://127.0.0.1:8000/servername/admin.
+Set up a credential, create an organization, add some repos.  Or use the CLI import command to import repos from GitHub.
 
-View graphs at http://servername/
+Can the repositories periodically with the "python3 manage.py scan" command.
+
+View graphs at http://127.0.0.1/
 
 More detailed documentation about Django admin settings will come later, but is largely
 documented already with tooltips and in the install guide.
@@ -98,13 +101,6 @@ License
 =======
 
 All source is provided under the Apache 2 license, (C) All Project Contributors.
-
-Questions/Troubleshooting
-=========================
-
-The mailing list will be available soon.
-
-Until then, see FAQ.md
 
 Mailing List
 ============
@@ -125,14 +121,12 @@ Code Contribution Preferences
 
 A few small guidelines to keep things easy to manage.
 
-0) While not required, it is strongly encouraged that all contributors should join the mailing list, so they can keep track of larger changes going down the pipe, that are sometimes difficult to describe in GitHub or twitter posts.  If you are on twitter, you may also wish to follow @SourceOptics.
+0) While not required, it is strongly encouraged that all contributors should join the mailing list, so they can keep track of larger changes and project themes, that are sometimes difficult to describe in GitHub or twitter posts.  If you are on twitter, you may also wish to follow @SourceOptics.
 
 1) Contributions should be by github pull request on a seperate branch per topic. Please do not combine features. Rebase your pull requests to keep them up to date and avoid merges in the git history.  
 
 2) We care a lot about managing the surface area of the application to keep it easy to maintain and operate, and this project should move pretty fast. To keep frustrations over repeated work low, discussion of feature ideas *prior* to submitting a pull request is  encouraged (i.e. what do you think about X, how should this be implemented?). For bugfixes, feel free to submit code directly. If you make a database change, you must check in a new Django migrations file.
 
-3) Please do not send any submissions to tweak PEP8, pylint, or other code preferences.  Management will do that periodically, this breaks source code attribution.  Similarly, do not submit additions to add packaging or integration with third party build or test services.
-
-4) Any addition of new database fields must also add a Django migration in the same pull request.
+3) Please do not send any submissions to tweak PEP8, pylint, or other code preferences.  Management will do that periodically, this breaks source code attribution.  Similarly, do not submit additions to add packaging, deployment, or integration with third party build or test services, as these are site specific preferences and we will not be maintaining multiple offshoots.
 
 Thank you!
