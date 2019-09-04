@@ -39,11 +39,19 @@ pip install -r requirements.txt
 Database Setup
 ==============
 
-First, we'll create a role for whatever username you would like to run source_optics as:
+Once PostgreSQL is installed, make a new database:
 
 ```
-sudo -u postgres createuser --createdb <username>
+createdb source_optics
+````
+
+Next, we'll create a role for whatever username you would like to run source_optics as:
+
 ```
+createuser --createdb <username>
+```
+
+(You may need to run these commands sudoed to 'postgres' depending on your plaform setup)
 
 From the 'psql' prompt you will then need to create a new role to allow database access:
 
