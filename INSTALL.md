@@ -140,6 +140,9 @@ are used for some git checkouts, so like this:
 ssh-agent python manage.py scan
 ```
 
+Note that in order for the scan to *NOT* stall, the SSH fingerprint of the remote server (for SSH checkouts) *must*
+be added to known hosts for the user running the scanner command.  You can easily do this by just attempting to do a manual git clone for one of the many repos, and then saying "yes" at the known host prompt.
+
 To scan just a single organization (or organizations matching a substring), you can run as follows:
 
 ```
@@ -196,7 +199,11 @@ the repository to be scanned in the very next scanner pass.
 Automated Repository Imports
 ============================
 
-Configure GitHub in the organization's Credential object (in Django Admin) and run the following:
+Configure GitHub in the organization's Credential object (in Django Admin).
+
+You will need to supply an organizaton name and, if using GitHub Enterprise, the github API endpoint URL.
+
+Once configured, run the following:
 
 ```
 python3 manage.py github_import -o organization_name
