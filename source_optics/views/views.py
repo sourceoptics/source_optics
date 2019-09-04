@@ -271,74 +271,73 @@ def repo(request, org=None, repo=None, start=None, end=None, intv=None):
 def graph_volume(request, org=None, repo=None, start=None, end=None, intv=None):
     (scope, repo, start, end) = _get_scope(request, org=org, repo=repo, start=start, end=end)
     df = dataframes.stat_series(repo, start=start, end=end, interval=intv)
-    scope['graph'] = graphs.scatter_plot(repo=repo, start=start, end=end, df=df, x='day', y='lines_changed', fit=True)
+    scope['graph'] = graphs.scatter_plot(df=df, x='day', y='lines_changed', fit=True)
     return render(request, 'graph.html', context=scope)
 
 def graph_frequency(request, org=None, repo=None, start=None, end=None, intv=None):
     (scope, repo, start, end) = _get_scope(request, org=org, repo=repo, start=start, end=end)
     df = dataframes.stat_series(repo, start=start, end=end, interval=intv)
-    scope['graph'] = graphs.scatter_plot(repo=repo, start=start, end=end, df=df, x='day', y='commit_total', fit=True)
+    scope['graph'] = graphs.scatter_plot(df=df, x='day', y='commit_total', fit=True)
     return render(request, 'graph.html', context=scope)
 
 def graph_participation(request, org=None, repo=None, start=None, end=None, intv=None):
     (scope, repo, start, end) = _get_scope(request, org=org, repo=repo, start=start, end=end)
     df = dataframes.stat_series(repo, start=start, end=end, interval=intv)
-    scope['graph'] = graphs.scatter_plot(repo=repo, start=start, end=end, df=df, x='day', y='author_total', fit=True)
+    scope['graph'] = graphs.scatter_plot(df=df, x='day', y='author_total', fit=True)
     return render(request, 'graph.html', context=scope)
 
 def graph_largest_contributors(request, org=None, repo=None, start=None, end=None, intv=None):
     (scope, repo, start, end) = _get_scope(request, org=org, repo=repo, start=start, end=end)
     df = dataframes.stat_series(repo, start=start, end=end, interval=intv, by_author=True, limit_top_authors=True)
-    scope['graph'] = graphs.scatter_plot(repo=repo, start=start, end=end, df=df, x='day', y='commit_total', fit=True)
+    scope['graph'] = graphs.scatter_plot(df=df, x='day', y='commit_total', fit=True)
     return render(request, 'graph.html', context=scope)
 
 def graph_granularity(request, org=None, repo=None, start=None, end=None, intv=None):
     (scope, repo, start, end) = _get_scope(request, org=org, repo=repo, start=start, end=end)
     df = dataframes.stat_series(repo, start=start, end=end, interval=intv)
-    scope['graph'] = graphs.scatter_plot(repo=repo, start=start, end=end, df=df, x='day', y='average_commit_size', fit=True)
+    scope['graph'] = graphs.scatter_plot(df=df, x='day', y='average_commit_size', fit=True)
     return render(request, 'graph.html', context=scope)
 
 def graph_key_retention(request, org=None, repo=None, start=None, end=None):
     (scope, repo, start, end) = _get_scope(request, org=org, repo=repo, start=start, end=end)
     df = dataframes.stat_series(repo, start=start, end=end, interval='LF', by_author=True)
-    scope['graph'] = graphs.scatter_plot(repo=repo, start=start, end=end, df=df, x='earliest_commit_day', y='longevity', fit=True)
+    scope['graph'] = graphs.scatter_plot(df=df, x='earliest_commit_day', y='longevity', fit=True)
     return render(request, 'graph.html', context=scope)
 
 def graph_files_time(request, org=None, repo=None, start=None, intv=None, end=None):
     (scope, repo, start, end) = _get_scope(request, org=org, repo=repo, start=start, end=end)
     df = dataframes.stat_series(repo, start=start, end=end, interval=intv, by_author=True)
-    scope['graph'] = graphs.scatter_plot(repo=repo, start=start, end=end, df=df, x='day', y='files_changed', fit=True)
+    scope['graph'] = graphs.scatter_plot(df=df, x='day', y='files_changed', fit=True)
     return render(request, 'graph.html', context=scope)
 
 def graph_bias_time(request, org=None, repo=None, start=None, intv=None, end=None):
     (scope, repo, start, end) = _get_scope(request, org=org, repo=repo, start=start, end=end)
     df = dataframes.stat_series(repo, start=start, end=end, interval=intv)
-    scope['graph'] = graphs.scatter_plot(repo=repo, start=start, end=end, df=df, x='day', y='bias', fit=True)
+    scope['graph'] = graphs.scatter_plot(df=df, x='day', y='bias', fit=True)
     return render(request, 'graph.html', context=scope)
-
 
 def graph_commitment(request, org=None, repo=None, start=None, end=None):
     (scope, repo, start, end) = _get_scope(request, org=org, repo=repo, start=start, end=end)
     df = dataframes.stat_series(repo, start=start, end=end, interval='LF', by_author=True)
-    scope['graph'] = graphs.scatter_plot(repo=repo, start=start, end=end, df=df, x='earliest_commit_day', y='commitment', fit=True)
+    scope['graph'] = graphs.scatter_plot(df=df, x='earliest_commit_day', y='commitment', fit=True)
     return render(request, 'graph.html', context=scope)
 
 def graph_early_retention(request, org=None, repo=None, start=None, end=None):
     (scope, repo, start, end) = _get_scope(request, org=org, repo=repo, start=start, end=end)
     df = dataframes.stat_series(repo, start=start, end=end, interval='LF', by_author=True)
-    scope['graph'] = graphs.scatter_plot(repo=repo, start=start, end=end, df=df, x='earliest_commit_day', y='commit_total', fit=True)
+    scope['graph'] = graphs.scatter_plot(df=df, x='earliest_commit_day', y='commit_total', fit=True)
     return render(request, 'graph.html', context=scope)
 
 def graph_staying_power(request, org=None, repo=None, start=None, end=None):
     (scope, repo, start, end) = _get_scope(request, org=org, repo=repo, start=start, end=end)
     df = dataframes.stat_series(repo, start=start, end=end, interval='LF', by_author=True)
-    scope['graph'] = graphs.scatter_plot(repo=repo, start=start, end=end, df=df, x='latest_commit_day', y='longevity', fit=True)
+    scope['graph'] = graphs.scatter_plot(df=df, x='latest_commit_day', y='longevity', fit=True)
     return render(request, 'graph.html', context=scope)
 
 def graph_bias_impact(request, org=None, repo=None, start=None, end=None):
     (scope, repo, start, end) = _get_scope(request, org=org, repo=repo, start=start, end=end)
     df = dataframes.stat_series(repo, start=start, end=end, interval='LF', by_author=True)
-    scope['graph'] = graphs.scatter_plot(repo=repo, start=start, end=end, df=df, x='bias', y='lines_changed', fit=True)
+    scope['graph'] = graphs.scatter_plot(df=df, x='bias', y='lines_changed', fit=True)
     return render(request, 'graph.html', context=scope)
 
 def report_authors(request, org=None, repo=None, start=None, end=None, intv=None, limit=None):

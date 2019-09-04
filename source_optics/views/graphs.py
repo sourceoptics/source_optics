@@ -74,7 +74,7 @@ def add_fit(df, x, y, chart):
     )
     return chart + polynomial_fit
 
-def scatter_plot(repo=None, start=None, end=None, df=None, x=None, y=None, tooltips=None, fit=False):
+def scatter_plot(df=None, x=None, y=None, tooltips=None, fit=False):
     """
     This renders an altair graph around pretty much any combination of two parameters found on a Statistic object.
     """
