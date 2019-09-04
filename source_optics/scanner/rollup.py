@@ -269,7 +269,7 @@ class Rollup:
             # probably just a merge commit today, be cool about it and skip this one.
             return
 
-        stat = Statistic.compute_interval_statistic(days, repo=repo, interval=interval, author=author, start=start_day, end=end_date)
+        stat = Statistic.compute_interval_statistic(days, repo=repo, interval=interval, author=author, start=start_day, end=end_date, for_update=True)
 
         cls.smart_bulk_update(repo=repo, start_day=start_day, author=author, interval=interval, stat=stat, total_instances=total_instances)
 
@@ -351,6 +351,8 @@ class Rollup:
 
             print("(RTS3) compiling team stats: month=%s" % start_day)
             cls.compute_interval_rollup(repo=repo, start_day=start_day, interval=MONTH, total_instances=total_instances)
+        cls.bulk_create(total_instances)
+        models.cache_clear()
 
         print("(RTS4) compiling team stats: lifetime")
         cls.compute_interval_rollup(repo=repo, start_day=None, interval=LIFETIME, total_instances=total_instances)

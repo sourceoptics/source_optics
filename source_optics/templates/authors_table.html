@@ -22,20 +22,11 @@
         {headerName: "Average Commit Size", field: "average_commit_size", sortable: true, filter: true },
         {headerName: "Lines/Day",           field: "lines_changed_per_day", sortable: true, filter: true },
         {headerName: "Files/Day",           field: "files_changed_per_day", sortable: true, filter: true },
-        {headerName: "Commits/Day",         field: "commits_per_day", sortable: true, filter: true }
-
-        {% if intv == 'LF' %}
-        ,{headerName: "Longevity",          field: "longevity", sortable: true, filter: true },
+        {headerName: "Commits/Day",         field: "commits_per_day", sortable: true, filter: true },
+        {headerName: "Longevity",          field: "longevity", sortable: true, filter: true },
         {headerName: "Commitment",          field: "commitment", sortable: true, filter: true },
         {headerName: "Earliest Commit",    field: "earliest_commit_date", sortable: true, filter: true },
-        {headerName: "Latest Commit",      field: "latest_commit_date", sortable: true, filter: true },
-
-        {% comment %}
-        // this is interesting and quite useful for graphs, but... how interesting for the space it takes up? Disabled for now.
-        {headerName: "Days Before Joined", field: "days_before_joined", sortable: true, filter: true },
-        {headerName: "Days Since Seen",    field: "days_since_seen", sortable: true, filter: true },
-        {% endcomment %}
-        {% endif %}
+        {headerName: "Latest Commit",      field: "latest_commit_date", sortable: true, filter: true }
     ];
 
 

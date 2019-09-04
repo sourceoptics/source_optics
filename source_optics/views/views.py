@@ -127,23 +127,24 @@ def get_author_table(repo, start=None, end=None, interval=None, limit=None):
     authors = Author.authors(repo, start, end)
 
     for author in authors:
-        if interval == 'LF':
-            # we don't use aggregate
-            # FIXME: this should be a function on the statistic object
-            stats =  Statistic.queryset_for_range(repo, 'LF', author=author)
-            if stats.count():
-                # this IF is just in case there's an author row and we didn't do a full scan with the new code yet
-                stat = stats.first()
-                # FIXME: this is expensive, if we can get this data in one query and interlace the stat it will be MUCH faster
-                stat2 = stat.to_author_dict(repo, author)
-                results.append(stat2)
-
-        else:
-            # interval here as a parameter uses anything but lifetime as 'not lifetime', because this is just a table and not graphs
-            stat1 = Statistic.queryset_for_range(repo, author=author, start=start, end=end, interval='DY')
-            stat2 = Statistic.compute_interval_statistic(stat1, interval='DY', repo=repo, author=author, start=start, end=end)
-            stat2 = stat2.to_dict()
-            stat2['author'] = author.email
+        #if interval == 'LF':
+        #    # we don't use aggregate
+        #    # FIXME: this should be a function on the statistic object
+        #    stats =  Statistic.queryset_for_range(repo, 'LF', author=author)
+        #    if stats.count():
+        #        # this IF is just in case there's an author row and we didn't do a full scan with the new code yet
+        #        stat = stats.first()
+        #        # FIXME: this is expensive, if we can get this data in one query and interlace the stat it will be MUCH faster
+        #        stat2 = stat.to_author_dict(repo, author)
+        #        results.append(stat2)
+        #else:
+        #    # interval here as a parameter uses anything but lifetime as 'not lifetime', because this is just a table and not graphs
+        stat1 = Statistic.queryset_for_range(repo, author=author, start=start, end=end, interval=interval)
+        stat2 = Statistic.compute_interval_statistic(stat1, interval='DY', repo=repo, author=author, start=start, end=end)
+        stat2 = stat2.to_dict()
+        stat2['author'] = author.email
+        if stat2['lines_changed']:
+            # skip authors with no contribution in the time range
             results.append(stat2)
     return results
 
@@ -289,7 +290,7 @@ def graph_participation(request, org=None, repo=None, start=None, end=None, intv
 def graph_largest_contributors(request, org=None, repo=None, start=None, end=None, intv=None):
     (scope, repo, start, end) = _get_scope(request, org=org, repo=repo, start=start, end=end)
     df = dataframes.top_author_time_series(repo, start=start, end=end, interval=intv)
-    scope['graph'] = graphs.scatter_plot(df=df, x='day', y='commit_total', color='author:N', fit=True, author=True)
+    scope['graph'] = graphs.scatter_plot(df=df, x='day', y='commit_total', color='author:N', author=True)
     return render(request, 'graph.html', context=scope)
 
 def graph_granularity(request, org=None, repo=None, start=None, end=None, intv=None):
@@ -298,45 +299,45 @@ def graph_granularity(request, org=None, repo=None, start=None, end=None, intv=N
     scope['graph'] = graphs.scatter_plot(df=df, x='day', y='average_commit_size', fit=True)
     return render(request, 'graph.html', context=scope)
 
-def graph_key_retention(request, org=None, repo=None, start=None, end=None):
+def graph_key_retention(request, org=None, repo=None, start=None, end=None, intv=None):
     (scope, repo, start, end) = _get_scope(request, org=org, repo=repo, start=start, end=end)
-    df = dataframes.author_time_series(repo, start=start, end=end, interval='LF')
+    df = dataframes.author_time_series(repo, start=start, end=end, interval=intv)
     scope['graph'] = graphs.scatter_plot(df=df, x='earliest_commit_day', y='longevity', fit=True, author=True)
     return render(request, 'graph.html', context=scope)
 
-def graph_files_time(request, org=None, repo=None, start=None, intv=None, end=None):
+def graph_files_time(request, org=None, repo=None, start=None, end=None, intv=None):
     (scope, repo, start, end) = _get_scope(request, org=org, repo=repo, start=start, end=end)
     df = dataframes.author_time_series(repo, start=start, end=end, interval=intv)
     scope['graph'] = graphs.scatter_plot(df=df, x='day', y='files_changed', fit=True, author=True)
     return render(request, 'graph.html', context=scope)
 
-def graph_bias_time(request, org=None, repo=None, start=None, intv=None, end=None):
+def graph_bias_time(request, org=None, repo=None, start=None, end=None, intv=None):
     (scope, repo, start, end) = _get_scope(request, org=org, repo=repo, start=start, end=end)
     df = dataframes.author_time_series(repo, start=start, end=end, interval=intv)
     scope['graph'] = graphs.scatter_plot(df=df, x='day', y='bias', fit=True, author=True)
     return render(request, 'graph.html', context=scope)
 
-def graph_commitment(request, org=None, repo=None, start=None, end=None):
+def graph_commitment(request, org=None, repo=None, start=None, end=None, intv=None):
     (scope, repo, start, end) = _get_scope(request, org=org, repo=repo, start=start, end=end)
-    df = dataframes.author_time_series(repo, start=start, end=end, interval='LF')
+    df = dataframes.author_time_series(repo, start=start, end=end, interval=intv)
     scope['graph'] = graphs.scatter_plot(df=df, x='earliest_commit_day', y='commitment', fit=True, author=True)
     return render(request, 'graph.html', context=scope)
 
-def graph_early_retention(request, org=None, repo=None, start=None, end=None):
+def graph_early_retention(request, org=None, repo=None, start=None, end=None, intv=None):
     (scope, repo, start, end) = _get_scope(request, org=org, repo=repo, start=start, end=end)
-    df = dataframes.author_time_series(repo, start=start, end=end, interval='LF')
+    df = dataframes.author_time_series(repo, start=start, end=end, interval=intv)
     scope['graph'] = graphs.scatter_plot(df=df, x='earliest_commit_day', y='commit_total', fit=True, author=True)
     return render(request, 'graph.html', context=scope)
 
-def graph_staying_power(request, org=None, repo=None, start=None, end=None):
+def graph_staying_power(request, org=None, repo=None, start=None, end=None, intv=None):
     (scope, repo, start, end) = _get_scope(request, org=org, repo=repo, start=start, end=end)
-    df = dataframes.author_time_series(repo, start=start, end=end, interval='LF')
+    df = dataframes.author_time_series(repo, start=start, end=end, interval=intv)
     scope['graph'] = graphs.scatter_plot(df=df, x='latest_commit_day', y='longevity', fit=True, author=True)
     return render(request, 'graph.html', context=scope)
 
-def graph_bias_impact(request, org=None, repo=None, start=None, end=None):
+def graph_bias_impact(request, org=None, repo=None, start=None, end=None, intv=None):
     (scope, repo, start, end) = _get_scope(request, org=org, repo=repo, start=start, end=end)
-    df = dataframes.author_time_series(repo, start=start, end=end, interval='LF')
+    df = dataframes.author_time_series(repo, start=start, end=end, interval=intv)
     scope['graph'] = graphs.scatter_plot(df=df, x='bias', y='lines_changed', fit=True, author=True)
     return render(request, 'graph.html', context=scope)
 
@@ -347,6 +348,7 @@ def report_authors(request, org=None, repo=None, start=None, end=None, intv=None
     (scope, repo, start, end) = _get_scope(request, org=org, repo=repo, start=start, end=end, interval=intv)
     data = get_author_table(repo, start=start, end=end, interval=intv, limit=limit)
     scope['title'] = "Source Optics: %s repo: (authors report)" % repo.name
+    scope['author_count'] = len(data)
     scope['author_json'] = json.dumps(data)
     return render(request, 'authors.html', context=scope)
 

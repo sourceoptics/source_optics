@@ -140,9 +140,13 @@ def _scatter_queryset_to_dataframe(repo, totals, fields, just_data=False):
             elif f == 'earliest_commit_day':
                 if t.earliest_commit_date is not None:
                     data[f].append((t.earliest_commit_date - first_day).days)
+                else:
+                    data[f] = -1
             elif f == 'latest_commit_day':
                 if t.latest_commit_date is not None:
                     data[f].append((t.latest_commit_date - first_day).days)
+                else:
+                    data[f] = -1
             elif f == 'author':
                 data[f].append(t.author.email)
             else:
@@ -166,8 +170,6 @@ def _stat_series(repo, start=None, end=None, fields=None, by_author=False, inter
 
     if fields is None:
         fields = Statistic.GRAPHABLE_FIELDS[:]
-        if interval == 'LF':
-            fields.extend(Statistic.GRAPHABLE_FIELDS_LIFETIME[:])
         if by_author:
             fields.append('author')
 
@@ -185,3 +187,7 @@ def top_author_time_series(repo, start=None, end=None, interval=None):
 
 # TODO: make a method that returns the top_author_time_series but makes an 11th author which is the aggregrate of all authors not in
 # the top author list.  We will then use *THAT* data for pie charts and stacked bars.
+
+# TODO: still need to see if we can modify Statistics code so that earliest_commit_date / latest are on all objects
+# compute derived records with F expressions on aggregration.
+# https://stackoverflow.com/questions/45593440/how-to-execute-arithmetic-operations-between-model-fields-in-django

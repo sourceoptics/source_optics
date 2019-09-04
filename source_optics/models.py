@@ -429,17 +429,15 @@ class Statistic(models.Model):
         'flux',
         'files_changed',
         'bias',
-        'commitment'
-    ]
-    GRAPHABLE_FIELDS_LIFETIME = [
+        'commitment',
         'earliest_commit_date',
         'latest_commit_date',
         'days_since_seen',
         'days_before_joined',
         'longevity',
         'days_active',
-        'latest_commit_day',
-        'earliest_commit_day'
+        'latest_commit_day', # view side
+        'earliest_commit_day', # view side
     ]
 
     INTERVALS = (
@@ -505,7 +503,7 @@ class Statistic(models.Model):
         )
 
     @classmethod
-    def compute_interval_statistic(cls, queryset, interval=interval, repo=None, author=None, start=None, end=None):
+    def compute_interval_statistic(cls, queryset, interval=interval, repo=None, author=None, start=None, end=None, for_update=False):
 
         # used by rollup.py to derive a rollup interval from another.
 
@@ -538,14 +536,7 @@ class Statistic(models.Model):
 
         stat.compute_derived_values()
 
-        if interval == 'LF':
-
-            # we can only provide these for lifetime intervals because they don't entirely
-            # make sense without the full history, for instance, 'earliest commit' would
-            # not be within the time range. we *COULD* change this, and denormalize the system
-            # where every row has this data, but it would massively slow down the scanner to
-            # update every single row on every scan - and that's bad. Hence just updating
-            # the lifetime rows.
+        if for_update and interval == 'LF':
 
             all_earliest = repo.earliest_commit_date()
             all_latest = repo.latest_commit_date()
@@ -555,6 +546,38 @@ class Statistic(models.Model):
             stat.days_before_joined = (stat.earliest_commit_date - all_earliest).days
             stat.longevity = (stat.latest_commit_date - stat.earliest_commit_date).days + 1
             stat.commitment = (stat.days_active / (1 + stat.longevity))
+
+            update_stats = None
+            if author:
+                update_stats = Statistic.objects.filter(repo=repo, author=author)
+            else:
+                update_stats = Statistic.objects.filter(repo=repo, author__isnull=True)
+            # these stats are somewhat denormalized 'globals' but allows us to include them efficiently in time-series tooltips which is nice.
+            update_stats.update(
+                earliest_commit_date = stat.earliest_commit_date,
+                latest_commit_date = stat.latest_commit_date,
+                days_since_seen = stat.days_since_seen,
+                days_before_joined = stat.days_before_joined,
+                longevity = stat.longevity,
+                commitment = stat.commitment
+            )
+
+        elif not for_update and queryset.count():
+
+            if author:
+                first = queryset.first()
+                stat.earliest_commit_date = first.earliest_commit_date
+                stat.latest_comit_date = first.latest_commit_date
+                stat.days_since_seen = first.days_since_seen
+                stat.days_before_joined = first.days_before_joined
+                stat.longevity = first.longevity
+                stat.commitment = first.commitment
+            else:
+                # leave these at defaults
+                pass
+
+
+
 
         return stat
 
@@ -581,8 +604,10 @@ class Statistic(models.Model):
             else:
                 return 0
         else:
-            if getattr(data, right):
-                return int(float(getattr(data,left)) / float(getattr(data,right)))
+            left  = getattr(data, left, None)
+            right = getattr(data, right, None)
+            if left and right:
+                return int(float(left) / float(right))
             else:
                 return 0
 
@@ -607,6 +632,8 @@ class Statistic(models.Model):
         self.bias = other.bias
         self.flux = other.flux
         self.commitment = other.commitment
+        self.longevity = other.longevity
+
 
     @classmethod
     def queryset_for_range(cls, repo, interval, author=None, start=None, end=None):

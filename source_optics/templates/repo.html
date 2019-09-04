@@ -38,13 +38,10 @@
 
 <hr/>
 
-<h1>Bias Vs Impact</h1>
-<i>Bias is the net difference in lines of code added or removed.  What is the relationship between bias and lines changed?</i><br/>
-
-<div data-loader="ajax" data-src="/org/{{ org.pk }}/repo/{{ repo.pk }}/start/{{ start_str }}/end/{{ end_str }}/graph/bias_impact">loading</div>
+<div data-loader="ajax" data-src="/org/{{ org.pk }}/repo/{{ repo.pk }}/start/{{ start_str }}/end/{{ end_str }}//intv/{{ intv }}/graph/bias_impact">loading</div>
 
 <h2>Bias Over Time</h2>
-<i>Is the repository trending more towards additions, deletions, or surgical edits</i>
+<i>Bias is Additions-Removals. Is the repository trending more towards additions, deletions, or surgical edits?</i>
 
 <div data-loader="ajax" data-src="/org/{{ org.pk }}/repo/{{ repo.pk }}/start/{{ start_str }}/end/{{ end_str }}/intv/{{ intv }}/graph/bias_time">loading</div>
 
@@ -61,19 +58,19 @@
 <h2>Key Contributor Retention (Lifetime)</h2>
 <i>At what points did this project possibly lose significant code contributors?</i>
 
-<div data-loader="ajax" data-src="/org/{{ org.pk }}/repo/{{ repo.pk }}/start/{{ start_str }}/end/{{ end_str }}/graph/key_retention">loading</div>
+<div data-loader="ajax" data-src="/org/{{ org.pk }}/repo/{{ repo.pk }}/start/{{ start_str }}/end/{{ end_str }}/intv/LF/graph/key_retention">loading</div>
 
 <h2>Commitment Over Time</h2>
 
-<div data-loader="ajax" data-src="/org/{{ org.pk }}/repo/{{ repo.pk }}/start/{{ start_str }}/end/{{ end_str }}/graph/commitment">loading</div>
+<div data-loader="ajax" data-src="/org/{{ org.pk }}/repo/{{ repo.pk }}/start/{{ start_str }}/end/{{ end_str }}/intv/LF/graph/commitment">loading</div>
 
 <h2>Early Retention</h2>
 
-<div data-loader="ajax" data-src="/org/{{ org.pk }}/repo/{{ repo.pk }}/start/{{ start_str }}/end/{{ end_str }}/graph/early_retention">loading</div>
+<div data-loader="ajax" data-src="/org/{{ org.pk }}/repo/{{ repo.pk }}/start/{{ start_str }}/end/{{ end_str }}/intv/LF/graph/early_retention">loading</div>
 
 <h2>Staying Power</h2>
 
-<div data-loader="ajax" data-src="/org/{{ org.pk }}/repo/{{ repo.pk }}/start/{{ start_str }}/end/{{ end_str }}/graph/staying_power">loading</div>
+<div data-loader="ajax" data-src="/org/{{ org.pk }}/repo/{{ repo.pk }}/start/{{ start_str }}/end/{{ end_str }}/intv/LF/graph/staying_power">loading</div>
 
 <br/>
 <br/>

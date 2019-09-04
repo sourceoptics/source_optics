@@ -77,9 +77,11 @@ def scatter_plot(df=None, x=None, y=None, color=None, author=False, fit=False):
     This renders an altair graph around pretty much any combination of two parameters found on a Statistic object.
     """
 
-    tooltips=['date', 'commit_total', 'lines_changed', 'author_total']
+    tooltips=['date',  'commit_total', 'lines_changed', 'files_changed']
     if author:
-        tooltips.extend(['author'])
+        tooltips.extend(['author', 'earliest_commit_date', 'latest_commit_date', 'days_active', 'commitment'])
+    else:
+        tooltips.extend(['author_total'])
     # FIXME: we should pass in the interval, and add longevity/etc when interval==LF.
 
     if fit and x=='date':
@@ -92,12 +94,14 @@ def scatter_plot(df=None, x=None, y=None, color=None, author=False, fit=False):
         chart = alt.Chart(df, height=600, width=600).mark_point().encode(
             x=alt.X(x, scale=alt.Scale(zero=False, clamp=True)), #, scale=alt.Scale(zero=False, clamp=True)),
             y=alt.Y(y, scale=alt.Scale(zero=False, clamp=True)), #, scale=alt.Scale(zero=False, clamp=True)),
-            color=color
+            color=color,
+            tooltip=tooltips
         ).interactive()
     else:
         chart = alt.Chart(df, height=600, width=600).mark_point().encode(
             x=alt.X(x, scale=alt.Scale(zero=False, clamp=True)),  # , scale=alt.Scale(zero=False, clamp=True)),
             y=alt.Y(y, scale=alt.Scale(zero=False, clamp=True)),  # , scale=alt.Scale(zero=False, clamp=True)),
+            tooltip=tooltips
         ).interactive()
 
     if fit:
