@@ -140,7 +140,7 @@ class Rollup:
 
         if file_change_count == 0:
             # this looks like a merge commit, FIXME: it would be a good idea to validate that this is 100% true.
-            print("-- skipping potential merge commit --")
+            # print("-- skipping potential merge commit --")
             return
 
         if not author:

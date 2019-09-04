@@ -38,7 +38,7 @@
 
 <hr/>
 
-<h1>Bias And Flux</h1>
+<h1>Bias Vs Impact</h1>
 <i>Bias is the net difference in lines of code added or removed.  What is the relationship between bias and lines changed?</i><br/>
 
 <div data-loader="ajax" data-src="/org/{{ org.pk }}/repo/{{ repo.pk }}/start/{{ start_str }}/end/{{ end_str }}/graph/bias_impact">loading</div>
@@ -53,6 +53,7 @@
 
 <div data-loader="ajax" data-src="/org/{{ org.pk }}/repo/{{ repo.pk }}/start/{{ start_str }}/end/{{ end_str }}/intv/{{ intv }}/graph/files_time">loading</div>
 
+<hr/>
 
 <h1>Lifetime Graphs</h1>
 <i>Note: The following repository-character graphs are ignorning the selected time range.</i>
@@ -63,7 +64,6 @@
 <div data-loader="ajax" data-src="/org/{{ org.pk }}/repo/{{ repo.pk }}/start/{{ start_str }}/end/{{ end_str }}/graph/key_retention">loading</div>
 
 <h2>Commitment Over Time</h2>
-<!-- FIXME: is there a better thing to graph frequency against? -->
 
 <div data-loader="ajax" data-src="/org/{{ org.pk }}/repo/{{ repo.pk }}/start/{{ start_str }}/end/{{ end_str }}/graph/commitment">loading</div>
 
@@ -74,5 +74,12 @@
 <h2>Staying Power</h2>
 
 <div data-loader="ajax" data-src="/org/{{ org.pk }}/repo/{{ repo.pk }}/start/{{ start_str }}/end/{{ end_str }}/graph/staying_power">loading</div>
+
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+
 
 {% include 'footer.html' %}
