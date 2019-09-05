@@ -214,6 +214,7 @@ def _get_scope(request, org=None, repos=None, repo=None, repo_table=False):
     context = dict(
         orgs  = orgs.order_by('name').all(),
         org   = org,
+        orgs_count = orgs.count(),
         repos = repos.all(),
         start = start,
         end   = end,

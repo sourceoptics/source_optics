@@ -9,4 +9,9 @@
     {% endfor %}
 </table>
 
+{% if not orgs_count %}
+   There are no organizations in the system yet. Visit the <A HREF="/admin">Admin View</A> to create some
+   credentials and organizations.  Refer to the install documentation if you have questions.
+{% endif %}
+
 {% include 'footer.html' %}
