@@ -44,12 +44,6 @@ urlpatterns = [
     path('org/<org>/repo/<repo>/graph/participation', views.graph_participation, name='graph_participation'),
     path('org/<org>/repo/<repo>/graph/largest_contributors', views.graph_largest_contributors, name='graph_largest_contributors'),
     path('org/<org>/repo/<repo>/graph/granularity', views.graph_granularity, name='graph_granularity'),
-    path('org/<org>/repo/<repo>/graph/key_retention', views.graph_key_retention, name='graph_key_retention'),
-    path('org/<org>/repo/<repo>/graph/commitment', views.graph_commitment, name='graph_commitment'),
-    path('org/<org>/repo/<repo>/graph/early_retention', views.graph_early_retention, name='graph_early_retention'),
-    path('org/<org>/repo/<repo>/graph/staying_power', views.graph_staying_power, name='graph_staying_power'),
-    path('org/<org>/repo/<repo>/graph/bias_impact', views.graph_bias_impact, name='graph_bias_impact'),
-    path('org/<org>/repo/<repo>/graph/bias_time', views.graph_bias_time, name='graph_bias_time'),
     path('org/<org>/repo/<repo>/graph/files_time', views.graph_files_time, name='graph_files_time'),
 
     path('org/<org>/repo/<repo>/report/authors', views.report_authors, name='report_authors'),

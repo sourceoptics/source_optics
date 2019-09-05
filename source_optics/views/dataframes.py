@@ -17,8 +17,13 @@
 
 import pandas as pd
 from django.db.models import Sum
+import django.utils.timezone as timezone
+import dateutil.rrule as rrule
+import datetime
+from ..models import Statistic, Author
+import pandas
 
-from ..models import Statistic
+TZ = timezone.get_current_timezone()
 
 
 def get_interval(start, end):
@@ -50,9 +55,7 @@ def top_authors(repo, start, end, attribute='commit_total', limit=10):
         start_date__range=(start, end)
     ).values('author_id').annotate(total=Sum(attribute)).order_by('-total')[0:limit]
 
-    author_ids = [ t['author_id'] for t in filter_set ]
-    return author_ids
-
+    return [ x for x in Author.objects.filter(pk__in= [ t['author_id'] for t in filter_set ]).all() ]
 
 def _interval_queryset(repo, start=None, end=None, by_author=False, interval='DY', limit_top_authors=False):
 
@@ -62,10 +65,12 @@ def _interval_queryset(repo, start=None, end=None, by_author=False, interval='DY
     with a limit=-1 (default) parameter.
     # FIXME: clean all this up.
     """
+    limited_to = None
 
     totals = None
     if not by_author:
         if interval != 'LF':
+            print("n1")
             totals = Statistic.objects.select_related('repo', ).filter(
                 interval=interval,
                 repo=repo,
@@ -73,6 +78,7 @@ def _interval_queryset(repo, start=None, end=None, by_author=False, interval='DY
                 start_date__range=(start, end)
             )
         else:
+            print("n2")
             if start is None or end is None:
                 totals = Statistic.objects.select_related('repo').filter(
                     interval=interval,
@@ -83,20 +89,27 @@ def _interval_queryset(repo, start=None, end=None, by_author=False, interval='DY
                 totals = Statistic.objects.select_related('repo').filter(
                     interval=interval,
                     repo=repo,
+                    author__isnull=True
                 )
     else:
         top = None
         if limit_top_authors:
-            top = top_authors(repo, start, end)
+            limited_to = top_authors(repo, start, end)
         if interval != 'LF':
+            assert start is not None
+            assert end is not None
+            print(start,end)
+            print(top)
             if limit_top_authors:
+                print("n3")
                 totals = Statistic.objects.select_related('repo', 'author').filter(
                     interval=interval,
                     repo=repo,
-                    author__pk__in=top,
+                    author__in=limited_to,
                     start_date__range=(start, end)
                 )
             else:
+                print("n4")
                 totals = Statistic.objects.select_related('repo', 'author').filter(
                     interval=interval,
                     repo=repo,
@@ -104,6 +117,7 @@ def _interval_queryset(repo, start=None, end=None, by_author=False, interval='DY
                     start_date__range=(start, end)
                 )
         else:
+            print("n5")
             totals = Statistic.objects.select_related('repo', 'author').filter(
                 interval=interval,
                 repo=repo,
@@ -112,19 +126,20 @@ def _interval_queryset(repo, start=None, end=None, by_author=False, interval='DY
             if start and end:
                 totals = totals.filter(author__commits__commit_date__range=(start,end))
             if limit_top_authors:
-                totals = totals.filter(author__pk__in=top)
+                totals = totals.filter(author__pk__in=limited_to)
 
-    return totals.order_by('author','start_date')
+    return (totals.order_by('author','start_date'), limited_to)
 
-def _interval_queryset_to_dataframe(repo, totals, fields, just_data=False):
+def _field_prep(field, stat, first_day):
+    if field == 'date':
+        return stat.start_date
+    elif field == 'author':
+        return stat.author.email
+    else:
+        return getattr(stat, field)
 
-    """
-    Convert a queryset of statistic objects as returned by the above function
-    to a Pandas dataframe which we can graph.  This ALMOST relies on the statistic
-    objects being 100% correct in the database, but we also add a denormalized
-    'days' stat, because Altair cannot do polynomial regressions (i.e. curve fitting graphs)
-    against raw datetime objects.  'days' is the days since the project started.
-    """
+def _interval_queryset_to_dataframe(repo, totals, fields, start, end, interval, limited_to):
+
 
     data = dict()
 
@@ -133,36 +148,12 @@ def _interval_queryset_to_dataframe(repo, totals, fields, just_data=False):
     for f in fields:
         data[f] = []
 
+    # load the dataframe with the queryset results we have
     for t in totals:
-
         for f in fields:
-            if f == 'date':
-                # just renaming this one field for purposes of axes labelling
-                data[f].append(t.start_date)
-            elif f == 'day':
-                if t.start_date is not None:
-                    # if condition because lifetime stats have no dates
-                    data[f].append((t.start_date - first_day).days)
-                else:
-                    data[f].append(0)
-            elif f == 'earliest_commit_day':
-                if t.earliest_commit_date is not None:
-                    data[f].append((t.earliest_commit_date - first_day).days)
-                else:
-                    data[f] = -1
-            elif f == 'latest_commit_day':
-                if t.latest_commit_date is not None:
-                    data[f].append((t.latest_commit_date - first_day).days)
-                else:
-                    data[f] = -1
-            elif f == 'author':
-                data[f].append(t.author.email)
-            else:
-                data[f].append(getattr(t, f))
-    if not just_data:
-        return pd.DataFrame(data, columns=fields)
-    else:
-        return (data, fields)
+            data[f].append(_field_prep(f, t, first_day))
+
+    return (data, fields)
 
 def _stat_series(repo, start=None, end=None, fields=None, by_author=False, interval=None, limit_top_authors=False):
 
@@ -181,11 +172,14 @@ def _stat_series(repo, start=None, end=None, fields=None, by_author=False, inter
         if by_author:
             fields.append('author')
 
-    totals = _interval_queryset(repo, start=start, end=end, by_author=by_author, interval=interval, limit_top_authors=limit_top_authors)
-    return _interval_queryset_to_dataframe(repo, totals, fields)
+    print("INF=%s" % fields)
+
+    (totals, limited_to_authors) = _interval_queryset(repo, start=start, end=end, by_author=by_author, interval=interval, limit_top_authors=limit_top_authors)
+    (pre_df, fields) = _interval_queryset_to_dataframe(repo, totals, fields, start, end, interval, limited_to_authors)
+    return pandas.DataFrame(pre_df, columns=fields)
 
 def team_time_series(repo, start=None, end=None, interval=None):
-    return _stat_series(repo, start=start, end=end, interval=interval)
+    return _stat_series(repo, start=start, end=end, interval=interval, by_author=False)
 
 def author_time_series(repo, start=None, end=None, interval=None):
     return _stat_series(repo, start=start, end=end, interval=interval, by_author=True)
@@ -193,5 +187,3 @@ def author_time_series(repo, start=None, end=None, interval=None):
 def top_author_time_series(repo, start=None, end=None, interval=None):
     return _stat_series(repo, start=start, end=end, interval=interval, by_author=True, limit_top_authors=True)
 
-# TODO: make a method that returns the top_author_time_series but makes an 11th author which is the aggregrate of all authors not in
-# the top author list.  We will then use *THAT* data for pie charts and stacked bars.

@@ -421,7 +421,6 @@ class Statistic(models.Model):
 
     GRAPHABLE_FIELDS = [
         'date',
-        'day',
         'lines_changed',
         'commit_total',
         'author_total',
@@ -436,8 +435,6 @@ class Statistic(models.Model):
         'days_before_joined',
         'longevity',
         'days_active',
-        'latest_commit_day', # view side
-        'earliest_commit_day', # view side
     ]
 
     INTERVALS = (
