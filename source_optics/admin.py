@@ -31,15 +31,6 @@ class RepoAdmin(admin.ModelAdmin):
               'scanner_extension_allow_list', 'scanner_extension_deny_list' ]
     actions = [fast_delete]
 
-class CommitAdmin(admin.ModelAdmin):
-    list_display = ('sha', 'subject', 'repo', 'author', 'commit_date')
-    actions = [fast_delete]
-
-class StatAdmin(admin.ModelAdmin):
-    list_display = ('start_date', 'interval', 'repo', 'author', 'commit_total',
-    'lines_added', 'lines_removed', 'lines_changed', 'files_changed', 'author_total')
-    actions = [fast_delete]
-
 class CredentialForm(ModelForm):
     password = CharField(widget=PasswordInput(), required=False)
     ssh_unlock_passphrase = CharField(widget=PasswordInput(), required=False)
@@ -52,11 +43,6 @@ class CredentialAdmin(admin.ModelAdmin):
     form = CredentialForm
 
 admin.site.register(Organization)
-admin.site.register(Statistic, StatAdmin)
 admin.site.register(Repository, RepoAdmin)
 admin.site.register(Author)
-admin.site.register(Commit, CommitAdmin)
-admin.site.register(FileChange)
-admin.site.register(File)
-admin.site.register(Tag)
 admin.site.register(Credential, CredentialAdmin)
