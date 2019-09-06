@@ -13,21 +13,17 @@
   <!-- FIXME: this table is getting HUGE, do we need multiple table links especially for the lifetime version? -->
 
     var columnDefs = [
-        {headerName: "Author",              field: "author", sortable: true, filter: true },
-        {headerName: "Added+Removed",       field: "lines_changed", sortable: true, filter: true },
-        {headerName: "Added-Removed",       field: "bias", sortable: true, filter: true },
-        {headerName: "Commit Total",        field: "commit_total", sortable: true, filter: true },
-        {headerName: "Files Changed",       field: "files_changed", sortable: true, filter: true },
-        {headerName: "Days Active",         field: "days_active", sortable: true, filter: true },
-        {headerName: "Average Commit Size", field: "average_commit_size", sortable: true, filter: true },
-        {headerName: "Lines/Day",           field: "lines_changed_per_day", sortable: true, filter: true },
-        {headerName: "Files/Day",           field: "files_changed_per_day", sortable: true, filter: true },
-        {headerName: "Commits/Day",         field: "commits_per_day", sortable: true, filter: true },
-        {headerName: "Longevity",           field: "longevity", sortable: true, filter: true },
-        {headerName: "Commitment",          field: "commitment", sortable: true, filter: true },
-        {headerName: "Earliest Commit",     field: "earliest_commit_date", sortable: true, filter: true },
-        {headerName: "Latest Commit",       field: "latest_commit_date", sortable: true, filter: true }
+        {headerName: "Author",         field: "author", sortable: true, filter: true },
+        {headerName: "L+",             field: "lines_added", sortable: true, filter: true },
+        {headerName: "L-",             field: "lines_removed", sortable: true, filter: true },
+        {headerName: "Commits",        field: "commit_total", sortable: true, filter: true },
+        {headerName: "Files",          field: "files_changed", sortable: true, filter: true },
+        {headerName: "Days",           field: "days_active", sortable: true, filter: true },
+        {headerName: "Longevity",      field: "longevity", sortable: true, filter: true },
+        {headerName: "Joined Day",     field: "days_before_joined", sortable: true, filter: true },
+        {headerName: "Missing Days",   field: "days_since_seen", sortable: true, filter: true }
     ];
+
 
 
     // specify the data
