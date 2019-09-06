@@ -1,57 +1,72 @@
 
 import json
-from source_optics.models import (Author, Statistic)
+from source_optics.models import (Author, Statistic, Commit)
+from django.core.paginator import Paginator
 
-def commits_table(scope): # repos=None, organization=None, repo=None, start=None, end=None, author_email=None, author_domain=None, page_size=50, page=0):
-
-    raise Exception("NOT IMPLEMENTED YET, WIP")
+def commits_feed(scope): # repos=None, organization=None, repo=None, start=None, end=None, author_email=None, author_domain=None, page_size=50, page=0):
 
     # FIXME: looks like a function
     objs = None
+
+    repo = scope.repo
+    author = scope.author
+    organization = scope.org
+    start = scope.start
+    end = scope.end
+    author_email = scope.author_email
+    author_domain = scope.author_domain
+    #page = scope.page
+    #page_size = scope.page_size
+
     if repo and author:
-        Commits.objects.filter(organization=organization, repo=repo, author=author)
+        objs = Commit.objects.filter(repo=repo, author=author)
     elif repo:
-        Commits.objects.filter(organization=organization, repo=repo)
+        objs = Commit.objects.filter(repo=repo)
     elif author:
-        Commits.objects.filter(organization=organization, author=author)
+        objs = Commit.objects.filter(author=author)
+    elif organization:
+        objs = Commit.objects.filter(repo__organization=organization)
     else:
-        Commits.objects.filter(organization==organization)
+        raise Exception("?")
 
     if start and end:
-        objs = Commit.objects.filter(commit__date__range=(start,end))
+        objs = objs.filter(commit_date__range=(start,end))
 
     if author_email:
         objs = objs.filter(author__email=author_email)
     elif author_domain:
         objs = objs.filter(author__email__contains="@%s" % author_domain)
 
-    objs = objs.select_related('author','filechanges')
+    # all this nested filtering apparently can make bad queries, so we should probably unroll all of the above?
+
+    objs = objs.select_related('author').order_by('-commit_date')
 
     count = objs.count()
-    start_index = page * page_size
-    end_index = start_index + page_size
-
-    objs = objs[start_index:end_index]
 
     results = []
 
+    paginator = Paginator(objs, scope.page_size)
+    page = paginator.page(scope.page)
+
     # we may wish to show filechange info here
-    for commit in objs:
-        desc = commit.description
+    for commit in page:
+        desc = commit.subject
         if desc is None:
             desc = ""
         desc = desc[:255]
         results.append(dict(
+            repo=commit.repo.name,
+            commit_date=str(commit.commit_date),
             author_id=commit.author.pk,
             author=commit.author.email,
             sha=commit.sha,
-            desc=desc
+            subject=desc
         ))
 
-    return dict(results=results, count=count)
+    return dict(results=results, page=page, count=count)
 
 
-def author_table(scope, limit=None):
+def author_stats_table(scope, limit=None):
     """
     this drives the author tables, both ranged and non-ranged, accessed off the main repo list.
     the interval 'LF' shows lifetime stats, but elsewhere we just do daily roundups, so this parameter
@@ -59,6 +74,8 @@ def author_table(scope, limit=None):
     """
 
     results = []
+
+    assert scope.repo is not None
 
     interval = scope.interval
     if interval != 'LF':

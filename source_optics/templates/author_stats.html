@@ -7,10 +7,6 @@
 
   <script type="text/javascript" charset="utf-8">
 
-    function detailsCellRendererFunc(params) {
-        return "<a href='/repo/" + params.value + "/start/{{ start_str }}/end/{{ end_str }}'>go</a>";
-    }
-
     var columnDefs = [
         {headerName: "Author",         field: "author", sortable: true, filter: true },
         {headerName: "L+",             field: "lines_added", sortable: true, filter: true },
@@ -32,6 +28,8 @@
     thisGrid = new agGrid.Grid(eGridDiv, gridOptions);
 
 </script>
+
+</div>
 
 {% include 'footer.html' %}
 

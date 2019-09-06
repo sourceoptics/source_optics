@@ -48,7 +48,8 @@ urlpatterns = [
     path('repo/<repo>/graph/commit_size', views.graph_commit_size, name='graph_commit_size'),
 
     # REPORTS
-    path('repo/<repo>/report/authors', views.report_authors, name='report_authors'),
+    path('report/author_stats', views.report_author_stats, name='report_author_stats'),
+    path('report/commits', views.report_commits, name='report_commits'),
 
     # REST API
     path('api/', include(api_router.urls)),

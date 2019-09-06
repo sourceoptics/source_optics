@@ -157,25 +157,42 @@ def graph_commit_size(request, repo=None):
     scope.context['graph'] = graphs.time_plot(df=df, scope=scope, y='average_commit_size')
     return render(request, 'graph.html', context=scope.context)
 
-def report_authors(request, repo=None):
+def report_author_stats(request):
     """
     generates a partial graph which is loaded in the repo graphs page. more comments in graphs.py
     """
     limit = None
-    scope = Scope(request, repo=repo)
-    data = reports.author_table(scope, limit=limit)
+    scope = Scope(request)
+    data = reports.author_stats_table(scope, limit=limit)
     scope.context['title'] = "Source Optics: %s repo: (authors report)" % scope.repo.name
     scope.context['author_count'] = len(data)
     scope.context['table_json'] = json.dumps(data)
     # FIXME: should be repo_authors ? perhaps this will be standardized...
-    return render(request, 'repo_authors.html', context=scope.context)
+    return render(request, 'author_stats.html', context=scope.context)
 
 def report_commits(request, org=None):
     # FIXME: how about a scope object?
-    scope = Scope(request, repo=repo)
+    scope = Scope(request)
     data = reports.commits_feed(scope)
+    assert scope.repo or scope.author
+    # FIXME: this needs cleanup - move generic pagination support to a common function
     # TODO: title can come from commits_feed function
     scope.context['title'] = "Source Optics: commit feed"
+    scope.context['table_json'] = json.dumps(data['results'])
+    page = data['page']
+    scope.context['page_number'] = page.number
+    scope.context['has_previous'] = page.has_previous()
+    if scope.context['has_previous']:
+        if scope.repo:
+            scope.context['next_link'] = "/report/commits?repo=%s&start=%s&end=%s&page=%s" % (scope.repo.pk, scope.start_str, scope.end_str, page.next_page_number())
+        elif scope.author:
+            scope.context['next_link'] = "/report/commits?author=%s&start=%s&end=%s&page=%s" % (scope.author.pk, scope.start_str, scope.end_str, page.next_page_number())
+    scope.context['has_next'] = page.has_next()
+    if scope.context['has_next']:
+        if scope.repo:
+            scope.context['next_link'] = "/report/commits?repo=%s&start=%s&end=%s&page=%s" % (scope.repo.pk, scope.start_str, scope.end_str, page.next_page_number())
+        elif scope.author:
+            scope.context['next_link'] = "/report/commits?author=%s&start=%s&end=%s&page=%s" % (scope.author.pk, scope.start_str, scope.end_str, page.next_page_number())
     scope.context.update(data)
     return render(request, 'commits.html', context=scope.context)
 

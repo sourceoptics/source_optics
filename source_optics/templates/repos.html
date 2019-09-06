@@ -6,18 +6,23 @@
 
   <script type="text/javascript" charset="utf-8">
 
-    function chartsCell(params) {
-        return "<a href='/repo/" + params.value + "?start={{ start_str }}&end={{ end_str }}&intv={{ intv }}'>go</a>";
+    function detailsCell(params) {
+        return "<a href='/repo/" + params.value + "?start={{ start_str }}&end={{ end_str }}&intv={{ intv }}&org={{ org.pk }}'>" + params.value + "</a>";
     }
 
-    function authorsRangedCell(params) {
-        return "<a href='/repo/" + params.value + "/report/authors?start={{ start_str }}&end={{ end_str }}&intv={{ intv }}'>go</a>";
+    function authorsStatsCell(params) {
+        return "<a href='/report/author_stats?start={{ start_str }}&end={{ end_str }}&repo=" + params.value + "&org={{ org.pk }}'>go</a>";
+    }
+
+    <!-- TODO: use FontAwesome icons -->
+    function commitFeedCell(params) {
+        return "<a href='/report/commits?start={{ start_str }}&end={{ end_str }}&repo=" + params.value + "&org={{ org.pk }}'>go</a>";
     }
 
     var columnDefs = [
-        {headerName: "Name",                field: "name", sortable: true, filter: true },
-        {headerName: "Charts",              field: "details1", cellRenderer: chartsCell },
-        {headerName: "Authors",             field: "details2", cellRenderer: authorsRangedCell },
+        {headerName: "Repo",                field: "name", cellRenderer: detailsCell },
+        {headerName: "Author Stats",        field: "details2", cellRenderer: authorsStatsCell },
+        {headerName: "Commit Feed",         field: "details3", cellRenderer: commitFeedCell },
         {headerName: "Author Total",        field: "author_total", sortable: true, filter: true },
         {headerName: "Lines Changed",       field: "lines_changed", sortable: true, filter: true },
         {headerName: "Lines Added",         field: "lines_added", sortable: true, filter: true },

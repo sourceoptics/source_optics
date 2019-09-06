@@ -24,7 +24,8 @@ from . import reports
 class Scope(object):
 
     __slots__ = [
-        'start', 'end', 'interval', 'org', 'orgs', 'orgs_count', 'repos', 'repo', 'page_size', 'page', 'author', 'author_email', 'author_domain', 'context'
+        'start', 'end', 'start_str', 'end_str', 'interval', 'org', 'orgs', 'orgs_count',
+        'repos', 'repo', 'page_size', 'page', 'author', 'author_email', 'author_domain', 'context'
     ]
 
     def __init__(self, request, org=None, repo=None, add_repo_table=False):
@@ -32,13 +33,15 @@ class Scope(object):
         Get objects from the URL parameters.
         """
 
+        # FIXME: overdo for code cleanup
+
         assert request is not None
 
         start = request.GET.get('start', None)
         end = request.GET.get('end', None)
         interval = request.GET.get('intv', 'WK')
-        self.page_size = request.GET.get('page_size', 50)
-        self.page = request.GET.get('page', 0)
+        self.page_size = request.GET.get('page_size', 100)
+        self.page = request.GET.get('page', 1)
         self.author_email = request.GET.get('author_email', None)
         self.author_domain = request.GET.get('author_domain', None)
         self.interval = interval
@@ -49,7 +52,13 @@ class Scope(object):
 
         author = request.GET.get('author', None)
         if author:
-            author = Author.objects.get(pk=author)
+            try:
+                int(author)
+                self.author = Author.objects.get(pk=author)
+            except:
+                self.author = Author.objects.get(email=author)
+        else:
+            self.author = None
 
         # FIXME: a side effect, but important to have somewhere, should be Django middleware?
         models.cache_clear()
@@ -75,13 +84,28 @@ class Scope(object):
 
         self.repo = None
         if org:
-            self.org = Organization.objects.get(pk=int(org))
+            try:
+                int(org)
+                self.org = Organization.objects.get(pk=int(org))
+            except:
+                self.org = Organization.objects.get(name=int(org))
             if repo:
-                self.repo = Repository.objects.get(pk=repo, organization=self.org)
+                try:
+                    int(repo)
+                    self.repo = Repository.objects.get(pk=repo, organization=self.org)
+                except:
+                    print("repo", repo)
+                    print("org", self.org)
+                    self.repo = Repository.objects.get(name=repo, organization=self.org)
         else:
             self.org = None
             if repo:
-                self.repo = Repository.objects.get(pk=repo)
+                try:
+                    int(repo)
+                    self.repo = Repository.objects.get(pk=repo)
+                except:
+                    # there could be more than one, this might not lead to an error
+                    self.repo = Repository.objects.get(name=repo)
                 self.org = self.repo.organization
 
         if org:
@@ -93,6 +117,7 @@ class Scope(object):
         self.orgs_count = self.orgs.count()
 
         context = dict(
+            author=self.author,
             orgs=self.orgs.order_by('name').all(),
             org=self.org,
             orgs_count=self.orgs.count(),
@@ -105,11 +130,14 @@ class Scope(object):
         )
 
         if start and end:
-            context['start_str'] = start.strftime("%Y-%m-%d")
-            context['end_str'] = end.strftime("%Y-%m-%d")
+            self.start_str = start.strftime("%Y-%m-%d")
+            self.end_str = end.strftime("%Y-%m-%d")
         else:
-            context['start_str'] = None
-            context['end_str'] = None
+            self.start_str = None
+            self.end_str = None
+
+        context['start_str'] = self.start_str
+        context['end_str'] = self.end_str
 
         if add_repo_table:
             context['repo_table'] = reports.repo_table(self)
