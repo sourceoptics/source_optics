@@ -120,11 +120,11 @@ def _interval_queryset(repo, start=None, end=None, by_author=False, interval='DY
                 # we can still trim the lifetime stats by excluding authors
                 totals = totals.filter(author__commits__commit_date__range=(start,end))
         if limit_top_authors:
-            filtered = totals.filter(author__in=limited_to)
+            filtered = totals.filter(author__in=limited_to).select_related('author')
             inverse = totals.exclude(author__in=limited_to).select_related('author')
-            totals = filtered
+            return (filtered, limited_to, inverse)
 
-    return (totals.order_by('author','start_date').select_related('author'), limited_to, inverse)
+    return (totals.order_by('author','start_date').select_related('author'), None, None)
 
 
 def _interval_queryset_to_dataframe(repo=None, totals=None, fields=None, start=None, end=None, interval=None, limited_to=None, inverse=None):
@@ -172,8 +172,8 @@ def _interval_queryset_to_dataframe(repo=None, totals=None, fields=None, start=N
                 if f == 'date' or f == 'day':
                     data[f].append(str(x['start_date']))
                 elif f in [ 'days_active', 'days_since_seen', 'longevity', 'days_active', 'average_commit_size', 'days_before_joined' ]:
-                    # these aren't available in the aggregrate, but we need a placeholder
-                    data[f] = -1
+                    # these aren't available in the aggregate, but we need a placeholder
+                    data[f].append(-1)
                 elif f == 'author':
                     data[f].append('OTHER')
                 else:
