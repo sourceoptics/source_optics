@@ -36,7 +36,7 @@ urlpatterns = [
     # FIXME: the org parameter is unneccessary when repo is specified.
 
     path('', views.orgs, name='orgs'),
-    path('org/<org>/repos/<repos>/', views.repos, name='repos'),
+    path('org/<org>/repos/', views.repos, name='repos'),
     path('org/<org>/repo/<repo>/', views.repo, name='repo'),
     # TODO: use the reverse url function vs having these URLs directly in templates
 

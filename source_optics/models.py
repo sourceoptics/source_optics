@@ -630,7 +630,6 @@ class Statistic(models.Model):
                     author__isnull=True,
                     repo=repo,
                     interval='LF',
-
                 )
         else:
             if author:

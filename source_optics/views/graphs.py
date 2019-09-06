@@ -74,7 +74,7 @@ def get_stat(repo, author, start, end, aspect):
        return -10000
    return value
 
-def time_area_plot(df=None, repo=None, start=None, end=None, y=None, by_author=False, top=None, aspect=None):
+def time_plot(scope=None, df=None, repo=None, y=None, by_author=False, top=None, aspect=None):
     """
     Generates a time series area plot.
     :param df: a pandas dataframe
@@ -84,6 +84,11 @@ def time_area_plot(df=None, repo=None, start=None, end=None, y=None, by_author=F
     :param author: true if the chart is going to be showing authors vs the whole team together
     :return: chart HTML
     """
+    assert df is not None
+    assert scope is not None
+    start = scope.start
+    end = scope.end
+    repo = scope.repo
 
     if top:
         assert start is not None

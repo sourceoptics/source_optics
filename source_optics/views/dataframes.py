@@ -48,11 +48,15 @@ def get_interval(start, end):
     else:
         return 'DY'
 
-def top_authors(repo, start, end, aspect='commit_total', limit=10):
+def top_authors(scope, aspect='commit_total', limit=10):
 
     """
     Return the top N authors for a repo based on a specified attribute.
     """
+
+    repo = scope.repo
+    start = scope.start
+    end = scope.end
 
     interval = get_interval(start, end)
 
@@ -63,9 +67,11 @@ def top_authors(repo, start, end, aspect='commit_total', limit=10):
         start_date__range=(start, end)
     ).values('author_id').annotate(total=Sum(aspect)).order_by('-total')[0:limit]
 
-    return [ x for x in Author.objects.filter(pk__in= [ t['author_id'] for t in filter_set ]).all() ]
+    result = [ x for x in Author.objects.filter(pk__in= [ t['author_id'] for t in filter_set ]).all() ]
+    return result
 
-def _interval_queryset(repo, start=None, end=None, by_author=False, interval='DY', aspect=None, limit_top_authors=False):
+def _interval_queryset(scope, by_author=False, aspect=None, limit_top_authors=False):
+
 
     """
     Returns a queryset of statistics usable for a scatter plot.
@@ -73,6 +79,12 @@ def _interval_queryset(repo, start=None, end=None, by_author=False, interval='DY
     with a limit=-1 (default) parameter.
     # FIXME: clean all this up.
     """
+
+    repo = scope.repo
+    start = scope.start
+    end = scope.end
+    interval = scope.interval
+
     limited_to = None
     inverse = None
 
@@ -100,7 +112,7 @@ def _interval_queryset(repo, start=None, end=None, by_author=False, interval='DY
                 )
     else:
         if limit_top_authors:
-            limited_to = top_authors(repo, start, end, aspect=aspect)
+            limited_to = top_authors(scope, aspect=aspect)
         if interval != 'LF':
             assert start is not None
             assert end is not None
@@ -127,7 +139,7 @@ def _interval_queryset(repo, start=None, end=None, by_author=False, interval='DY
     return (totals.order_by('author','start_date').select_related('author'), None, None)
 
 
-def _interval_queryset_to_dataframe(repo=None, totals=None, fields=None, start=None, end=None, interval=None, limited_to=None, inverse=None):
+def _interval_queryset_to_dataframe(totals=None, fields=None, limited_to=None, inverse=None):
     """
     :param repo: repository object
     :param totals: a statistics queryset
@@ -139,7 +151,6 @@ def _interval_queryset_to_dataframe(repo=None, totals=None, fields=None, start=N
     :param inverse: if provided, an aggregrate of authors not in the primary dataset
     :return: (datastructure for dataframe, list of fields used)
     """
-
 
     data = dict()
 
@@ -181,11 +192,15 @@ def _interval_queryset_to_dataframe(repo=None, totals=None, fields=None, start=N
 
     return (data, fields)
 
-def _stat_series(repo, start=None, end=None, by_author=False, interval=None, limit_top_authors=False, aspect=None):
+def _stat_series(scope, by_author=False, interval=None, limit_top_authors=False, aspect=None):
 
     """
     returns an appropriate dataframe of statistics for the input criteria.
     """
+
+    start = scope.start
+    end = scope.end
+
 
     if not interval:
         interval = get_interval(start, end)
@@ -195,20 +210,20 @@ def _stat_series(repo, start=None, end=None, by_author=False, interval=None, lim
         fields.append('author')
 
 
-    (totals, limited_to_authors, inverse) = _interval_queryset(repo, start=start, end=end, by_author=by_author, interval=interval, aspect=aspect, limit_top_authors=limit_top_authors)
-    (pre_df, fields) = _interval_queryset_to_dataframe(repo=repo, totals=totals, fields=fields, start=start, end=end, interval=interval, limited_to=limited_to_authors, inverse=inverse)
+    (totals, limited_to_authors, inverse) = _interval_queryset(scope, by_author=by_author, aspect=aspect, limit_top_authors=limit_top_authors)
+    (pre_df, fields) = _interval_queryset_to_dataframe(totals=totals, fields=fields, limited_to=limited_to_authors, inverse=inverse)
     df = pandas.DataFrame(pre_df, columns=fields)
     return (df, limited_to_authors)
 
-def team_time_series(repo, start=None, end=None, interval=None):
-    (df, _) = _stat_series(repo, start=start, end=end, interval=interval, by_author=False)
+def team_time_series(scope): # repo, start=None, end=None, interval=None):
+    (df, _) = _stat_series(scope, by_author=False)
     return df
 
-def author_time_series(repo, start=None, end=None, interval=None):
-    (df, _) = _stat_series(repo, start=start, end=end, interval=interval, by_author=True)
+def author_time_series(scope): # repo, start=None, end=None, interval=None):
+    (df, _) = _stat_series(scope, by_author=True)
     return df
 
-def top_author_time_series(repo, start=None, end=None, interval=None, aspect=None):
-    (df, top) = _stat_series(repo, start=start, end=end, interval=interval, by_author=True, aspect=aspect, limit_top_authors=True)
+def top_author_time_series(scope, aspect=None):
+    (df, top) = _stat_series(scope, by_author=True, aspect=aspect, limit_top_authors=True)
     return (df, top)
 
