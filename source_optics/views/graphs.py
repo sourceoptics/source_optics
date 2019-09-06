@@ -75,14 +75,14 @@ def plot(df=None, x=None, y=None, color=None, author=False):
         x = 'date:T'
 
     if color:
-        chart = alt.Chart(df, height=600, width=600).mark_bar().encode(
+        chart = alt.Chart(df, height=600, width=600).mark_area().encode(
             x=alt.X(x, axis = alt.Axis(title = 'date', format = ("%b %Y")), scale=alt.Scale(zero=False, clamp=True)), #, scale=alt.Scale(zero=False, clamp=True)),
             y=alt.Y(y, scale=alt.Scale(zero=False, clamp=True)), #, scale=alt.Scale(zero=False, clamp=True)),
             color=color,
             tooltip=tooltips
         ).interactive()
     else:
-        chart = alt.Chart(df, height=600, width=600).mark_bar().encode(
+        chart = alt.Chart(df, height=600, width=600).mark_area().encode(
             x=alt.X(x, axis = alt.Axis(title = 'date', format = ("%b %Y")), scale=alt.Scale(zero=False, clamp=True)),  # , scale=alt.Scale(zero=False, clamp=True)),
             y=alt.Y(y, scale=alt.Scale(zero=False, clamp=True)),  # , scale=alt.Scale(zero=False, clamp=True)),
             tooltip=tooltips
