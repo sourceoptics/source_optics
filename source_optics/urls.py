@@ -39,14 +39,15 @@ urlpatterns = [
     path('org/<org>/repos/<repos>/', views.repos, name='repos'),
     path('org/<org>/repo/<repo>/', views.repo, name='repo'),
     # TODO: use the reverse url function vs having these URLs directly in templates
-    path('org/<org>/repo/<repo>/graph/volume', views.graph_volume, name='graph_volume'),
-    path('org/<org>/repo/<repo>/graph/frequency', views.graph_frequency, name='graph_frequency'),
-    path('org/<org>/repo/<repo>/graph/participation', views.graph_participation, name='graph_participation'),
-    path('org/<org>/repo/<repo>/graph/frequent_contributors', views.graph_frequent_contributors, name='graph_frequent_contributors'),
-    path('org/<org>/repo/<repo>/graph/largest_contributors', views.graph_largest_contributors, name='graph_largest_contributors'),
-    path('org/<org>/repo/<repo>/graph/granularity', views.graph_granularity, name='graph_granularity'),
-    path('org/<org>/repo/<repo>/graph/files_time', views.graph_files_time, name='graph_files_time'),
 
+    # GRAPHS
+    path('org/<org>/repo/<repo>/graph/participation', views.graph_participation, name='graph_participation'),
+    path('org/<org>/repo/<repo>/graph/commits', views.graph_commits, name='graph_commits'),
+    path('org/<org>/repo/<repo>/graph/lines_changed', views.graph_lines_changed, name='graph_lines_changed'),
+    path('org/<org>/repo/<repo>/graph/files_changed', views.graph_files_changed, name='graph_files_changed'),
+    path('org/<org>/repo/<repo>/graph/commit_size', views.graph_commit_size, name='graph_commit_size'),
+
+    # REPORTS
     path('org/<org>/repo/<repo>/report/authors', views.report_authors, name='report_authors'),
 
     # REST API

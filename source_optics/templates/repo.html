@@ -3,35 +3,27 @@
 <h1>Repo: {{ repo.name }}</h1>
 <p>between: {{ start_str }} and {{ end_str }}</p>
 
-<h1>Basic Graphs</h1>
-<h2>Volume</h2>
-<!-- TODO: move these comments to tooltips with an info block and we can have more inline help. -->
-<i>How does the rate of change of code morph over time?</i>
 
-<div data-loader="ajax" data-src="/org/{{ org.pk }}/repo/{{ repo.pk }}/graph/volume?start={{ start_str}}&end={{ end_str}}&intf={{ intv }}">loading</div>
+<h2>Lines Changed</h2>
 
-<h2>Frequency</h2>
+<div data-loader="ajax" data-src="/org/{{ org.pk }}/repo/{{ repo.pk }}/graph/lines_changed?start={{ start_str}}&end={{ end_str}}&intf={{ intv }}">loading</div>
 
-<div data-loader="ajax" data-src="/org/{{ org.pk }}/repo/{{ repo.pk }}/graph/frequency?start={{ start_str}}&end={{ end_str}}&intf={{ intv }}">loading</div>
+<h2>Commits</h2>
 
-<h2>Largest Contributors</h2>
+<div data-loader="ajax" data-src="/org/{{ org.pk }}/repo/{{ repo.pk }}/graph/commits?start={{ start_str}}&end={{ end_str}}&intf={{ intv }}">loading</div>
 
-<div data-loader="ajax" data-src="/org/{{ org.pk }}/repo/{{ repo.pk }}/graph/largest_contributors?start={{ start_str}}&end={{ end_str}}&intf={{ intv }}">loading</div>
+<h2>Files Changed</h2>
 
-<h2>Frequent Contributors</h2>
-
-<div data-loader="ajax" data-src="/org/{{ org.pk }}/repo/{{ repo.pk }}/graph/frequent_contributors?start={{ start_str}}&end={{ end_str}}&intf={{ intv }}">loading</div>
+<div data-loader="ajax" data-src="/org/{{ org.pk }}/repo/{{ repo.pk }}/graph/files_changed?start={{ start_str}}&end={{ end_str}}&intf={{ intv }}">loading</div>
 
 <h2>Participation</h2>
 
 <div data-loader="ajax" data-src="/org/{{ org.pk }}/repo/{{ repo.pk }}/graph/participation?start={{ start_str}}&end={{ end_str}}&intf={{ intv }}">loading</div>
 
-<h2>Commit Size</h2>
+<h2>Average Commit Size</h2>
 
-<div data-loader="ajax" data-src="/org/{{ org.pk }}/repo/{{ repo.pk }}/graph/granularity?start={{ start_str}}&end={{ end_str}}&intf={{ intv }}">loading</div>
+<div data-loader="ajax" data-src="/org/{{ org.pk }}/repo/{{ repo.pk }}/graph/commit_size?start={{ start_str}}&end={{ end_str}}&intf={{ intv }}">loading</div>
 
-<h2>Files Changed</h2>
 
-<div data-loader="ajax" data-src="/org/{{ org.pk }}/repo/{{ repo.pk }}/graph/files_time?start={{ start_str}}&end={{ end_str}}&intf={{ intv }}">loading</div>
 
 {% include 'footer.html' %}

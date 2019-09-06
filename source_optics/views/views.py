@@ -237,48 +237,35 @@ def repo(request, org=None, repo=None):
     scope['title'] = "Source Optics: %s repo (graphs)" % repo.name
     return render(request, 'repo.html', context=scope)
 
-def graph_volume(request, org=None, repo=None):
-    (scope, repo, start, end, intv) = _get_scope(request, org=org, repo=repo)
-    df = dataframes.team_time_series(repo, start=start, end=end, interval=intv)
-    scope['graph'] = graphs.time_area_plot(df=df, y='lines_changed')
-    return render(request, 'graph.html', context=scope)
-
-def graph_frequency(request, org=None, repo=None):
-    (scope, repo, start, end, intv) = _get_scope(request, org=org, repo=repo)
-    df = dataframes.team_time_series(repo, start=start, end=end, interval=intv)
-    scope['graph'] = graphs.time_area_plot(df=df, y='commit_total')
-    return render(request, 'graph.html', context=scope)
-
 def graph_participation(request, org=None, repo=None):
     (scope, repo, start, end, intv) = _get_scope(request, org=org, repo=repo)
     df = dataframes.team_time_series(repo, start=start, end=end, interval=intv)
     scope['graph'] = graphs.time_area_plot(df=df, y='author_total')
     return render(request, 'graph.html', context=scope)
 
-def graph_largest_contributors(request, org=None, repo=None):
-    (scope, repo, start, end, intv) = _get_scope(request, org=org, repo=repo)
-    (df, top) = dataframes.top_author_time_series(repo, start=start, end=end, interval=intv, aspect='lines_changed')
-    scope['graph'] = graphs.time_area_plot(df=df, repo=repo, start=start, end=end, y='lines_changed', top=top, by_author=True, aspect='lines_changed')
-    return render(request, 'graph.html', context=scope)
-
-def graph_frequent_contributors(request, org=None, repo=None):
-    (scope, repo, start, end, intv) = _get_scope(request, org=org, repo=repo)
-    (df, top) = dataframes.top_author_time_series(repo, start=start, end=end, interval=intv, aspect='commit_total')
-    scope['graph'] = graphs.time_area_plot(df=df, repo=repo, start=start, end=end, y='commit_total', top=top, by_author=True, aspect='commit_total')
-    return render(request, 'graph.html', context=scope)
-
-def graph_granularity(request, org=None, repo=None):
-    (scope, repo, start, end, intv) = _get_scope(request, org=org, repo=repo)
-    df = dataframes.team_time_series(repo, start=start, end=end, interval=intv)
-    scope['graph'] = graphs.time_area_plot(df=df, y='average_commit_size')
-    return render(request, 'graph.html', context=scope)
-
-def graph_files_time(request, org=None, repo=None):
+def graph_files_changed(request, org=None, repo=None):
     (scope, repo, start, end, intv) = _get_scope(request, org=org, repo=repo)
     df = dataframes.team_time_series(repo, start=start, end=end, interval=intv)
     scope['graph'] = graphs.time_area_plot(df=df, y='files_changed')
     return render(request, 'graph.html', context=scope)
 
+def graph_lines_changed(request, org=None, repo=None):
+    (scope, repo, start, end, intv) = _get_scope(request, org=org, repo=repo)
+    (df, top) = dataframes.top_author_time_series(repo, start=start, end=end, interval=intv, aspect='lines_changed')
+    scope['graph'] = graphs.time_area_plot(df=df, repo=repo, start=start, end=end, y='lines_changed', top=top, by_author=True, aspect='lines_changed')
+    return render(request, 'graph.html', context=scope)
+
+def graph_commits(request, org=None, repo=None):
+    (scope, repo, start, end, intv) = _get_scope(request, org=org, repo=repo)
+    (df, top) = dataframes.top_author_time_series(repo, start=start, end=end, interval=intv, aspect='commit_total')
+    scope['graph'] = graphs.time_area_plot(df=df, repo=repo, start=start, end=end, y='commit_total', top=top, by_author=True, aspect='commit_total')
+    return render(request, 'graph.html', context=scope)
+
+def graph_commit_size(request, org=None, repo=None):
+    (scope, repo, start, end, intv) = _get_scope(request, org=org, repo=repo)
+    df = dataframes.team_time_series(repo, start=start, end=end, interval=intv)
+    scope['graph'] = graphs.time_area_plot(df=df, y='average_commit_size')
+    return render(request, 'graph.html', context=scope)
 
 def report_authors(request, org=None, repo=None):
     """
