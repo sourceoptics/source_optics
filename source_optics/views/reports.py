@@ -95,16 +95,12 @@ def author_stats_table(scope, limit=None):
             results.append(stat2)
 
     if not scope.author and scope.repo:
-        print("p1")
         for author in authors:
             add_stat(author, scope.repo)
     elif scope.author and not scope.repo:
-        print("p2")
         for repo in scope.author.repos():
-            print("r1=", type(repo))
             add_stat(scope.author, repo)
     elif scope.author and scope.repo:
-        print("p3")
         add_stat(scope.author, scope.repo)
 
     return results

@@ -41,7 +41,7 @@ urlpatterns = [
     # TODO: use the reverse url function vs having these URLs directly in templates
 
     # GRAPHS
-    path('org/<org>/repo/<repo>/graph/participation', views.graph_participation, name='graph_participation'),
+    path('repo/<repo>/graph/participation', views.graph_participation, name='graph_participation'),
     path('repo/<repo>/graph/commits', views.graph_commits, name='graph_commits'),
     path('repo/<repo>/graph/lines_changed', views.graph_lines_changed, name='graph_lines_changed'),
     path('repo/<repo>/graph/files_changed', views.graph_files_changed, name='graph_files_changed'),
