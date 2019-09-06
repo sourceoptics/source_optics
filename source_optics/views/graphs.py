@@ -54,14 +54,16 @@ def render_chart(chart):
     return template.Template(TEMPLATE_CHART.format(output_div=output_div, spec=json.dumps(spec), embed_opt=json.dumps(embed_opt))).render(c)
 
 
+# FIXME: this should be called "time_barplot"
+
 def plot(df=None, x=None, y=None, color=None, author=False):
     """
     This renders an altair graph around pretty much any combination of two parameters found on a Statistic object.
     """
 
-    tooltips=['date', 'commit_total', 'lines_changed', 'files_changed']
+    tooltips=['commit_total', 'lines_changed', 'files_changed']
     if author:
-        tooltips.extend(['author', 'earliest_commit_date', 'latest_commit_date', 'days_active', 'commitment'])
+        tooltips.extend(['author'])
     else:
         tooltips.extend(['author_total'])
 
@@ -69,16 +71,19 @@ def plot(df=None, x=None, y=None, color=None, author=False):
 
     alt.data_transformers.disable_max_rows()
 
+    if x == 'date':
+        x = 'date:T'
+
     if color:
         chart = alt.Chart(df, height=600, width=600).mark_bar().encode(
-            x=alt.X(x, scale=alt.Scale(zero=False, clamp=True)), #, scale=alt.Scale(zero=False, clamp=True)),
+            x=alt.X(x, axis = alt.Axis(title = 'date', format = ("%b %Y")), scale=alt.Scale(zero=False, clamp=True)), #, scale=alt.Scale(zero=False, clamp=True)),
             y=alt.Y(y, scale=alt.Scale(zero=False, clamp=True)), #, scale=alt.Scale(zero=False, clamp=True)),
             color=color,
             tooltip=tooltips
         ).interactive()
     else:
         chart = alt.Chart(df, height=600, width=600).mark_bar().encode(
-            x=alt.X(x, scale=alt.Scale(zero=False, clamp=True)),  # , scale=alt.Scale(zero=False, clamp=True)),
+            x=alt.X(x, axis = alt.Axis(title = 'date', format = ("%b %Y")), scale=alt.Scale(zero=False, clamp=True)),  # , scale=alt.Scale(zero=False, clamp=True)),
             y=alt.Y(y, scale=alt.Scale(zero=False, clamp=True)),  # , scale=alt.Scale(zero=False, clamp=True)),
             tooltip=tooltips
         ).interactive()

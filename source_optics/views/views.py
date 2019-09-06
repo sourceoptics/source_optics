@@ -167,16 +167,15 @@ def get_repo_table(repos, start, end):
 
 
 def _get_scope(request, org=None, repos=None, repo=None, repo_table=False):
+    """
+    Get objects from the URL parameters.
+    """
 
     start = request.GET.get('start', None)
     end = request.GET.get('end', None)
     interval = request.GET.get('intv', None)
 
     models.cache_clear()
-
-    """
-    Get objects from the URL parameters.
-    """
 
     orgs = Organization.objects.all()
 
@@ -266,7 +265,7 @@ def graph_participation(request, org=None, repo=None):
 def graph_largest_contributors(request, org=None, repo=None):
     (scope, repo, start, end, intv) = _get_scope(request, org=org, repo=repo)
     df = dataframes.top_author_time_series(repo, start=start, end=end, interval=intv)
-    scope['graph'] = graphs.plot(df=df, x='date', y='commit_total', color='author:N')
+    scope['graph'] = graphs.plot(df=df, x='date', y='commit_total', color='author:N', author=True)
     return render(request, 'graph.html', context=scope)
 
 def graph_granularity(request, org=None, repo=None):

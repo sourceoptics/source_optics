@@ -66,11 +66,11 @@ def _interval_queryset(repo, start=None, end=None, by_author=False, interval='DY
     # FIXME: clean all this up.
     """
     limited_to = None
+    inverse = None
 
     totals = None
     if not by_author:
         if interval != 'LF':
-            print("n1")
             totals = Statistic.objects.select_related('repo', ).filter(
                 interval=interval,
                 repo=repo,
@@ -78,7 +78,6 @@ def _interval_queryset(repo, start=None, end=None, by_author=False, interval='DY
                 start_date__range=(start, end)
             )
         else:
-            print("n2")
             if start is None or end is None:
                 totals = Statistic.objects.select_related('repo').filter(
                     interval=interval,
@@ -98,52 +97,48 @@ def _interval_queryset(repo, start=None, end=None, by_author=False, interval='DY
         if interval != 'LF':
             assert start is not None
             assert end is not None
-            print(start,end)
-            print(top)
-            if limit_top_authors:
-                print("n3")
-                totals = Statistic.objects.select_related('repo', 'author').filter(
-                    interval=interval,
-                    repo=repo,
-                    author__in=limited_to,
-                    start_date__range=(start, end)
-                )
-            else:
-                print("n4")
-                totals = Statistic.objects.select_related('repo', 'author').filter(
-                    interval=interval,
-                    repo=repo,
-                    author__isnull=False,
-                    start_date__range=(start, end)
-                )
+            totals = Statistic.objects.select_related('repo', 'author').filter(
+                interval=interval,
+                repo=repo,
+                author__isnull=False,
+                start_date__range=(start, end)
+            )
         else:
-            print("n5")
             totals = Statistic.objects.select_related('repo', 'author').filter(
                 interval=interval,
                 repo=repo,
                 author__isnull=False
             )
             if start and end:
+                # we can still trim the lifetime stats by excluding authors
                 totals = totals.filter(author__commits__commit_date__range=(start,end))
-            if limit_top_authors:
-                totals = totals.filter(author__pk__in=limited_to)
+        if limit_top_authors:
+            filtered = totals.filter(author__in=limited_to)
+            inverse = totals.exclude(author__in=limited_to)
+            totals = filtered
 
-    return (totals.order_by('author','start_date'), limited_to)
+    return (totals.order_by('author','start_date'), limited_to, inverse)
 
 def _field_prep(field, stat, first_day):
     if field == 'date':
-        return stat.start_date
+        return str(stat.start_date)
     elif field == 'author':
         return stat.author.email
     else:
         return getattr(stat, field)
 
-def _interval_queryset_to_dataframe(repo, totals, fields, start, end, interval, limited_to):
+def _interval_queryset_to_dataframe(repo, totals, fields, start, end, interval, limited_to, inverse):
 
 
     data = dict()
 
     first_day = repo.earliest_commit_date()
+
+    if inverse:
+        # reduced field support
+        # FIXME: this should come from view settings, not Statistic, and not here
+        fields = [ 'date', 'lines_changed', 'author', 'lines_added', 'lines_removed', 'commit_total', 'author_total', 'files_changed']
+
 
     for f in fields:
         data[f] = []
@@ -152,6 +147,30 @@ def _interval_queryset_to_dataframe(repo, totals, fields, start, end, interval, 
     for t in totals:
         for f in fields:
             data[f].append(_field_prep(f, t, first_day))
+
+    if inverse is not None:
+
+        # reduced field support
+
+        inverse = inverse.values('start_date').annotate(
+            lines_changed=Sum('lines_changed'),
+            lines_added=Sum('lines_added'),
+            lines_removed=Sum('lines_removed'),
+            commit_total=Sum('commit_total'),
+            author_total=Sum('author_total'),
+            files_changed=Sum('files_changed')
+        )
+
+        for x in inverse.all():
+            for f in fields:
+                if f in 'date':
+                    data[f].append(str(x['start_date']))
+                elif f in ['days_active', 'longevity', 'commitment', 'days_since_seen']:
+                    data[f] = -1
+                elif f == 'author':
+                    data[f].append('OTHER')
+                else:
+                    data[f].append(x[f])
 
     return (data, fields)
 
@@ -172,10 +191,9 @@ def _stat_series(repo, start=None, end=None, fields=None, by_author=False, inter
         if by_author:
             fields.append('author')
 
-    print("INF=%s" % fields)
 
-    (totals, limited_to_authors) = _interval_queryset(repo, start=start, end=end, by_author=by_author, interval=interval, limit_top_authors=limit_top_authors)
-    (pre_df, fields) = _interval_queryset_to_dataframe(repo, totals, fields, start, end, interval, limited_to_authors)
+    (totals, limited_to_authors, inverse) = _interval_queryset(repo, start=start, end=end, by_author=by_author, interval=interval, limit_top_authors=limit_top_authors)
+    (pre_df, fields) = _interval_queryset_to_dataframe(repo, totals, fields, start, end, interval, limited_to_authors, inverse)
     return pandas.DataFrame(pre_df, columns=fields)
 
 def team_time_series(repo, start=None, end=None, interval=None):
