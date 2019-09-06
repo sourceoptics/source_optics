@@ -15,16 +15,27 @@
 
 # dataframes.py - code behind getting meaningful pandas dataframes (largely for graphing) from Statistic model querysets
 
-import pandas as pd
 from django.db.models import Sum
 import django.utils.timezone as timezone
-import dateutil.rrule as rrule
-import datetime
 from ..models import Statistic, Author
 import pandas
 
-TZ = timezone.get_current_timezone()
+# fields valid for axes or tooltips in time series graphs
+TIME_SERIES_FIELDS = [
+    'day',
+    'date',
+    'lines_changed',
+    'commit_total',
+    'author_total',
+    'average_commit_size',
+    'files_changed',
+    'days_since_seen',
+    'days_before_joined',
+    'longevity',
+    'days_active'
+]
 
+TZ = timezone.get_current_timezone()
 
 def get_interval(start, end):
     """
@@ -37,27 +48,24 @@ def get_interval(start, end):
     else:
         return 'DY'
 
-def top_authors(repo, start, end, attribute='commit_total', limit=10):
+def top_authors(repo, start, end, aspect='commit_total', limit=10):
 
     """
     Return the top N authors for a repo based on a specified attribute.
-    FIXME: this isn't currently used because we show the full list.  This will change
-    if we show a truncated list on the repo graph page.
     """
 
     interval = get_interval(start, end)
 
-    # authors = []
     filter_set = Statistic.objects.filter(
         interval=interval,
         author__isnull=False,
         repo=repo,
         start_date__range=(start, end)
-    ).values('author_id').annotate(total=Sum(attribute)).order_by('-total')[0:limit]
+    ).values('author_id').annotate(total=Sum(aspect)).order_by('-total')[0:limit]
 
     return [ x for x in Author.objects.filter(pk__in= [ t['author_id'] for t in filter_set ]).all() ]
 
-def _interval_queryset(repo, start=None, end=None, by_author=False, interval='DY', limit_top_authors=False):
+def _interval_queryset(repo, start=None, end=None, by_author=False, interval='DY', aspect=None, limit_top_authors=False):
 
     """
     Returns a queryset of statistics usable for a scatter plot.
@@ -91,9 +99,8 @@ def _interval_queryset(repo, start=None, end=None, by_author=False, interval='DY
                     author__isnull=True
                 )
     else:
-        top = None
         if limit_top_authors:
-            limited_to = top_authors(repo, start, end)
+            limited_to = top_authors(repo, start, end, aspect=aspect)
         if interval != 'LF':
             assert start is not None
             assert end is not None
@@ -119,26 +126,22 @@ def _interval_queryset(repo, start=None, end=None, by_author=False, interval='DY
 
     return (totals.order_by('author','start_date').select_related('author'), limited_to, inverse)
 
-def _field_prep(field, stat, first_day):
-    if field == 'date':
-        return str(stat.start_date)
-    elif field == 'author':
-        return stat.author.email
-    else:
-        return getattr(stat, field)
 
-def _interval_queryset_to_dataframe(repo, totals, fields, start, end, interval, limited_to, inverse):
+def _interval_queryset_to_dataframe(repo=None, totals=None, fields=None, start=None, end=None, interval=None, limited_to=None, inverse=None):
+    """
+    :param repo: repository object
+    :param totals: a statistics queryset
+    :param fields: fields to include in the dataframe
+    :param start: beginning of the date range
+    :param end: end of the date range
+    :param interval: DY, WK, MN
+    :param limited_to: a set of authors that are in the primary dataset
+    :param inverse: if provided, an aggregrate of authors not in the primary dataset
+    :return: (datastructure for dataframe, list of fields used)
+    """
 
 
     data = dict()
-
-    first_day = repo.earliest_commit_date()
-
-    if inverse:
-        # reduced field support
-        # FIXME: this should come from view settings, not Statistic, and not here
-        fields = [ 'day', 'date', 'lines_changed', 'author', 'lines_added', 'lines_removed', 'commit_total', 'author_total', 'files_changed']
-
 
     for f in fields:
         data[f] = []
@@ -146,16 +149,14 @@ def _interval_queryset_to_dataframe(repo, totals, fields, start, end, interval, 
     # load the dataframe with the queryset results we have
     for t in totals:
         for f in fields:
-            if f == 'date' or f == 'day':
+            if f in [ 'date', 'day' ]:
                 data[f].append(str(t.start_date))
             elif f == 'author':
                 data[f].append(t.author.email)
             else:
                 data[f].append(getattr(t,f))
 
-    if inverse is not None:
-
-        # reduced field support
+    if inverse:
 
         inverse = inverse.values('start_date').annotate(
             lines_changed=Sum('lines_changed'),
@@ -170,7 +171,8 @@ def _interval_queryset_to_dataframe(repo, totals, fields, start, end, interval, 
             for f in fields:
                 if f == 'date' or f == 'day':
                     data[f].append(str(x['start_date']))
-                elif f in ['days_active', 'longevity', 'commitment', 'days_since_seen']:
+                elif f in [ 'days_active', 'days_since_seen', 'longevity', 'days_active', 'average_commit_size', 'days_before_joined' ]:
+                    # these aren't available in the aggregrate, but we need a placeholder
                     data[f] = -1
                 elif f == 'author':
                     data[f].append('OTHER')
@@ -179,26 +181,22 @@ def _interval_queryset_to_dataframe(repo, totals, fields, start, end, interval, 
 
     return (data, fields)
 
-def _stat_series(repo, start=None, end=None, fields=None, by_author=False, interval=None, limit_top_authors=False):
+def _stat_series(repo, start=None, end=None, by_author=False, interval=None, limit_top_authors=False, aspect=None):
 
     """
-    The public function in this file (FIXME: convert the rest to _functions) that returns
-    an appropriate dataframe of statistics for the input criteria.  There are more fields
-    returned for lifetime statistics since many of the lifetime stats don't make sense
-    when used with a daterange. (ex: longevity).
+    returns an appropriate dataframe of statistics for the input criteria.
     """
 
     if not interval:
         interval = get_interval(start, end)
 
-    if fields is None:
-        fields = Statistic.GRAPHABLE_FIELDS[:]
-        if by_author:
-            fields.append('author')
+    fields = TIME_SERIES_FIELDS[:]
+    if by_author:
+        fields.append('author')
 
 
-    (totals, limited_to_authors, inverse) = _interval_queryset(repo, start=start, end=end, by_author=by_author, interval=interval, limit_top_authors=limit_top_authors)
-    (pre_df, fields) = _interval_queryset_to_dataframe(repo, totals, fields, start, end, interval, limited_to_authors, inverse)
+    (totals, limited_to_authors, inverse) = _interval_queryset(repo, start=start, end=end, by_author=by_author, interval=interval, aspect=aspect, limit_top_authors=limit_top_authors)
+    (pre_df, fields) = _interval_queryset_to_dataframe(repo=repo, totals=totals, fields=fields, start=start, end=end, interval=interval, limited_to=limited_to_authors, inverse=inverse)
     return pandas.DataFrame(pre_df, columns=fields)
 
 def team_time_series(repo, start=None, end=None, interval=None):
@@ -207,6 +205,6 @@ def team_time_series(repo, start=None, end=None, interval=None):
 def author_time_series(repo, start=None, end=None, interval=None):
     return _stat_series(repo, start=start, end=end, interval=interval, by_author=True)
 
-def top_author_time_series(repo, start=None, end=None, interval=None):
-    return _stat_series(repo, start=start, end=end, interval=interval, by_author=True, limit_top_authors=True)
+def top_author_time_series(repo, start=None, end=None, interval=None, aspect=None):
+    return _stat_series(repo, start=start, end=end, interval=interval, by_author=True, aspect=aspect, limit_top_authors=True)
 

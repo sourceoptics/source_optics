@@ -14,13 +14,15 @@
 #
 # graphs.py - generate altair graphs as HTML snippets given panda dataframe inputs (see dataframes.py)
 
+AUTHOR_TIME_SERIES_TOOLTIPS = ['day','author','commit_total', 'lines_changed', 'files_changed', 'days_active', 'longevity', 'days_since_seen' ]
+
+TIME_SERIES_TOOLTIPS = ['day','commit_total', 'lines_changed', 'files_changed', 'author_total' ]
+
 import json
 import random
 import string
 
 import altair as alt
-import numpy as np
-import pandas as pd
 from django import template
 
 # template used by render_chart below
@@ -54,37 +56,33 @@ def render_chart(chart):
     return template.Template(TEMPLATE_CHART.format(output_div=output_div, spec=json.dumps(spec), embed_opt=json.dumps(embed_opt))).render(c)
 
 
-# FIXME: this should be called "time_barplot"
-
-def plot(df=None, x=None, y=None, color=None, author=False):
+def time_area_plot(df=None, y=None, color=None, author=False):
     """
-    This renders an altair graph around pretty much any combination of two parameters found on a Statistic object.
+    Generates a time series area plot.
+    :param df: a pandas dataframe
+    :param y: the name of the y axis from the dataframe
+    :param color: a bit of a misnomer, this is what attribute to use for the legend
+    :param author: true if the chart is going to be showing authors vs the whole team together
+    :return: chart HTML
     """
 
-    tooltips=['day','commit_total', 'lines_changed', 'files_changed']
+    tooltips = TIME_SERIES_TOOLTIPS
     if author:
-        tooltips.extend(['author'])
-    else:
-        tooltips.extend(['author_total'])
-
-    # FIXME: we should pass in the interval, and add longevity/etc when interval==LF.
+        tooltips = AUTHOR_TIME_SERIES_TOOLTIPS
 
     alt.data_transformers.disable_max_rows()
 
-    if x == 'date':
-        x = 'date:T'
-
     if color:
         chart = alt.Chart(df, height=600, width=600).mark_area().encode(
-            x=alt.X(x, axis = alt.Axis(title = 'date', format = ("%b %Y")), scale=alt.Scale(zero=False, clamp=True)), #, scale=alt.Scale(zero=False, clamp=True)),
-            y=alt.Y(y, scale=alt.Scale(zero=False, clamp=True)), #, scale=alt.Scale(zero=False, clamp=True)),
+            x=alt.X('date:T', axis = alt.Axis(title = 'date', format = ("%b %Y")), scale=alt.Scale(zero=False, clamp=True)),
+            y=alt.Y(y, scale=alt.Scale(zero=False, clamp=True)),
             color=color,
             tooltip=tooltips
         ).interactive()
     else:
         chart = alt.Chart(df, height=600, width=600).mark_area().encode(
-            x=alt.X(x, axis = alt.Axis(title = 'date', format = ("%b %Y")), scale=alt.Scale(zero=False, clamp=True)),  # , scale=alt.Scale(zero=False, clamp=True)),
-            y=alt.Y(y, scale=alt.Scale(zero=False, clamp=True)),  # , scale=alt.Scale(zero=False, clamp=True)),
+            x=alt.X('date:T', axis = alt.Axis(title = 'date', format = ("%b %Y")), scale=alt.Scale(zero=False, clamp=True)),
+            y=alt.Y(y, scale=alt.Scale(zero=False, clamp=True)),
             tooltip=tooltips
         ).interactive()
 

@@ -149,8 +149,6 @@ def get_repo_table(repos, start, end):
 
     results = []
     for repo in repos:
-        # FIXME: REFACTOR: most of this entire block should use a method on Statistic
-
         stats = Statistic.queryset_for_range(repo, author=None, interval='DY', start=start, end=end)
         stat2 = Statistic.compute_interval_statistic(stats, interval='DY', repo=repo, author=None, start=start, end=end)
         stat2 = stat2.to_dict()
@@ -158,13 +156,9 @@ def get_repo_table(repos, start, end):
         # providing pk's for link columns in the repo chart
         for x in [ 'details1', 'details2', 'details3']:
             stat2[x] = repo.pk
-
         results.append(stat2)
-
     results = sorted(results, key=lambda x: x['name'])
-
     return json.dumps(results)
-
 
 def _get_scope(request, org=None, repos=None, repo=None, repo_table=False):
     """
@@ -196,7 +190,6 @@ def _get_scope(request, org=None, repos=None, repo=None, repo_table=False):
     if org and org != '_':
         org = Organization.objects.get(pk=int(org))
 
-    # FIXME: this should probably be a method on Repository
     if repos and org and repos != '_':
         repos = repos.split(',')
         repos = Repository.objects.select_related('organization').filter(organization=org, repos__name__in=repos)
@@ -247,37 +240,43 @@ def repo(request, org=None, repo=None):
 def graph_volume(request, org=None, repo=None):
     (scope, repo, start, end, intv) = _get_scope(request, org=org, repo=repo)
     df = dataframes.team_time_series(repo, start=start, end=end, interval=intv)
-    scope['graph'] = graphs.plot(df=df, x='date', y='lines_changed')
+    scope['graph'] = graphs.time_area_plot(df=df, y='lines_changed')
     return render(request, 'graph.html', context=scope)
 
 def graph_frequency(request, org=None, repo=None):
     (scope, repo, start, end, intv) = _get_scope(request, org=org, repo=repo)
     df = dataframes.team_time_series(repo, start=start, end=end, interval=intv)
-    scope['graph'] = graphs.plot(df=df, x='date', y='commit_total')
+    scope['graph'] = graphs.time_area_plot(df=df, y='commit_total')
     return render(request, 'graph.html', context=scope)
 
 def graph_participation(request, org=None, repo=None):
     (scope, repo, start, end, intv) = _get_scope(request, org=org, repo=repo)
     df = dataframes.team_time_series(repo, start=start, end=end, interval=intv)
-    scope['graph'] = graphs.plot(df=df, x='date', y='author_total')
+    scope['graph'] = graphs.time_area_plot(df=df, y='author_total')
     return render(request, 'graph.html', context=scope)
 
 def graph_largest_contributors(request, org=None, repo=None):
     (scope, repo, start, end, intv) = _get_scope(request, org=org, repo=repo)
-    df = dataframes.top_author_time_series(repo, start=start, end=end, interval=intv)
-    scope['graph'] = graphs.plot(df=df, x='date', y='commit_total', color='author:N', author=True)
+    df = dataframes.top_author_time_series(repo, start=start, end=end, interval=intv, aspect='lines_changed')
+    scope['graph'] = graphs.time_area_plot(df=df, y='lines_changed', color='author:N', author=True)
+    return render(request, 'graph.html', context=scope)
+
+def graph_frequent_contributors(request, org=None, repo=None):
+    (scope, repo, start, end, intv) = _get_scope(request, org=org, repo=repo)
+    df = dataframes.top_author_time_series(repo, start=start, end=end, interval=intv, aspect='commit_total')
+    scope['graph'] = graphs.time_area_plot(df=df, y='commit_total', color='author:N', author=True)
     return render(request, 'graph.html', context=scope)
 
 def graph_granularity(request, org=None, repo=None):
     (scope, repo, start, end, intv) = _get_scope(request, org=org, repo=repo)
     df = dataframes.team_time_series(repo, start=start, end=end, interval=intv)
-    scope['graph'] = graphs.plot(df=df, x='date', y='average_commit_size')
+    scope['graph'] = graphs.time_area_plot(df=df, y='average_commit_size')
     return render(request, 'graph.html', context=scope)
 
 def graph_files_time(request, org=None, repo=None):
     (scope, repo, start, end, intv) = _get_scope(request, org=org, repo=repo)
     df = dataframes.team_time_series(repo, start=start, end=end, interval=intv)
-    scope['graph'] = graphs.plot(df=df, x='date', y='files_changed')
+    scope['graph'] = graphs.time_area_plot(df=df, y='files_changed')
     return render(request, 'graph.html', context=scope)
 
 

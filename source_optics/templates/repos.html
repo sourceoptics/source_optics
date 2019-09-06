@@ -14,22 +14,17 @@
         return "<a href='/org/{{ org.pk }}/repo/" + params.value + "/report/authors?start={{ start_str }}&end={{ end_str }}&intv={{ intv }}'>go</a>";
     }
 
-    function authorsLifetimeCell(params) {
-        return "<a href='/org/{{ org.pk }}/repo/" + params.value + "/report/authors??start=_&end=_&intv=LF'>go</a>";
-    }
-
     var columnDefs = [
         {headerName: "Name",                field: "name", sortable: true, filter: true },
         {headerName: "Charts",              field: "details1", cellRenderer: chartsCell },
-        {headerName: "Authors (Ranged)",    field: "details2", cellRenderer: authorsRangedCell },
-        {headerName: "Authors (Lifetime)",  field: "details3", cellRenderer: authorsLifetimeCell },
+        {headerName: "Authors",             field: "details2", cellRenderer: authorsRangedCell },
         {headerName: "Author Total",        field: "author_total", sortable: true, filter: true },
         {headerName: "Lines Changed",       field: "lines_changed", sortable: true, filter: true },
         {headerName: "Lines Added",         field: "lines_added", sortable: true, filter: true },
         {headerName: "Lines Removed",       field: "lines_removed", sortable: true, filter: true },
         {headerName: "Commit Total",        field: "commit_total", sortable: true, filter: true },
         {headerName: "Days Active",         field: "days_active", sortable: true, filter: true },
-        {headerName: "Avg Commit Size",     field: "average_commit_size", sortable: true, filter: true },
+        {headerName: "Avg Commit Size",     field: "average_commit_size", sortable: true, filter: true }
     ];
 
     var rowData = {{ repo_table | safe }};

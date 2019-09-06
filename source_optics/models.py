@@ -419,24 +419,6 @@ class FileChange(models.Model):
 
 class Statistic(models.Model):
 
-    # FIXME: this should be view specific.
-    GRAPHABLE_FIELDS = [
-        'day',
-        'date',
-        'lines_changed',
-        'commit_total',
-        'author_total',
-        'average_commit_size',
-        'flux',
-        'files_changed',
-        'bias',
-        'commitment',
-        'days_since_seen',
-        'days_before_joined',
-        'longevity',
-        'days_active',
-    ]
-
     INTERVALS = (
         ('DY', 'Day'),
         ('WK', 'Week'),
