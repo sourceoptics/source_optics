@@ -14,6 +14,10 @@
 #
 # graphs.py - generate altair graphs as HTML snippets given panda dataframe inputs (see dataframes.py)
 
+import functools
+from .. models import Statistic
+from django.db.models import Sum
+
 AUTHOR_TIME_SERIES_TOOLTIPS = ['day','author','commit_total', 'lines_changed', 'files_changed', 'days_active', 'longevity', 'days_since_seen' ]
 
 TIME_SERIES_TOOLTIPS = ['day','commit_total', 'lines_changed', 'files_changed', 'author_total' ]
@@ -55,28 +59,49 @@ def render_chart(chart):
     c = template.Context()
     return template.Template(TEMPLATE_CHART.format(output_div=output_div, spec=json.dumps(spec), embed_opt=json.dumps(embed_opt))).render(c)
 
+@functools.lru_cache(maxsize=64)
+def get_stat(repo, author, start, end, aspect):
+   return Statistic.objects.filter(
+       author=author,
+       repo=repo,
+       interval='DY',
+       start_date__range=(start,end)
+   ).aggregate(
+       lines_changed=Sum('lines_changed'),
+       commit_total=Sum('commit_total')
+   )[aspect]
 
-def time_area_plot(df=None, y=None, color=None, author=False):
+def time_area_plot(df=None, repo=None, start=None, end=None, y=None, by_author=False, top=None, aspect=None):
     """
     Generates a time series area plot.
     :param df: a pandas dataframe
     :param y: the name of the y axis from the dataframe
-    :param color: a bit of a misnomer, this is what attribute to use for the legend
+    :param top: the legend, used for the top authors plot sorting, as a list of authors
+    :param aspect: the aspect the chart was limited by
     :param author: true if the chart is going to be showing authors vs the whole team together
     :return: chart HTML
     """
 
+    if top:
+        assert start is not None
+        assert end is not None
+        assert repo is not None
+        # sort top authors by the statistic we filtered them by
+        top = reversed(sorted(top, key=lambda x: get_stat(repo, x, start, end, aspect)))
+        top = [ x.email for x in top ]
+        top.append('OTHER')
+
     tooltips = TIME_SERIES_TOOLTIPS
-    if author:
+    if by_author:
         tooltips = AUTHOR_TIME_SERIES_TOOLTIPS
 
     alt.data_transformers.disable_max_rows()
 
-    if color:
+    if by_author:
         chart = alt.Chart(df, height=600, width=600).mark_area().encode(
             x=alt.X('date:T', axis = alt.Axis(title = 'date', format = ("%b %Y")), scale=alt.Scale(zero=False, clamp=True)),
             y=alt.Y(y, scale=alt.Scale(zero=False, clamp=True)),
-            color=color,
+            color=alt.Color('author', sort=top),
             tooltip=tooltips
         ).interactive()
     else:

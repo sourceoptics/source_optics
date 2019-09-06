@@ -197,14 +197,18 @@ def _stat_series(repo, start=None, end=None, by_author=False, interval=None, lim
 
     (totals, limited_to_authors, inverse) = _interval_queryset(repo, start=start, end=end, by_author=by_author, interval=interval, aspect=aspect, limit_top_authors=limit_top_authors)
     (pre_df, fields) = _interval_queryset_to_dataframe(repo=repo, totals=totals, fields=fields, start=start, end=end, interval=interval, limited_to=limited_to_authors, inverse=inverse)
-    return pandas.DataFrame(pre_df, columns=fields)
+    df = pandas.DataFrame(pre_df, columns=fields)
+    return (df, limited_to_authors)
 
 def team_time_series(repo, start=None, end=None, interval=None):
-    return _stat_series(repo, start=start, end=end, interval=interval, by_author=False)
+    (df, _) = _stat_series(repo, start=start, end=end, interval=interval, by_author=False)
+    return df
 
 def author_time_series(repo, start=None, end=None, interval=None):
-    return _stat_series(repo, start=start, end=end, interval=interval, by_author=True)
+    (df, _) = _stat_series(repo, start=start, end=end, interval=interval, by_author=True)
+    return df
 
 def top_author_time_series(repo, start=None, end=None, interval=None, aspect=None):
-    return _stat_series(repo, start=start, end=end, interval=interval, by_author=True, aspect=aspect, limit_top_authors=True)
+    (df, top) = _stat_series(repo, start=start, end=end, interval=interval, by_author=True, aspect=aspect, limit_top_authors=True)
+    return (df, top)
 
