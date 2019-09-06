@@ -114,10 +114,10 @@ def _interval_queryset(repo, start=None, end=None, by_author=False, interval='DY
                 totals = totals.filter(author__commits__commit_date__range=(start,end))
         if limit_top_authors:
             filtered = totals.filter(author__in=limited_to)
-            inverse = totals.exclude(author__in=limited_to)
+            inverse = totals.exclude(author__in=limited_to).select_related('author')
             totals = filtered
 
-    return (totals.order_by('author','start_date'), limited_to, inverse)
+    return (totals.order_by('author','start_date').select_related('author'), limited_to, inverse)
 
 def _field_prep(field, stat, first_day):
     if field == 'date':
@@ -137,7 +137,7 @@ def _interval_queryset_to_dataframe(repo, totals, fields, start, end, interval, 
     if inverse:
         # reduced field support
         # FIXME: this should come from view settings, not Statistic, and not here
-        fields = [ 'date', 'lines_changed', 'author', 'lines_added', 'lines_removed', 'commit_total', 'author_total', 'files_changed']
+        fields = [ 'day', 'date', 'lines_changed', 'author', 'lines_added', 'lines_removed', 'commit_total', 'author_total', 'files_changed']
 
 
     for f in fields:
@@ -146,7 +146,12 @@ def _interval_queryset_to_dataframe(repo, totals, fields, start, end, interval, 
     # load the dataframe with the queryset results we have
     for t in totals:
         for f in fields:
-            data[f].append(_field_prep(f, t, first_day))
+            if f == 'date' or f == 'day':
+                data[f].append(str(t.start_date))
+            elif f == 'author':
+                data[f].append(t.author.email)
+            else:
+                data[f].append(getattr(t,f))
 
     if inverse is not None:
 
@@ -163,7 +168,7 @@ def _interval_queryset_to_dataframe(repo, totals, fields, start, end, interval, 
 
         for x in inverse.all():
             for f in fields:
-                if f in 'date':
+                if f == 'date' or f == 'day':
                     data[f].append(str(x['start_date']))
                 elif f in ['days_active', 'longevity', 'commitment', 'days_since_seen']:
                     data[f] = -1

@@ -421,6 +421,7 @@ class Statistic(models.Model):
 
     # FIXME: this should be view specific.
     GRAPHABLE_FIELDS = [
+        'day',
         'date',
         'lines_changed',
         'commit_total',

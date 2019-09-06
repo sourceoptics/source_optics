@@ -61,7 +61,7 @@ def plot(df=None, x=None, y=None, color=None, author=False):
     This renders an altair graph around pretty much any combination of two parameters found on a Statistic object.
     """
 
-    tooltips=['commit_total', 'lines_changed', 'files_changed']
+    tooltips=['day','commit_total', 'lines_changed', 'files_changed']
     if author:
         tooltips.extend(['author'])
     else:
