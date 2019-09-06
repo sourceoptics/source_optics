@@ -164,7 +164,7 @@ def _interval_queryset_to_dataframe(repo=None, totals=None, fields=None, start=N
             lines_removed=Sum('lines_removed'),
             commit_total=Sum('commit_total'),
             author_total=Sum('author_total'),
-            files_changed=Sum('files_changed')
+            files_changed=Sum('files_changed'),
         )
 
         for x in inverse.all():

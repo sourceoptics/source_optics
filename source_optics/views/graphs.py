@@ -18,7 +18,7 @@ import functools
 from .. models import Statistic
 from django.db.models import Sum
 
-AUTHOR_TIME_SERIES_TOOLTIPS = ['day','author','commit_total', 'lines_changed', 'files_changed', 'days_active', 'longevity', 'days_since_seen' ]
+AUTHOR_TIME_SERIES_TOOLTIPS = ['day','author','commit_total', 'lines_changed', 'files_changed', 'longevity', 'days_since_seen' ]
 
 TIME_SERIES_TOOLTIPS = ['day','commit_total', 'lines_changed', 'files_changed', 'author_total' ]
 
@@ -61,7 +61,7 @@ def render_chart(chart):
 
 @functools.lru_cache(maxsize=64)
 def get_stat(repo, author, start, end, aspect):
-   return Statistic.objects.filter(
+   value = Statistic.objects.filter(
        author=author,
        repo=repo,
        interval='DY',
@@ -70,6 +70,9 @@ def get_stat(repo, author, start, end, aspect):
        lines_changed=Sum('lines_changed'),
        commit_total=Sum('commit_total')
    )[aspect]
+   if value is None:
+       return -10000
+   return value
 
 def time_area_plot(df=None, repo=None, start=None, end=None, y=None, by_author=False, top=None, aspect=None):
     """
@@ -105,7 +108,7 @@ def time_area_plot(df=None, repo=None, start=None, end=None, y=None, by_author=F
             tooltip=tooltips
         ).interactive()
     else:
-        chart = alt.Chart(df, height=600, width=600).mark_area().encode(
+        chart = alt.Chart(df, height=600, width=600).mark_line().encode(
             x=alt.X('date:T', axis = alt.Axis(title = 'date', format = ("%b %Y")), scale=alt.Scale(zero=False, clamp=True)),
             y=alt.Y(y, scale=alt.Scale(zero=False, clamp=True)),
             tooltip=tooltips
