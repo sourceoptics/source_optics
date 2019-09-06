@@ -1,16 +1,15 @@
+
+{% include 'header.html' %}
+
+<h1>{{ repo.name }}: Authors ({{ author_count }})</h1>
+
 <div id="myGrid" class="ag-theme-balham"></div>
 
   <script type="text/javascript" charset="utf-8">
-    // specify the columns
-
 
     function detailsCellRendererFunc(params) {
-        return "<a href='/org/{{ org.pk }}/repo/" + params.value + "/start/{{ start_str }}/end/{{ end_str }}'>go</a>";
+        return "<a href='/repo/" + params.value + "/start/{{ start_str }}/end/{{ end_str }}'>go</a>";
     }
-
-    // FIXME: days active sounds like a great stat to have! Let's add it.
-
-  <!-- FIXME: this table is getting HUGE, do we need multiple table links especially for the lifetime version? -->
 
     var columnDefs = [
         {headerName: "Author",         field: "author", sortable: true, filter: true },
@@ -24,22 +23,17 @@
         {headerName: "Missing Days",   field: "days_since_seen", sortable: true, filter: true }
     ];
 
-
-
-    // specify the data
-    var rowData = {{ author_json | safe }};
-
-    // let the grid know which columns and what data to use
+    var rowData = {{ table_json | safe }};
     var gridOptions = {
       columnDefs: columnDefs,
       rowData: rowData
     };
-
-  // lookup the container we want the Grid to use
-  var eGridDiv = document.querySelector('#myGrid');
-
-  // create the grid passing in the div to use together with the columns & data we want to use
-  thisGrid = new agGrid.Grid(eGridDiv, gridOptions);
-
+    var eGridDiv = document.querySelector('#myGrid');
+    thisGrid = new agGrid.Grid(eGridDiv, gridOptions);
 
 </script>
+
+{% include 'footer.html' %}
+
+
+

@@ -117,62 +117,62 @@ class StatisticViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 
-def repo(request, org=None, repo=None):
+def repo(request, repo=None):
     """
     Generates the index page for a given repo.
     The index page is mostly a collection of graphs, so perhaps it should be called repo_graphs.html and this method
     should also be renamed.
     """
-    scope = Scope(request, org=org, repo=repo)
+    scope = Scope(request, repo=repo)
     scope.context['title'] = "Source Optics: %s repo (graphs)" % scope.repo.name
     return render(request, 'repo.html', context=scope.context)
 
-def graph_participation(request, org=None, repo=None):
-    scope = Scope(request, org=org, repo=repo)
+def graph_participation(request, repo=None):
+    scope = Scope(request, repo=repo)
     df = dataframes.team_time_series(scope)
     scope.context['graph'] = graphs.time_plot(df=df, scope=scope, y='author_total')
     return render(request, 'graph.html', context=scope.context)
 
-def graph_files_changed(request, org=None, repo=None):
-    scope = Scope(request, org=org, repo=repo)
+def graph_files_changed(request, repo=None):
+    scope = Scope(request, repo=repo)
     df = dataframes.team_time_series(scope)
     scope.context['graph'] = graphs.time_plot(df=df, scope=scope, y='files_changed')
     return render(request, 'graph.html', context=scope.context)
 
-def graph_lines_changed(request, org=None, repo=None):
-    scope = Scope(request, org=org, repo=repo)
+def graph_lines_changed(request, repo=None):
+    scope = Scope(request, repo=repo)
     (df, top) = dataframes.top_author_time_series(scope, aspect='lines_changed')
     scope.context['graph'] = graphs.time_plot(df=df, scope=scope, y='lines_changed', top=top, by_author=True, aspect='lines_changed')
     return render(request, 'graph.html', context=scope.context)
 
-def graph_commits(request, org=None, repo=None):
-    scope = Scope(request, org=org, repo=repo)
+def graph_commits(request, repo=None):
+    scope = Scope(request, repo=repo)
     (df, top) = dataframes.top_author_time_series(scope, aspect='commit_total')
     scope.context['graph'] = graphs.time_plot(df=df, scope=scope, y='commit_total', top=top, by_author=True, aspect='commit_total')
     return render(request, 'graph.html', context=scope.context)
 
-def graph_commit_size(request, org=None, repo=None):
-    scope = Scope(request, org=org, repo=repo)
+def graph_commit_size(request, repo=None):
+    scope = Scope(request, repo=repo)
     df = dataframes.team_time_series(scope)
     scope.context['graph'] = graphs.time_plot(df=df, scope=scope, y='average_commit_size')
     return render(request, 'graph.html', context=scope.context)
 
-def report_authors(request, org=None, repo=None):
+def report_authors(request, repo=None):
     """
     generates a partial graph which is loaded in the repo graphs page. more comments in graphs.py
     """
     limit = None
-    scope = Scope(request, org=org, repo=repo)
+    scope = Scope(request, repo=repo)
     data = reports.author_table(scope, limit=limit)
     scope.context['title'] = "Source Optics: %s repo: (authors report)" % scope.repo.name
     scope.context['author_count'] = len(data)
-    scope.context['author_json'] = json.dumps(data)
+    scope.context['table_json'] = json.dumps(data)
     # FIXME: should be repo_authors ? perhaps this will be standardized...
-    return render(request, 'authors.html', context=scope.context)
+    return render(request, 'repo_authors.html', context=scope.context)
 
 def report_commits(request, org=None):
     # FIXME: how about a scope object?
-    scope = Scope(request, org=org, repo=repo)
+    scope = Scope(request, repo=repo)
     data = reports.commits_feed(scope)
     # TODO: title can come from commits_feed function
     scope.context['title'] = "Source Optics: commit feed"

@@ -36,19 +36,19 @@ urlpatterns = [
     # FIXME: the org parameter is unneccessary when repo is specified.
 
     path('', views.orgs, name='orgs'),
-    path('org/<org>/repos/', views.repos, name='repos'),
-    path('org/<org>/repo/<repo>/', views.repo, name='repo'),
+    path('org/<org>/repos', views.repos, name='repos'),
+    path('repo/<repo>', views.repo, name='repo'),
     # TODO: use the reverse url function vs having these URLs directly in templates
 
     # GRAPHS
     path('org/<org>/repo/<repo>/graph/participation', views.graph_participation, name='graph_participation'),
-    path('org/<org>/repo/<repo>/graph/commits', views.graph_commits, name='graph_commits'),
-    path('org/<org>/repo/<repo>/graph/lines_changed', views.graph_lines_changed, name='graph_lines_changed'),
-    path('org/<org>/repo/<repo>/graph/files_changed', views.graph_files_changed, name='graph_files_changed'),
-    path('org/<org>/repo/<repo>/graph/commit_size', views.graph_commit_size, name='graph_commit_size'),
+    path('repo/<repo>/graph/commits', views.graph_commits, name='graph_commits'),
+    path('repo/<repo>/graph/lines_changed', views.graph_lines_changed, name='graph_lines_changed'),
+    path('repo/<repo>/graph/files_changed', views.graph_files_changed, name='graph_files_changed'),
+    path('repo/<repo>/graph/commit_size', views.graph_commit_size, name='graph_commit_size'),
 
     # REPORTS
-    path('org/<org>/repo/<repo>/report/authors', views.report_authors, name='report_authors'),
+    path('repo/<repo>/report/authors', views.report_authors, name='report_authors'),
 
     # REST API
     path('api/', include(api_router.urls)),

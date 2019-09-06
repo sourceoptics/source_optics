@@ -7,11 +7,11 @@
   <script type="text/javascript" charset="utf-8">
 
     function chartsCell(params) {
-        return "<a href='/org/{{ org.pk }}/repo/" + params.value + "?start={{ start_str }}&end={{ end_str }}&intv={{ intv }}'>go</a>";
+        return "<a href='/repo/" + params.value + "?start={{ start_str }}&end={{ end_str }}&intv={{ intv }}'>go</a>";
     }
 
     function authorsRangedCell(params) {
-        return "<a href='/org/{{ org.pk }}/repo/" + params.value + "/report/authors?start={{ start_str }}&end={{ end_str }}&intv={{ intv }}'>go</a>";
+        return "<a href='/repo/" + params.value + "/report/authors?start={{ start_str }}&end={{ end_str }}&intv={{ intv }}'>go</a>";
     }
 
     var columnDefs = [

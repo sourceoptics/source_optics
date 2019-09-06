@@ -82,6 +82,7 @@ class Scope(object):
             self.org = None
             if repo:
                 self.repo = Repository.objects.get(pk=repo)
+                self.org = self.repo.organization
 
         if org:
             self.repos = Repository.objects.filter(organization=org).select_related('organization')

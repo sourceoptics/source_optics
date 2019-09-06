@@ -1,1 +1,36 @@
-placeholder
+
+{% include 'header.html' %}
+
+{% if repo %}
+<h1>{{ repo.name }}: Commits</h1>
+{% elif author %}
+<h1>{{ author.email }}: Commits</h1>
+{% else %}
+<h1>Commits</h1>
+{% endif %}
+
+<div id="myGrid" class="ag-theme-balham"></div>
+
+  <script type="text/javascript" charset="utf-8">
+
+    var columnDefs = [
+        {headerName: "Date",        field: "commit_date", sortable: true, filter: true },
+        {headerName: "Author",      field: "author", sortable: true, filter: true },
+        {headerName: "Repo",        field: "repo", sortable: true, filter: true },
+        {headerName: "Description", field: "description", sortable: true, filter: true },
+        {headerName: "SHA",         field: "sha", filter: true },
+    ];
+
+    var rowData = {{ table_json | safe }};
+    var gridOptions = {
+      columnDefs: columnDefs,
+      rowData: rowData
+    };
+    var eGridDiv = document.querySelector('#myGrid');
+    thisGrid = new agGrid.Grid(eGridDiv, gridOptions);
+
+</script>
+
+{% include 'footer.html' %}
+
+
