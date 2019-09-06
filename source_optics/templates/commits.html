@@ -24,10 +24,18 @@
         {% endif %}
     }
 
+    function repoCell(params) {
+        return "<a href='/report/commits?start={{ start_str }}&end={{ end_str }}&repo=" + params.value + "'>" + params.value + "</a>";
+    }
+
     var columnDefs = [
         {headerName: "Date",        field: "commit_date", sortable: false, filter: true, type: ['dateColumn'] },
+        {% if repo %}
         {headerName: "Author",      field: "author", sortable: true, filter: true, cellRenderer: authorCell},
-        {headerName: "Repo",        field: "repo", sortable: true, filter: true, width: 100 },
+        {% endif %}
+        {% if author %}
+        {headerName: "Repo",        field: "repo", sortable: true, filter: true, width: 100, cellRenderer: repoCell },
+        {% endif %}
         {headerName: "Description", field: "subject", sortable: true, filter: true, width: 600 },
         {headerName: "SHA",         field: "sha", filter: true }
     ];

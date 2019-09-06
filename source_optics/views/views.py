@@ -164,7 +164,12 @@ def report_author_stats(request):
     limit = None
     scope = Scope(request)
     data = reports.author_stats_table(scope, limit=limit)
-    scope.context['title'] = "Source Optics: %s repo: (authors report)" % scope.repo.name
+    if scope.repo:
+        # FIXME: this should be done in the template
+        scope.context['title'] = "Source Optics: stats for repo=%s" % scope.repo.name
+    else:
+        scope.context['title'] = "Source Optics: stats for author=%s" % scope.author.email
+
     scope.context['author_count'] = len(data)
     scope.context['table_json'] = json.dumps(data)
     # FIXME: should be repo_authors ? perhaps this will be standardized...

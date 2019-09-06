@@ -1,14 +1,30 @@
 
 {% include 'header.html' %}
 
-<h1>{{ repo.name }}: Authors ({{ author_count }})</h1>
+<h1>{{ title }}</h1>
 
 <div id="myGrid" class="ag-theme-balham"></div>
 
   <script type="text/javascript" charset="utf-8">
 
+    function authorCell(params) {
+        {% if repo %}
+        return "<a href='/report/author_stats?start={{ start_str }}&end={{ end_str }}&author=" + params.value + "'>" + params.value + "</a>";
+        {% else %}
+        return params.value
+        {% endif %}
+    }
+
+    function repoCell(params) {
+        return "<a href='/report/author_stats?start={{ start_str }}&end={{ end_str }}&repo=" + params.value + "'>" + params.value + "</a>";
+    }
+
+
     var columnDefs = [
-        {headerName: "Author",         field: "author", sortable: true, filter: true },
+        {headerName: "Author",         field: "author", sortable: true, filter: true, cellRenderer: authorCell },
+        {% if not repo %}
+        {headerName: "Repo",           field: "repo", sortable: true, filter: true, cellRenderer: repoCell },
+        {% endif %}
         {headerName: "L+",             field: "lines_added", sortable: true, filter: true },
         {headerName: "L-",             field: "lines_removed", sortable: true, filter: true },
         {headerName: "Commits",        field: "commit_total", sortable: true, filter: true },

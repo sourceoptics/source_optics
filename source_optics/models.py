@@ -229,14 +229,24 @@ class Author(models.Model):
         )
         return stat
 
+    @functools.lru_cache(maxsize=128, typed=False)
+    def repos(self, start=None, end=None):
+        if start is not None:
+            qs = Commit.objects.filter(
+                author=self,
+                commit_date__range=(start, end)
+            )
+        else:
+            qs = Commit.objects.filter(
+                author=self
+            )
+        repo_ids = qs.values_list('repo', flat=True).distinct('repo')
+        return Repository.objects.filter(pk__in=repo_ids)
+
     @classmethod
     @functools.lru_cache(maxsize=128, typed=False)
     def authors(cls, repo, start=None, end=None):
         assert repo is not None
-
-        # FIXME: some duplication with the method in Repo, we should retire that other method
-        # FIXME: this can be written more clearly and efficiently with a related field, right?
-
         if start is not None:
             qs = Commit.objects.filter(
                 author__isnull=False,
@@ -245,8 +255,8 @@ class Author(models.Model):
             )
         else:
             qs = Commit.objects.filter(
+                repo=repo,
                 author__isnull=False,
-                repo=repo
             )
         author_ids = qs.values_list('author', flat=True).distinct('author')
         return Author.objects.filter(pk__in=author_ids)
@@ -618,34 +628,35 @@ class Statistic(models.Model):
     def queryset_for_range(cls, repo, interval, author=None, start=None, end=None):
         assert repo is not None
         stats = Statistic.objects.select_related('author')
+        qs = None
         if interval == 'LF':
             if author:
-                return stats.filter(
+                qs = stats.filter(
                     author=author,
                     interval='LF',
-                    repo=repo
                 )
             else:
-                return stats.filter(
+                qs = stats.filter(
                     author__isnull=True,
-                    repo=repo,
                     interval='LF',
                 )
         else:
             if author:
-                return stats.filter(
+                qs = stats.filter(
                     author=author,
                     interval=interval,
-                    repo=repo,
                     start_date__range=(start, end)
                 )
             else:
-                return stats.filter(
+                qs = stats.filter(
                     author__isnull=True,
                     interval=interval,
-                    repo=repo,
                     start_date__range=(start, end)
                 )
+        if repo:
+            return qs.filter(repo=repo)
+        else:
+            return qs
 
 
     def to_dict(self):

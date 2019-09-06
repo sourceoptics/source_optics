@@ -75,22 +75,38 @@ def author_stats_table(scope, limit=None):
 
     results = []
 
-    assert scope.repo is not None
 
     interval = scope.interval
     if interval != 'LF':
         interval = 'DY'
 
-    authors = Author.authors(scope.repo, scope.start, scope.end)
+    authors = None
+    if scope.repo:
+        authors = Author.authors(scope.repo, scope.start, scope.end)
 
-    for author in authors:
-        stat1 = Statistic.queryset_for_range(scope.repo, author=author, start=scope.start, end=scope.end, interval=scope.interval)
-        stat2 = Statistic.compute_interval_statistic(stat1, interval=scope.interval, repo=scope.repo, author=author, start=scope.start, end=scope.end)
+    def add_stat(author, repo):
+        stat1 = Statistic.queryset_for_range(repo, author=author, start=scope.start, end=scope.end, interval=scope.interval)
+        stat2 = Statistic.compute_interval_statistic(stat1, interval=scope.interval, repo=repo, author=author, start=scope.start, end=scope.end)
         stat2 = stat2.to_dict()
         stat2['author'] = author.email
+        stat2['repo'] = repo.name
         if stat2['lines_changed']:
             # skip authors with no contribution in the time range
             results.append(stat2)
+
+    if not scope.author and scope.repo:
+        print("p1")
+        for author in authors:
+            add_stat(author, scope.repo)
+    elif scope.author and not scope.repo:
+        print("p2")
+        for repo in scope.author.repos():
+            print("r1=", type(repo))
+            add_stat(scope.author, repo)
+    elif scope.author and scope.repo:
+        print("p3")
+        add_stat(scope.author, scope.repo)
+
     return results
 
 
