@@ -200,7 +200,6 @@ class Commits:
             # update the global file object with the line counts
 
             assert commit is not None
-            print("DEBUG: commit=%s" % commit)
 
             total_files.append(File(
                 repo=commit.repo,
