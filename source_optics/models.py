@@ -226,6 +226,9 @@ class Author(models.Model):
             lines_changed=Sum('lines_removed'),
             lines_removed=Sum('lines_removed'),
             commit_total=Sum('commit_total'),
+            moves=Sum('moves'),
+            edits=Sum('edits'),
+            creates=Sum('creates')
         )
         return stat
 
@@ -332,6 +335,7 @@ class File(models.Model):
     path = models.TextField(db_index=True, max_length=256, blank=False, null=True)
     ext = models.TextField(max_length=32, blank=False, null=True)
     binary = models.BooleanField(default=False)
+    created_by = models.ForeignKey(Commit, on_delete=models.CASCADE, related_name='files', null=True)
 
     class Meta:
         unique_together = [ 'repo', 'name', 'path' ]
@@ -364,6 +368,10 @@ class FileChange(models.Model):
     commit = models.ForeignKey(Commit, db_index=True, on_delete=models.CASCADE, related_name='file_changes')
     lines_added = models.IntegerField(default=0)
     lines_removed = models.IntegerField(default=0)
+    # the following are kept as ints for quick aggregation
+    is_create = models.IntegerField(default=0)
+    is_move = models.IntegerField(default=0)
+    is_edit = models.IntegerField(default=0)
 
     class Meta:
         unique_together = [ 'file', 'commit' ]
@@ -401,7 +409,13 @@ class FileChange(models.Model):
         # it likely could be a lot more efficient by building a custom SQL query here
         qs = cls.queryset_for_range(repo, author=author, start=start, end=end)
         files = File.queryset_for_range(repo, author=author, start=start, end=end)
-        stats = qs.aggregate(lines_added=Sum("lines_added"), lines_removed = Sum("lines_removed"))
+        stats = qs.aggregate(
+            lines_added=Sum("lines_added"),
+            lines_removed = Sum("lines_removed"),
+            moves = Sum("is_move"),
+            edits = Sum("is_edit"),
+            creates = Sum("is_create"),
+        )
         # FIXME: there is duplication here with the Statistic class and we should figure out how to fix that.
         # FIXME: the qs call should use a LRU cache wrapped method. Isn't there a method in Commit?
         stats['commit_total'] = qs.values_list('commit', flat=True).distinct().count()
@@ -457,13 +471,15 @@ class Statistic(models.Model):
     flux = models.FloatField(blank=True, null=True, default=0)
     commitment = models.FloatField(blank=True, null=True, default=0)
 
-    # the following stats are only going to be valid for LIFETIME ('LF') intervals
     earliest_commit_date = models.DateTimeField(blank=True, null=True)
     latest_commit_date = models.DateTimeField(blank=True, null=True)
     days_since_seen = models.IntegerField(blank=False, null=True, default=-1)
     days_before_joined = models.IntegerField(blank=False, null=True, default=-1)
     longevity = models.IntegerField(blank=True, null=False, default=0)
 
+    moves = models.IntegerField(blank=True, null=False, default=0)
+    edits = models.IntegerField(blank=True, null=False, default=0)
+    creates = models.IntegerField(blank=True, null=False, default=0)
 
     def __str__(self):
         if self.author is None:
@@ -489,6 +505,9 @@ class Statistic(models.Model):
             lines_changed=Sum("lines_changed"),
             commit_total=Sum("commit_total"),
             days_active=Sum("days_active"),
+            moves=Sum("moves"),
+            edits=Sum("edits"),
+            creates=Sum("creates")
         )
 
     @classmethod
@@ -521,6 +540,9 @@ class Statistic(models.Model):
             days_active=data['days_active'],
             files_changed=files_changed,
             author_total=author_count,
+            moves=data['moves'],
+            creates=data['creates'],
+            edits=data['edits']
         )
 
         stat.compute_derived_values()
@@ -556,7 +578,7 @@ class Statistic(models.Model):
             if author:
                 first = queryset.first()
                 stat.earliest_commit_date = first.earliest_commit_date
-                stat.latest_comit_date = first.latest_commit_date
+                stat.latest_commit_date = first.latest_commit_date
                 stat.days_since_seen = first.days_since_seen
                 stat.days_before_joined = first.days_before_joined
                 stat.longevity = first.longevity
@@ -622,6 +644,9 @@ class Statistic(models.Model):
         self.flux = other.flux
         self.commitment = other.commitment
         self.longevity = other.longevity
+        self.moves = other.moves
+        self.creates = other.creates
+        self.edits = other.edits
 
 
     @classmethod
@@ -681,7 +706,10 @@ class Statistic(models.Model):
             commits_per_day=self.commits_per_day,
             bias=self.bias,
             flux=self.flux,
-            commitment=self.commitment
+            commitment=self.commitment,
+            creates=self.creates,
+            edits=self.edits,
+            moves=self.moves
         )
         if self.author:
             result['author']=self.author.email

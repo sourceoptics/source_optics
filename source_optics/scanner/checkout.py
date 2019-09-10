@@ -13,10 +13,9 @@
 # limitations under the License.
 #
 
-import os
 import traceback
-
 from . import commands
+import os
 
 GIT_TYPES = ["https://", "http://"]
 

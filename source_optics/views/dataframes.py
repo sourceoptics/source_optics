@@ -32,7 +32,10 @@ TIME_SERIES_FIELDS = [
     'days_since_seen',
     'days_before_joined',
     'longevity',
-    'days_active'
+    'days_active',
+    'creates',
+    'edits',
+    'moves'
 ]
 
 TZ = timezone.get_current_timezone()
@@ -169,6 +172,7 @@ def _interval_queryset_to_dataframe(totals=None, fields=None, limited_to=None, i
 
     if inverse:
 
+        # FIXME: this should use a method in the Statistic class
         inverse = inverse.values('start_date').annotate(
             lines_changed=Sum('lines_changed'),
             lines_added=Sum('lines_added'),
@@ -176,6 +180,9 @@ def _interval_queryset_to_dataframe(totals=None, fields=None, limited_to=None, i
             commit_total=Sum('commit_total'),
             author_total=Sum('author_total'),
             files_changed=Sum('files_changed'),
+            creates=Sum('creates'),
+            edits=Sum('edits'),
+            moves=Sum('moves')
         )
 
         for x in inverse.all():

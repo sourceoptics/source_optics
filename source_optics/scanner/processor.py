@@ -29,7 +29,7 @@ from django.utils import timezone
 
 from source_optics.scanner.rollup import Rollup
 
-from ..models import Commit, Repository, Statistic
+from ..models import Commit, Repository, Statistic, File
 from .checkout import Checkout
 from .commits import Commits
 from .ssh_agent import SshAgentManager
@@ -98,6 +98,7 @@ class RepoProcessor:
         repo.force_next_pull = True
         Commit.objects.filter(repo=repo).delete() # cascade everything else
         Statistic.objects.filter(repo=repo).delete()
+        File.objects.filter(repo=repo).delete()
         repo.save()
 
     @classmethod

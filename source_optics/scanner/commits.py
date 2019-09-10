@@ -180,7 +180,7 @@ class Commits:
 
 
     @classmethod
-    def create_file(cls, full_path, commit, la, lr, binary, mode, total_files, total_file_changes):
+    def create_file(cls, full_path, commit, la, lr, binary, mode, total_files, total_file_changes, moved):
         """
         After we have recorded commits, this function creates either Files or FileChange objects
         depending on what scanner pass we are running through.
@@ -199,12 +199,16 @@ class Commits:
 
             # update the global file object with the line counts
 
+            assert commit is not None
+            print("DEBUG: commit=%s" % commit)
+
             total_files.append(File(
                 repo=commit.repo,
                 path=path,
                 name=fname,
                 ext=ext,
-                binary=binary
+                binary=binary,
+                created_by=commit
             ))
 
             # BOOKMARK
@@ -217,11 +221,28 @@ class Commits:
                 # this shouldn't happen, but if we get here the parser has a bug.
                 raise Exception("FATAL, MISSING FILE RECORD, SHOULDN'T BE HERE!")
 
+            # these look like they should be booleans, but these are kept this way for fast aggregations
+            is_create = 1
+            is_move = 0
+            is_edit = 0
+
+            assert file.created_by is not None, "file record does not record the creating commit, please rescan once with -F"
+
+            # older scans won't have this and will need to do a rescan
+            if file.created_by.sha != commit.sha:
+                is_edit = 1
+                is_create = 0
+            if moved:
+                is_move = 1
+
             total_file_changes.append(FileChange(
                     commit=commit,
                     lines_added=la,
                     lines_removed=lr,
-                    file=file
+                    file=file,
+                    is_create=is_create,
+                    is_move=is_move,
+                    is_edit=is_edit
             ))
 
 
@@ -278,7 +299,11 @@ class Commits:
         to just log the file in the final path. This will possibly give users credit for
         aspects of a move but this something we can explore later. Not sure if it does - MPD.
         """
-        return FILE_PATH_RENAME_RE.sub(r'\1\2', path)
+        moved = False
+        if FILE_PATH_RENAME_RE.match(path):
+            return (True, FILE_PATH_RENAME_RE.sub(r'\1\2', path))
+        else:
+            return (False, path)
 
     @classmethod
     def should_process_path(cls, repo, path):
@@ -335,6 +360,9 @@ class Commits:
         process the list of file changes in this commit
         """
 
+        assert repo is not None
+        assert last_commit is not None
+
         tokens = line.split()
         (added, removed, path) = (tokens[0], tokens[1], ''.join(tokens[2:]))
 
@@ -361,12 +389,12 @@ class Commits:
             added = 0
             removed = 0
 
-        path = cls.repair_move_path(path)
+        (moved, path) = cls.repair_move_path(path)
 
         if not cls.should_process_path(repo, path):
             return None
 
-        cls.create_file(path, last_commit, added, removed, binary, mode, total_files, total_file_changes)
+        cls.create_file(path, last_commit, added, removed, binary, mode, total_files, total_file_changes, moved)
 
     @classmethod
     def handle_diff_information(cls, repo, line, mode):

@@ -46,6 +46,9 @@ urlpatterns = [
     path('repo/<repo>/graph/lines_changed', views.graph_lines_changed, name='graph_lines_changed'),
     path('repo/<repo>/graph/files_changed', views.graph_files_changed, name='graph_files_changed'),
     path('repo/<repo>/graph/commit_size', views.graph_commit_size, name='graph_commit_size'),
+    path('repo/<repo>/graph/creates', views.graph_creates, name='graph_creates'),
+    path('repo/<repo>/graph/edits', views.graph_edits, name='graph_edits'),
+    path('repo/<repo>/graph/moves', views.graph_moves, name='graph_moves'),
 
     # REPORTS
     path('report/author_stats', views.report_author_stats, name='report_author_stats'),

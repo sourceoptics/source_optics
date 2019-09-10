@@ -20,10 +20,20 @@
 
 <div data-loader="ajax" data-src="/repo/{{ repo.pk }}/graph/participation?start={{ start_str}}&end={{ end_str}}&intf={{ intv }}">loading</div>
 
+<h2>Creates</h2>
+
+<div data-loader="ajax" data-src="/repo/{{ repo.pk }}/graph/creates?start={{ start_str}}&end={{ end_str}}&intf={{ intv }}">loading</div>
+
+<h2>Edits</h2>
+
+<div data-loader="ajax" data-src="/repo/{{ repo.pk }}/graph/edits?start={{ start_str}}&end={{ end_str}}&intf={{ intv }}">loading</div>
+
+<h2>Moves</h2>
+
+<div data-loader="ajax" data-src="/repo/{{ repo.pk }}/graph/moves?start={{ start_str}}&end={{ end_str}}&intf={{ intv }}">loading</div>
+
 <h2>Average Commit Size</h2>
 
 <div data-loader="ajax" data-src="/repo/{{ repo.pk }}/graph/commit_size?start={{ start_str}}&end={{ end_str}}&intf={{ intv }}">loading</div>
-
-
 
 {% include 'footer.html' %}

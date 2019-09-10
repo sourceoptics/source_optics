@@ -142,13 +142,32 @@ def graph_files_changed(request, repo=None):
 def graph_lines_changed(request, repo=None):
     scope = Scope(request, repo=repo)
     (df, top) = dataframes.top_author_time_series(scope, aspect='lines_changed')
-    scope.context['graph'] = graphs.time_plot(df=df, scope=scope, y='lines_changed', top=top, by_author=True, aspect='lines_changed')
+    scope.context['graph'] = graphs.time_plot(df=df, scope=scope, y='lines_changed', top=top, by_author=True, aspect='commit_total')
     return render(request, 'graph.html', context=scope.context)
 
 def graph_commits(request, repo=None):
     scope = Scope(request, repo=repo)
     (df, top) = dataframes.top_author_time_series(scope, aspect='commit_total')
     scope.context['graph'] = graphs.time_plot(df=df, scope=scope, y='commit_total', top=top, by_author=True, aspect='commit_total')
+    return render(request, 'graph.html', context=scope.context)
+
+def graph_creates(request, repo=None):
+    scope = Scope(request, repo=repo)
+    (df, top) = dataframes.top_author_time_series(scope, aspect='commit_total')
+    scope.context['graph'] = graphs.time_plot(df=df, scope=scope, y='creates', top=top, by_author=True, aspect='commit_total')
+    return render(request, 'graph.html', context=scope.context)
+
+def graph_edits(request, repo=None):
+    # FIXME: DRY on all of these
+    scope = Scope(request, repo=repo)
+    (df, top) = dataframes.top_author_time_series(scope, aspect='commit_total')
+    scope.context['graph'] = graphs.time_plot(df=df, scope=scope, y='edits', top=top, by_author=True, aspect='commit_total')
+    return render(request, 'graph.html', context=scope.context)
+
+def graph_moves(request, repo=None):
+    scope = Scope(request, repo=repo)
+    (df, top) = dataframes.top_author_time_series(scope, aspect='commit_total')
+    scope.context['graph'] = graphs.time_plot(df=df, scope=scope, y='moves', top=top, by_author=True, aspect='commit_total')
     return render(request, 'graph.html', context=scope.context)
 
 def graph_commit_size(request, repo=None):

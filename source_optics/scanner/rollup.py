@@ -166,6 +166,9 @@ class Rollup:
             lines_changed=data['lines_changed'],
             commit_total= data['commit_total'],
             files_changed=data['files_changed'],
+            moves=data['moves'],
+            edits=data['edits'],
+            creates=data['creates'],
             author_total=authors_count,
             days_active=1,
         )
