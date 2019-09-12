@@ -33,7 +33,7 @@ class GroupSerializer(serializers.HyperlinkedModelSerializer):
 class RepositorySerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Repository
-        fields = ('organization', 'enabled', 'last_scanned', 'tags', 'last_pulled', 'url', 'name', 'color')
+        fields = ('organization', 'enabled', 'last_scanned', 'tags', 'last_pulled', 'url', 'name')
 
 class CredentialSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
@@ -49,32 +49,22 @@ class AuthorSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = Author
-        fields = ('email', 'repos')
+        fields = ('email')
 
 class CommitSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = Commit
-        fields = ('repo', 'author', 'sha', 'commit_date', 'author_date', 'subject',
-                  'lines_added', 'lines_removed')
+        fields = ('repo', 'author', 'sha', 'commit_date', 'author_date', 'subject')
 
 class StatisticSerializer(serializers.HyperlinkedModelSerializer):
 
     class Meta:
         model = Statistic
         fields = ('start_date', 'interval', 'repo', 'author', 'lines_added',
-                  'lines_removed', 'lines_changed', 'commit_total', 'author_total')
+                  'lines_removed', 'lines_changed', 'commit_total', 'files_changed',
+                  'author_total', 'days_active', 'average_commit_size', 'commits_per_day',
+                  'files_changed_per_day', 'bias', 'commitment', 'earliest_commit_date',
+                  'latest_commit_date', 'days_since_seen', 'days_before_joined', 'longevity',
+                  'moves', 'edits', 'creates')
 
-
-class ReportParameters(serializers.Serializer):
-
-    end = serializers.DateTimeField(default=None)
-    days = serializers.IntegerField(default=None)
-    interval = serializers.ChoiceField(choices=['DY','WK','MN'], default='DY')
-    repo_pattern = serializers.CharField(max_length=512, default=None)
-    author_pattern = serializers.CharField(max_length=512, default=None)
-    author_id = serializers.IntegerField(default=None)
-    repo_id = serializers.IntegerField(default=None)
-    organization_id = serializers.IntegerField(default=None)
-    plugin = serializers.CharField(max_length=512, default='repo_summary')
-    arguments = serializers.JSONField(default=None)

@@ -88,8 +88,7 @@ class CommitViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Commit.objects.all()
     serializer_class = CommitSerializer
     filter_backends = (DjangoFilterBackend,)
-    filterset_fields = (
-    'repo', 'author', 'sha', 'commit_date', 'author_date', 'subject', 'lines_added', 'lines_removed')
+    filterset_fields = ('repo', 'author', 'sha', 'commit_date', 'author_date', 'subject')
 
 
 class AuthorViewSet(viewsets.ReadOnlyModelViewSet):
@@ -105,8 +104,7 @@ class StatisticViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Statistic.objects.all()
     serializer_class = StatisticSerializer
     filter_backends = (DjangoFilterBackend,)
-    filterset_fields = ('start_date', 'interval', 'repo', 'author', 'lines_added', 'lines_removed', 'lines_changed',
-                        'commit_total', 'author_total')
+    filterset_fields = ('start_date', 'interval', 'repo', 'author')
 
 
 # END REST API
