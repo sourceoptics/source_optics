@@ -31,6 +31,7 @@ class GroupSerializer(serializers.HyperlinkedModelSerializer):
         fields = ('url', 'name')
 
 class RepositorySerializer(serializers.HyperlinkedModelSerializer):
+
     class Meta:
         model = Repository
         fields = ('organization', 'enabled', 'last_scanned', 'tags', 'last_pulled', 'url', 'name')

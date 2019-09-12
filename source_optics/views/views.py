@@ -69,7 +69,6 @@ class RepositoryViewSet(viewsets.ReadOnlyModelViewSet):
     filter_backends = (DjangoFilterBackend,)
     filterset_fields = ('name', 'url', 'tags', 'last_scanned', 'enabled', 'organization')
 
-
 class OrganizationViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Organization.objects.all()
     serializer_class = OrganizationSerializer
@@ -95,8 +94,7 @@ class AuthorViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Author.objects.all()
     serializer_class = AuthorSerializer
     filter_backends = (DjangoFilterBackend,)
-    filterset_fields = ('email', 'repos')
-
+    filterset_fields = ('email',)
 
 # FIXME: all the current statistic fields aren't here, we should read this from the Statistic model
 # so we don't forget when adding new fields
