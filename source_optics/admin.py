@@ -16,8 +16,7 @@
 from django.contrib import admin
 from django.forms import CharField, ModelForm, PasswordInput
 
-from .models import (Author, Commit, Credential, File, FileChange,
-                     Organization, Repository, Statistic, Tag)
+from .models import (Author, Credential, Organization, Repository, EmailAlias)
 
 
 def fast_delete(modeladmin, request, queryset):
@@ -46,3 +45,4 @@ admin.site.register(Organization)
 admin.site.register(Repository, RepoAdmin)
 admin.site.register(Author)
 admin.site.register(Credential, CredentialAdmin)
+admin.site.register(EmailAlias)

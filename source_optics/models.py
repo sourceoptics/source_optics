@@ -192,10 +192,17 @@ class Repository(models.Model):
         cls.latest_commit_date.cache_clear()
 
 class Author(models.Model):
+
     email = models.CharField(db_index=True, max_length=512, unique=True, blank=False, null=True)
+    display_name = models.CharField(db_index=True, max_length=512, unique=False, blank=True, null=True)
+
+    def get_display_name(self):
+        if self.display_name:
+            return self.display_name
+        return self.email
 
     def __str__(self):
-        return f"Author: {self.email}"
+        return f"Author: {self.get_display_name()}"
 
     @functools.lru_cache(maxsize=128, typed=False)
     def earliest_commit_date(self, repo):
@@ -276,6 +283,17 @@ class Author(models.Model):
             file_changes__commit__author=self,
         ).distinct('path').count()
 
+class EmailAlias(models.Model):
+
+    organization = models.ForeignKey(Organization, related_name='+', null=True, blank=False, on_delete=models.CASCADE)
+    from_email = models.CharField(db_index=True, max_length=512, unique=True, blank=False, null=True)
+    to_email = models.CharField(db_index=True, max_length=512, unique=False, blank=False, null=True)
+
+    class Meta:
+        verbose_name_plural = "EmailAliases"
+
+    def __str__(self):
+        return("(%s) %s -> %s" % (self.organization.name, self.from_email, self.to_email))
 
 
 class Tag(models.Model):

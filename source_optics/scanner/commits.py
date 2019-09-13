@@ -16,10 +16,11 @@
 import fnmatch
 import os
 import re
+import functools
 
 from django.utils.dateparse import parse_datetime
 
-from ..models import Author, Commit, File, FileChange
+from ..models import Author, Commit, File, FileChange, EmailAlias
 from . import commands
 
 # we use git --log with a special one-line format string to capture certain fields
@@ -396,6 +397,15 @@ class Commits:
         cls.create_file(path, last_commit, added, removed, binary, mode, total_files, total_file_changes, moved)
 
     @classmethod
+    @functools.lru_cache(maxsize=10000, typed=False)
+    def check_alias(cls, repo, email):
+        _ = repo
+        alias = EmailAlias.objects.filter(from_email=email)
+        if alias.count():
+            return alias.first().to_email
+        return email
+
+    @classmethod
     def handle_diff_information(cls, repo, line, mode):
 
         """
@@ -415,6 +425,7 @@ class Commits:
             return commit
 
         email = data['author_email']
+        email = cls.check_alias(repo, email)
 
         author, created = Author.objects.get_or_create(email=email)
 

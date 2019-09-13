@@ -235,6 +235,26 @@ in SourceOptics works off a time-series implementation.
 
 Over time, expect to see lots of new features in this area.
 
+Email Alias Remapping (Optional)
+================================
+
+It is likely that some authors may commit under several different email aliases. When this occurs, alias
+mappings can be added by adding objects under "Email Aliases" in Django Admin. Adding these aliases will
+improve statistics and graphs significantly.
+
+Once added, rescanning with "python3 manage.py scan ... -F" will recompute all statistics, 
+combining the author records into one.  If a rescan with "-F" is not done, aliases will only affect
+future statistics.
+
+To remove the alias mapping, delete the EmailAlias row, and rescan again with "-F" and statistics will once
+again be recorded by the original email address.
+
+To provide faster data entry, a management command to load aliases from a text file seems like a good idea 
+for a future feature.
+
+Consider a site-wide policy to require commits to be under a specific email address per person to minimize
+the need to manage this aspect of the program.
+
 Upgrades
 ========
 
