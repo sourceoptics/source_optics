@@ -3,6 +3,7 @@ django-split-settings==0.3.0
 psycopg2-binary==2.7.7
 cryptography>=2.6.1
 djangorestframework==3.9.1
+django-filter==2.2.0
 PyGithub==1.43.2
 pandas==0.25.1
 altair==3.2.0
