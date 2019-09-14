@@ -119,6 +119,10 @@ def repo_table(scope): # repos, start, end):
         stat2 = Statistic.compute_interval_statistic(stats, interval='DY', repo=repo, author=None, start=scope.start, end=scope.end)
         stat2 = stat2.to_dict()
         stat2['name'] = repo.name
+        if repo.last_scanned:
+            stat2['last_scanned'] = repo.last_scanned.strftime("%Y-%m-%d %H:%M:%S")
+        else:
+            stat2['last_scanned'] = ""
         # providing pk's for link columns in the repo chart
         for x in [ 'details1', 'details2', 'details3']:
             stat2[x] = repo.pk
@@ -132,8 +136,8 @@ def orgs_table(scope):
     for org in scope.orgs:
         row = dict()
         row['name'] = org.name
-        # for web links in chart
-        for x in [ 'details1', 'details2', 'details3']:
-            row[x] = org.pk
+        row['repo_count'] = org.repos.count()
+        print("repo_count=%s" % row['repo_count'])
+        row['details1'] = org.pk
         results.append(row)
     return json.dumps(results)

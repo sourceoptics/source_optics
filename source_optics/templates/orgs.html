@@ -11,13 +11,15 @@
 
   <script type="text/javascript" charset="utf-8">
 
+    // FIXME: URL should be /repos?org=1
     function detailsCell(params) {
-        return "<a href='/org/" + params.value + "'>repos</a>";
+        return "<a href='/org/" + params.value + "/repos'>go</a>";
     }
 
     var columnDefs = [
         {headerName: "Organization",    field: "name", filter: true, sortable: true },
-        {headerName: "Repos",           field: "repos", cellRenderer: detailsCell },
+        {headerName: "Repo Count",      field: "repo_count", filter: true, sortable: true },
+        {headerName: "Explore",         field: "details1", cellRenderer: detailsCell },
 
     ];
 

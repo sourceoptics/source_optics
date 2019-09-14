@@ -6,8 +6,8 @@
 
   <script type="text/javascript" charset="utf-8">
 
-    function detailsCell(params) {
-        return "<a href='/repo/" + params.value + "?start={{ start_str }}&end={{ end_str }}&intv={{ intv }}&org={{ org.pk }}'>" + params.value + "</a>";
+    function graphCell(params) {
+        return "<a href='/repo/" + params.value + "?start={{ start_str }}&end={{ end_str }}&intv={{ intv }}&org={{ org.pk }}'>go</a>";
     }
 
     function authorsStatsCell(params) {
@@ -20,15 +20,16 @@
     }
 
     var columnDefs = [
-        {headerName: "Repo Graphs",    field: "name", cellRenderer: detailsCell },
+        {headerName: "Name",           field: "name", sortable: true, filter: true },
+        {headerName: "Graphs",         field: "details1", cellRenderer: graphCell, },
         {headerName: "Stats",          field: "details2", cellRenderer: authorsStatsCell },
         {headerName: "Commits",        field: "details3", cellRenderer: commitFeedCell },
-        {headerName: "Author Total",   field: "author_total", sortable: true, filter: true },
-        {headerName: "Lines Changed",  field: "lines_changed", sortable: true, filter: true },
-        {headerName: "Lines Added",    field: "lines_added", sortable: true, filter: true },
-        {headerName: "Lines Removed",  field: "lines_removed", sortable: true, filter: true },
-        {headerName: "Commit Total",   field: "commit_total", sortable: true, filter: true },
+        {headerName: "Authors",        field: "author_total", sortable: true, filter: true },
+        {headerName: "L+",             field: "lines_added", sortable: true, filter: true },
+        {headerName: "L-",             field: "lines_removed", sortable: true, filter: true },
+        {headerName: "#Commits",       field: "commit_total", sortable: true, filter: true },
         {headerName: "Days Active",    field: "days_active", sortable: true, filter: true },
+        {headerName: "Last Scanned",   field: "last_scanned", sortable: true, filter: true, type: 'dateColumn' }
     ];
 
     var rowData = {{ repo_table | safe }};

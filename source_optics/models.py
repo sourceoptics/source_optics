@@ -115,7 +115,7 @@ class Repository(models.Model):
 
     name = models.CharField(db_index=True, max_length=64, blank=False, null=False, validators=[validate_repo_name])
 
-    organization = models.ForeignKey(Organization, db_index=True, on_delete=models.SET_NULL, null=True)
+    organization = models.ForeignKey(Organization, db_index=True, on_delete=models.SET_NULL, null=True, related_name='repos')
     enabled = models.BooleanField(default=True, help_text='if false, disable scanning')
     last_scanned = models.DateTimeField(blank=True, null=True)
 
