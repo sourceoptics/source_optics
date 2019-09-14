@@ -2,21 +2,22 @@
 
 <head>
 <title>{{ title }}</title>
-  {% load static %}
+
+{% load static %}
 
 
-  <!-- FIXME: would be nice to compile these together to one local file -->
 <script src="/source_optics/static/vendor/vega-5.js"></script>
 <script src="/source_optics/static/vendor/vega-lite-3.js"></script>
 <script src="/source_optics/static/vendor/vega-embed-4.js"></script>
 <script src="/source_optics/static/vendor/jquery-3.3.1.min.js"></script>
-<script type="text/javascript" src="/source_optics/static/vendor/jquery.lazy-1.7.1.min.js"></script>
-<script type="text/javascript" src="/source_optics/static/vendor/jquery.lazy.ajax-1.7.1.min.js"></script>
-<link rel="stylesheet" href="/source_optics/static/vendor/bootstrap-4.3.1.min.css"/>
+<script src="/source_optics/static/vendor/jquery.lazy-1.7.1.min.js"></script>
+<script src="/source_optics/static/vendor/jquery.lazy.ajax-1.7.1.min.js"></script>
 <script src="/source_optics/static/vendor/popper-1.14.7.min.js"></script>
 <script src="/source_optics/static/vendor/bootstrap-4.3.1.min.js"></script>
 <script src="/source_optics/static/vendor/ag-grid-community.min.noStyle.js"></script>
 <script src="/source_optics/static/vendor/fontawesome-5.10.2/js/all.min.js"></script>
+
+<link rel="stylesheet" href="/source_optics/static/vendor/bootstrap-4.3.1.min.css"/>
 <link rel="stylesheet" href="/source_optics/static/vendor/ag-grid.css"/>
 <link rel="stylesheet" href="/source_optics/static/vendor/ag-theme-balham.css"/>
 <link rel="stylesheet" href="/source_optics/static/main.css">
@@ -27,6 +28,7 @@ $(function() {
     $("div[data-src]").Lazy();
 });
 </script>
+
 
 </head>
 

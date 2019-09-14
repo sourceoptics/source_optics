@@ -73,6 +73,8 @@ def author_stats_table(scope, limit=None):
     should really be a boolean.  The limit parameter is not yet used.
     """
 
+    # FIXME: this performs one query PER author and could be rewritten to be a LOT more intelligent.
+
     results = []
 
 
@@ -82,7 +84,8 @@ def author_stats_table(scope, limit=None):
 
     authors = None
     if scope.repo:
-        authors = Author.authors(scope.repo, scope.start, scope.end)
+        # this author ordering is not optimal, ideally we should use display_name if set, and then if not, email
+        authors = Author.authors(scope.repo, scope.start, scope.end).order_by('email')
 
     def add_stat(author, repo):
         stat1 = Statistic.queryset_for_range(repo, author=author, start=scope.start, end=scope.end, interval=scope.interval)

@@ -21,25 +21,27 @@
 
 
     var columnDefs = [
-        {headerName: "Author",         field: "author", sortable: true, filter: true, cellRenderer: authorCell },
+        {headerName: "Author",         field: "author", sortable: true, filter: true, cellRenderer: authorCell, resizeable: true },
         {% if not repo %}
-        {headerName: "Repo",           field: "repo", sortable: true, filter: true, cellRenderer: repoCell },
+        {headerName: "Repo",           field: "repo", sortable: true, filter: true, cellRenderer: repoCell, resizeable: true },
         {% endif %}
-        {headerName: "L+",             field: "lines_added", sortable: true, filter: true },
-        {headerName: "L-",             field: "lines_removed", sortable: true, filter: true },
-        {headerName: "Commits",        field: "commit_total", sortable: true, filter: true },
+        {headerName: "L+",             field: "lines_added", sortable: true, filter: true, resizeable: true },
+        {headerName: "L-",             field: "lines_removed", sortable: true, filter: true, resizeable: true },
+        {headerName: "Commits",        field: "commit_total", sortable: true, filter: true, resizeable: true},
         {% comment %}
         # it seems more useful to show creates/edits/moves ... correct?
-        {headerName: "Files",          field: "files_changed", sortable: true, filter: true },
+        {headerName: "Files",          field: "files_changed", sortable: true, filter: true, resizeable: true },
         {% endcomment %}
-        {headerName: "Creates",        field: "creates", sortable: true, filter: true },
-        {headerName: "Edits",          field: "edits", sortable: true, filter: true },
-        {headerName: "Moves",          field: "moves", sortable: true, filter: true },
-        {headerName: "Days",           field: "days_active", sortable: true, filter: true },
-        {headerName: "Missing For",    field: "days_since_seen", sortable: true, filter: true },
-        {headerName: "Earliest",       field: "earliest_commit_date", type: 'dateColumn', sortable: true, filter: true },
-        {headerName: "Latest",         field: "latest_commit_date", type: 'dateColumn', sortable: true, filter: true },
-        {headerName: "Longevity",      field: "longevity", sortable: true, filter: true }
+        {headerName: "Creates",        field: "creates", sortable: true, filter: true, resizeable: true },
+        {headerName: "Edits",          field: "edits", sortable: true, filter: true, resizeable: true },
+        {headerName: "Moves",          field: "moves", sortable: true, filter: true, resizeable: true },
+        {headerName: "Days",           field: "days_active", sortable: true, filter: true, resizeable: true },
+        {% comment %}
+        {headerName: "Missing For",    field: "days_since_seen", sortable: true, filter: true, resizeable: true },
+        {headerName: "Earliest",       field: "earliest_commit_date", type: 'dateColumn', sortable: true, filter: true, resizeable: true },
+        {% endcomment %}
+        {headerName: "Latest",         field: "latest_commit_date", type: 'dateColumn', sortable: true, filter: true, resizeable: true },
+        {headerName: "Longevity",      field: "longevity", sortable: true, filter: true, resizeable: true }
 
     ];
 

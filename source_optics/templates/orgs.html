@@ -29,8 +29,13 @@
       columnDefs: columnDefs,
       rowData: rowData,
       paginationAutoPageSize: true,
-      pagination: true
+      pagination: true,
+      onFirstDataRendered: onFirstDataRendered
     };
+
+  function onFirstDataRendered(params) {
+     params.api.sizeColumnsToFit();
+  }
 
   var eGridDiv = document.querySelector('#myGrid');
   thisGrid = new agGrid.Grid(eGridDiv, gridOptions);

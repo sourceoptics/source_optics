@@ -6,24 +6,16 @@
 
   <script type="text/javascript" charset="utf-8">
 
-    function graphCell(params) {
-        return "<a href='/repo/" + params.value + "?start={{ start_str }}&end={{ end_str }}&intv={{ intv }}&org={{ org.pk }}'>go</a>";
-    }
-
-    function authorsStatsCell(params) {
-        return "<a href='/report/author_stats?start={{ start_str }}&end={{ end_str }}&repo=" + params.value + "&org={{ org.pk }}'>go</a>";
-    }
-
-    <!-- TODO: use FontAwesome icons -->
-    function commitFeedCell(params) {
-        return "<a href='/report/commits?start={{ start_str }}&end={{ end_str }}&repo=" + params.value + "&org={{ org.pk }}'>go</a>";
+    function navCell(params) {
+         var graphs = "<a href='/repo/" + params.value + "?start={{ start_str }}&end={{ end_str }}&intv={{ intv }}&org={{ org.pk }}'><i class='fas fa-chart-line'></i></a>&nbsp;";
+         var author_stats = "<a href='/report/author_stats?start={{ start_str }}&end={{ end_str }}&repo=" + params.value + "&org={{ org.pk }}'><i class='fas fa-users'></i></a>&nbsp;";
+         var commit_feed = "<a href='/report/commits?start={{ start_str }}&end={{ end_str }}&repo=" + params.value + "&org={{ org.pk }}'><i class='fas fa-rss-square'></i></a>&nbsp;";
+         return graphs + author_stats + commit_feed;
     }
 
     var columnDefs = [
         {headerName: "Name",           field: "name", sortable: true, filter: true },
-        {headerName: "Graphs",         field: "details1", cellRenderer: graphCell, },
-        {headerName: "Stats",          field: "details2", cellRenderer: authorsStatsCell },
-        {headerName: "Commits",        field: "details3", cellRenderer: commitFeedCell },
+        {headerName: "Explore",        field: "details1", cellRenderer: navCell, },
         {headerName: "Authors",        field: "author_total", sortable: true, filter: true },
         {headerName: "L+",             field: "lines_added", sortable: true, filter: true },
         {headerName: "L-",             field: "lines_removed", sortable: true, filter: true },
@@ -38,8 +30,13 @@
       columnDefs: columnDefs,
       rowData: rowData,
       paginationAutoPageSize: true,
-      pagination: true
+      pagination: true,
+      onFirstDataRendered: onFirstDataRendered,
     };
+
+    function onFirstDataRendered(params) {
+         params.api.sizeColumnsToFit();
+    }
 
   var eGridDiv = document.querySelector('#myGrid');
   thisGrid = new agGrid.Grid(eGridDiv, gridOptions);
