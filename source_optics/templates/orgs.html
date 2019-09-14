@@ -1,17 +1,38 @@
 {% include 'header.html' %}
 
 <h1>Organizations</h1>
-<table>
-    {% for org in orgs %}
-    <ul>
-        <li><a href="/org/{{ org.pk }}/repos?start={{ start_str }}&end={{ end_str }}&intv={{ intv }}">{{ org.name }}</a></li>
-    </ul>
-    {% endfor %}
-</table>
 
 {% if not orgs_count %}
    There are no organizations in the system yet. Visit the <A HREF="/admin">Admin View</A> to create some
    credentials and organizations.  Refer to the install documentation if you have questions.
+{% else %}
+
+<div id="myGrid" class="ag-theme-balham"></div>
+
+  <script type="text/javascript" charset="utf-8">
+
+    function detailsCell(params) {
+        return "<a href='/org/" + params.value + "'>repos</a>";
+    }
+
+    var columnDefs = [
+        {headerName: "Organization",    field: "name", filter: true, sortable: true },
+        {headerName: "Repos",           field: "repos", cellRenderer: detailsCell },
+
+    ];
+
+    var rowData = {{ orgs_table | safe }};
+
+    var gridOptions = {
+      columnDefs: columnDefs,
+      rowData: rowData
+    };
+
+  var eGridDiv = document.querySelector('#myGrid');
+  thisGrid = new agGrid.Grid(eGridDiv, gridOptions);
+
+  </script>
+
 {% endif %}
 
 {% include 'footer.html' %}

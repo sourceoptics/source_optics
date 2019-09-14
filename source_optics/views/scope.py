@@ -28,7 +28,7 @@ class Scope(object):
         'repos', 'repo', 'page_size', 'page', 'author', 'author_email', 'author_domain', 'context'
     ]
 
-    def __init__(self, request, org=None, repo=None, add_repo_table=False):
+    def __init__(self, request, org=None, repo=None, add_repo_table=False, add_orgs_table=False):
         """
         Get objects from the URL parameters.
         """
@@ -141,6 +141,9 @@ class Scope(object):
 
         if add_repo_table:
             context['repo_table'] = reports.repo_table(self)
+
+        if add_orgs_table:
+            context['orgs_table'] = reports.orgs_table(self)
 
         self.context = context
 

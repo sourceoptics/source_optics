@@ -125,3 +125,15 @@ def repo_table(scope): # repos, start, end):
         results.append(stat2)
     results = sorted(results, key=lambda x: x['name'])
     return json.dumps(results)
+
+def orgs_table(scope):
+
+    results = []
+    for org in scope.orgs:
+        row = dict()
+        row['name'] = org.name
+        # for web links in chart
+        for x in [ 'details1', 'details2', 'details3']:
+            row[x] = org.pk
+        results.append(row)
+    return json.dumps(results)

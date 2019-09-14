@@ -229,7 +229,7 @@ def orgs(request):
     the index page for the app, presently, lists all organizations.  This should be morphed to a generic dashboard
     that also lists the orgs.
     """
-    scope = Scope(request)
+    scope = Scope(request, add_orgs_table=True)
     scope.context['title'] = "Source Optics: index"
     return render(request, 'orgs.html', context=scope.context)
 
