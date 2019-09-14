@@ -13,13 +13,13 @@
 
     // FIXME: URL should be /repos?org=1
     function detailsCell(params) {
-        return "<a href='/org/" + params.value + "/repos'>go</a>";
+        return "<a href='/org/" + params.value + "/repos'><span><i class='fas fa-database'></i></span></a>"
     }
 
     var columnDefs = [
         {headerName: "Organization",    field: "name", filter: true, sortable: true },
-        {headerName: "Repo Count",      field: "repo_count", filter: true, sortable: true },
         {headerName: "Explore",         field: "details1", cellRenderer: detailsCell },
+        {headerName: "Repo Count",      field: "repo_count", filter: true, sortable: true },
 
     ];
 
@@ -27,7 +27,9 @@
 
     var gridOptions = {
       columnDefs: columnDefs,
-      rowData: rowData
+      rowData: rowData,
+      paginationAutoPageSize: true,
+      pagination: true
     };
 
   var eGridDiv = document.querySelector('#myGrid');
