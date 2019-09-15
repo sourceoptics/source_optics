@@ -50,7 +50,6 @@ def execute_command(repo, command, input_text=None, env=None, log=True, timeout=
         os.chdir(chdir)
 
     # FIXME: standard logging
-    print("(%s): %s" % (repo.name, command))
 
     timeout_cmd = get_timeout()
 
@@ -68,9 +67,10 @@ def execute_command(repo, command, input_text=None, env=None, log=True, timeout=
     if env and sock:
         env['SSH_AUTH_SOCK'] = sock
 
-
-    print(command)
-    process = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+    # FIXME: use standard logging
+    print("(%s): %s" % (repo.name, command))
+    process = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                               # stderr=subprocess.STDOUT,
                                shell=shell, env=env)
 
 
@@ -88,7 +88,6 @@ def execute_command(repo, command, input_text=None, env=None, log=True, timeout=
         encoding='utf-8',
         errors='replace'
     )
-    #if len(input_text):
     stdin.write(input_text)
     stdin.close()
 
@@ -124,7 +123,6 @@ def execute_command(repo, command, input_text=None, env=None, log=True, timeout=
 
     if process.returncode != 0:
         raise Exception("command failed: rc=%s" % process.returncode)
-
 
     if capture:
         return out

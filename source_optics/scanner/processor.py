@@ -121,7 +121,8 @@ class RepoProcessor:
             agent_manager.add_key(repo, repo.organization.credential)
             return True
         else:
-            raise Exception("repo checkout of %s requires SSH credentials" % repo.name)
+            # FIXME: add typed exceptions with try/catch, so the processor can try other repos
+            raise Exception("Failed. The url for the repo '%s' does not start with http:// or https:// and no SSH key has been set for the organization" % repo.name)
 
     @classmethod
     def finalize_commit_scan_info(cls, repo, scan_time_start):
