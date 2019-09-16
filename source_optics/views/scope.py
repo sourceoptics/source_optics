@@ -21,59 +21,35 @@ from source_optics.models import (Organization, Repository, Author)
 import source_optics.models as models
 from . import reports
 
+
+def is_int(x):
+    try:
+        int(x)
+        return True
+    except:
+        return False
+
 class Scope(object):
 
     __slots__ = [
         'start', 'end', 'start_str', 'end_str', 'interval', 'org', 'orgs', 'orgs_count',
-        'repos', 'repo', 'page_size', 'page', 'author', 'author_email', 'author_domain', 'context'
+        'repos', 'repo', 'page_size', 'page', 'author', 'context', 'add_repo_table', 'add_orgs_table',
+        'request'
     ]
 
-    def __init__(self, request, org=None, repo=None, add_repo_table=False, add_orgs_table=False):
+    def _compute_start_and_end(self):
         """
-        Get objects from the URL parameters.
+        Most pages can specify a start and end date
         """
 
-        # FIXME: overdo for code cleanup
-
-        assert request is not None
-
-        start = request.GET.get('start', None)
-        end = request.GET.get('end', None)
-        interval = request.GET.get('intv', 'WK')
-        self.page_size = request.GET.get('page_size', 100)
-        self.page = request.GET.get('page', 1)
-        self.author_email = request.GET.get('author_email', None)
-        self.author_domain = request.GET.get('author_domain', None)
-        self.interval = interval
-        if not org:
-            org = request.GET.get('org', None)
-        if not repo:
-            repo = request.GET.get('repo', None)
-
-        author = request.GET.get('author', None)
-        if author:
-            try:
-                int(author)
-                self.author = Author.objects.get(pk=author)
-            except:
-                self.author = Author.objects.get(email=author)
-        else:
-            self.author = None
-
-        # FIXME: a side effect, but important to have somewhere, should be Django middleware?
-        models.cache_clear()
-
-        self.interval = interval
-        self.orgs = Organization.objects.order_by('name').all()
-
-        if interval is None:
-            interval='WK'
+        start = self.request.GET.get('start', None)
+        end = self.request.GET.get('end', None)
 
         if end == '_' or not end:
             end = timezone.now()
         elif end is not None:
             end = datetime.datetime.strptime(end, "%Y-%m-%d")
-        self.end = end + datetime.timedelta(days=1) # start of tomorrow
+        self.end = end + datetime.timedelta(days=1)  # start of tomorrow
 
         if start == '_' or not start:
             start = datetime.datetime.strptime("1970-01-01", "%Y-%m-%d")
@@ -82,41 +58,105 @@ class Scope(object):
         self.start = start
 
 
-        self.repo = None
-        if org:
-            try:
-                int(org)
-                self.org = Organization.objects.get(pk=int(org))
-            except:
-                self.org = Organization.objects.get(name=int(org))
-            if repo:
-                try:
-                    int(repo)
-                    self.repo = Repository.objects.get(pk=repo, organization=self.org)
-                except:
-                    print("repo", repo)
-                    print("org", self.org)
-                    self.repo = Repository.objects.get(name=repo, organization=self.org)
+    def _compute_pagination(self):
+        """
+        Certain pages like the commit feed are paginated
+        """
+
+        self.page_size = self.request.GET.get('page_size', 100)
+        self.page = self.request.GET.get('page', 1)
+
+    def _compute_org(self):
+        """
+        The organization may be specified in the query string as a name or an int
+        """
+
+        if not self.org:
+            self.org = self.request.GET.get('org', None)
+        if self.org:
+            if is_int(self.org):
+                self.org = Organization.objects.get(pk=int(self.org))
+            else:
+                self.org = Organization.objects.get(name=self.org)
+
+    def _compute_author(self):
+        """
+        If the page takes an author, it may be an email or an int...
+        FIXME: Note that now that we have 'display_name' on author, we really should search that also.
+        """
+
+        author = self.request.GET.get('author', None)
+
+        if author:
+            if is_int(author):
+                print("a1")
+                self.author = Author.objects.get(pk=author)
+            else:
+                print("a2 (%s)" % author)
+                # if we have an email like 12345+noreply@github.com
+                # the query string "+" comes back as a space for the "+" and this fixes it. As spaces
+                # are illegal in email this should be ok.
+                author = author.replace(" ","+")
+                self.author = Author.objects.get(email=author)
         else:
-            self.org = None
-            if repo:
-                try:
-                    int(repo)
-                    self.repo = Repository.objects.get(pk=repo)
-                except:
-                    # there could be more than one, this might not lead to an error
-                    self.repo = Repository.objects.get(name=repo)
+            self.author = None
+
+    def _compute_interval(self):
+        self.interval = self.request.GET.get('intv', 'WK')
+
+    def _compute_repo(self):
+        """
+        The repo is an int or a string, but is filtered by the selected organization, as repo names
+        should only be unique within an organization.
+        """
+        # FIXME: this is still a bit of a mess
+
+        if not self.repo:
+            self.repo = self.request.GET.get('repo', None)
+
+        if self.repo:
+            if self.org:
+                if is_int(self.repo):
+                    self.repo = Repository.objects.get(pk=self.repo, organization=self.org)
+                else:
+                    self.repo = Repository.objects.get(name=self.repo, organization=self.org)
+            else:
+                if is_int(self.repo):
+                    self.repo = Repository.objects.get(pk=self.repo)
+                else:
+                    # there could be more than on (ex: from a different org), this might not lead to an error
+                    self.repo = Repository.objects.get(name=self.repo)
                 self.org = self.repo.organization
 
-        if org:
-            self.repos = Repository.objects.filter(organization=org).select_related('organization')
+        if self.org:
+            self.repos = Repository.objects.filter(organization=self.org).select_related('organization')
         else:
             self.repos = Repository.objects.all()
 
-
+    def _compute_orgs(self):
+        """
+        Any page should have access to the full organization list to populate an organization switch control
+        """
+        self.orgs = Organization.objects.order_by('name').all()
         self.orgs_count = self.orgs.count()
 
-        context = dict(
+    def _add_tables(self):
+        """
+        Repo table is the list of all repos, org table is the list of all orgs.  These are used for
+        page indexes and should really NOT be built here inside of Scope (FIXME).
+        """
+
+        if self.add_repo_table:
+            self.context['repo_table'] = reports.repo_table(self)
+
+        if self.add_orgs_table:
+            self.context['orgs_table'] = reports.orgs_table(self)
+
+    def _compute_template_context(self):
+        """
+        Here's where we build the list of variables that will be available in Django templates.
+        """
+        self.context = dict(
             author=self.author,
             orgs=self.orgs.order_by('name').all(),
             org=self.org,
@@ -128,23 +168,50 @@ class Scope(object):
             intv=self.interval,
             title="Source Optics"
         )
+        self._add_start_and_end_strings()
+        self._add_tables()
 
-        if start and end:
-            self.start_str = start.strftime("%Y-%m-%d")
-            self.end_str = end.strftime("%Y-%m-%d")
+    def _add_start_and_end_strings(self):
+        """
+        Add formatted versions of the start and end times to the context for use in templates
+        """
+        if self.start and self.end:
+            self.start_str = self.start.strftime("%Y-%m-%d")
+            self.end_str = self.end.strftime("%Y-%m-%d")
         else:
             self.start_str = None
             self.end_str = None
 
-        context['start_str'] = self.start_str
-        context['end_str'] = self.end_str
+        self.context['start_str'] = self.start_str
+        self.context['end_str'] = self.end_str
 
-        if add_repo_table:
-            context['repo_table'] = reports.repo_table(self)
+    def __init__(self, request, org=None, repo=None, add_repo_table=False, add_orgs_table=False):
 
-        if add_orgs_table:
-            context['orgs_table'] = reports.orgs_table(self)
+        """
+        A scope object parses the request query string and makes available scope.context to django
+        templates. It is also allowed to raise any errors needed based on invalid query strings.
+        """
 
-        self.context = context
+        # FIXME: get org and repo from the query strings and remove them from the URL structure?
+        self.org = org
+        self.repo = repo
 
+        self.add_repo_table = add_repo_table
+        self.add_orgs_table = add_orgs_table
+
+        assert request is not None
+
+        self.request = request
+        self._compute_pagination()
+        self._compute_interval()
+        self._compute_org()
+        self._compute_author()
+        self._compute_orgs()
+        self._compute_repo()
+
+        self._compute_start_and_end()
+        self._compute_template_context()
+
+        # FIXME: a side effect, but important to have somewhere, should be Django middleware?
+        models.cache_clear()
 

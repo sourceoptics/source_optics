@@ -3,9 +3,8 @@ import json
 from source_optics.models import (Author, Statistic, Commit)
 from django.core.paginator import Paginator
 
-def commits_feed(scope): # repos=None, organization=None, repo=None, start=None, end=None, author_email=None, author_domain=None, page_size=50, page=0):
+def commits_feed(scope):
 
-    # FIXME: looks like a function
     objs = None
 
     repo = scope.repo
@@ -13,11 +12,10 @@ def commits_feed(scope): # repos=None, organization=None, repo=None, start=None,
     organization = scope.org
     start = scope.start
     end = scope.end
-    author_email = scope.author_email
-    author_domain = scope.author_domain
-    #page = scope.page
-    #page_size = scope.page_size
+    author = scope.author
 
+
+    # FIXME: this looks like a method we should add to Scope() but only to be called when needed
     if repo and author:
         objs = Commit.objects.filter(repo=repo, author=author)
     elif repo:
@@ -28,14 +26,11 @@ def commits_feed(scope): # repos=None, organization=None, repo=None, start=None,
         objs = Commit.objects.filter(repo__organization=organization)
     else:
         raise Exception("?")
-
     if start and end:
         objs = objs.filter(commit_date__range=(start,end))
 
-    if author_email:
-        objs = objs.filter(author__email=author_email)
-    elif author_domain:
-        objs = objs.filter(author__email__contains="@%s" % author_domain)
+    if author:
+        objs = objs.filter(author__pk=author.pk)
 
     # all this nested filtering apparently can make bad queries, so we should probably unroll all of the above?
 
