@@ -75,7 +75,7 @@ For those wishing to try out Source Optics, it should run happily from a laptop.
 Installation
 ============
 
-Installation and operation is as with any standard Django application and is described in INSTALL.md.
+Installation and operation is as with any standard Django application and is described in [INSTALL.md](https://github.com/sourceoptics/source_optics/blob/master/INSTALL.md).
 
 Roadmap
 =======
@@ -85,7 +85,7 @@ See GitHub Projects
 Usage
 =====
 
-(Also described in INSTALL.md)
+(Also described in [INSTALL.md](https://github.com/sourceoptics/source_optics/blob/master/INSTALL.md))
 
 Once installed and running, add in data with the Django admin UI, ex: http://127.0.0.1:8000/servername/admin.
 Set up a credential, create an organization, add some repos.  Or use the CLI import command to import repos from GitHub.
