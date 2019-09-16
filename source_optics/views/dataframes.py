@@ -35,16 +35,19 @@ TIME_SERIES_FIELDS = [
     'days_active',
     'creates',
     'edits',
-    'moves'
+    'moves',
+    'repo'
 ]
 
 TZ = timezone.get_current_timezone()
 
-def get_interval(start, end):
+def get_interval(scope, start, end):
     """
     Attempts to decide on a good granularity for a graph when it is not provided.
     This is mostly a vestige and can probably be removed.
     """
+    if scope.interval:
+        return scope.interval
     delta = end-start
     if delta.days > 365:
         return 'WK'
@@ -61,7 +64,7 @@ def top_authors(scope, aspect='commit_total', limit=10):
     start = scope.start
     end = scope.end
 
-    interval = get_interval(start, end)
+    interval = get_interval(scope, start, end)
 
     filter_set = Statistic.objects.filter(
         interval=interval,
@@ -119,6 +122,7 @@ def _interval_queryset(scope, by_author=False, aspect=None, limit_top_authors=Fa
         if interval != 'LF':
             assert start is not None
             assert end is not None
+
             totals = Statistic.objects.select_related('repo', 'author').filter(
                 interval=interval,
                 repo=repo,
@@ -142,7 +146,7 @@ def _interval_queryset(scope, by_author=False, aspect=None, limit_top_authors=Fa
     return (totals.order_by('author','start_date').select_related('author'), None, None)
 
 
-def _interval_queryset_to_dataframe(totals=None, fields=None, limited_to=None, inverse=None):
+def _interval_queryset_to_dataframe(repo, totals=None, fields=None, inverse=None):
     """
     :param repo: repository object
     :param totals: a statistics queryset
@@ -163,7 +167,9 @@ def _interval_queryset_to_dataframe(totals=None, fields=None, limited_to=None, i
     # load the dataframe with the queryset results we have
     for t in totals:
         for f in fields:
-            if f in [ 'date', 'day' ]:
+            if f == 'repo':
+                data[f].append(repo.name)
+            elif f in [ 'date', 'day' ]:
                 data[f].append(str(t.start_date))
             elif f == 'author':
                 data[f].append(t.author.email)
@@ -187,7 +193,9 @@ def _interval_queryset_to_dataframe(totals=None, fields=None, limited_to=None, i
 
         for x in inverse.all():
             for f in fields:
-                if f == 'date' or f == 'day':
+                if f == 'repo':
+                    data[f].append(repo.name)
+                elif f == 'date' or f == 'day':
                     data[f].append(str(x['start_date']))
                 elif f in [ 'days_active', 'days_since_seen', 'longevity', 'days_active', 'average_commit_size', 'days_before_joined' ]:
                     # these aren't available in the aggregate, but we need a placeholder
@@ -210,25 +218,54 @@ def _stat_series(scope, by_author=False, interval=None, limit_top_authors=False,
 
 
     if not interval:
-        interval = get_interval(start, end)
+        interval = get_interval(scope, start, end)
 
     fields = TIME_SERIES_FIELDS[:]
     if by_author:
         fields.append('author')
 
+    # holds the data before we save a dataframe
 
-    (totals, limited_to_authors, inverse) = _interval_queryset(scope, by_author=by_author, aspect=aspect, limit_top_authors=limit_top_authors)
-    (pre_df, fields) = _interval_queryset_to_dataframe(totals=totals, fields=fields, limited_to=limited_to_authors, inverse=inverse)
-    df = pandas.DataFrame(pre_df, columns=fields)
+    df_data = dict()
+    limited_to_authors = None
+
+    if scope.multiple_repos_selected():
+
+        # getting dataframes for multiple repos - this form does NOT (yet?) support filtering by a single author
+        # and currently works by executing one set of queries per repo
+
+        for repo in scope.repos:
+
+            scope.repo = repo
+            (totals, limited_to_authors, inverse) = _interval_queryset(scope, by_author=by_author, aspect=aspect, limit_top_authors=limit_top_authors)
+
+            (pre_df, fields) = _interval_queryset_to_dataframe(repo, totals=totals, fields=fields, inverse=inverse)
+            for f in fields:
+                if not f in df_data:
+                    df_data[f] = []
+                df_data[f].extend(pre_df[f])
+
+    else:
+        # getting data for a single repo - this form supports optional filtering by author
+
+        (totals, limited_to_authors, inverse) = _interval_queryset(scope, by_author=by_author, aspect=aspect,
+                                                                   limit_top_authors=limit_top_authors)
+
+        (df_data, fields) = _interval_queryset_to_dataframe(scope.repo, totals=totals, fields=fields, inverse=inverse)
+
+
+
+    df = pandas.DataFrame(df_data, columns=fields)
     return (df, limited_to_authors)
 
-def team_time_series(scope): # repo, start=None, end=None, interval=None):
+def team_time_series(scope):
     (df, _) = _stat_series(scope, by_author=False)
-    return df
+    return (df, None)
 
-def author_time_series(scope): # repo, start=None, end=None, interval=None):
+def author_time_series(scope):
     (df, _) = _stat_series(scope, by_author=True)
-    return df
+    return (df, None)
+
 
 def top_author_time_series(scope, aspect=None):
     (df, top) = _stat_series(scope, by_author=True, aspect=aspect, limit_top_authors=True)

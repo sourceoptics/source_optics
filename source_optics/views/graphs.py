@@ -112,10 +112,17 @@ def time_plot(scope=None, df=None, repo=None, y=None, by_author=False, top=None,
             color=alt.Color('author', sort=top),
             tooltip=tooltips
         ).interactive()
+    elif not scope.multiple_repos_selected():
+        chart = alt.Chart(df, height=600, width=600).mark_line().encode(
+            x=alt.X('date:T', axis = alt.Axis(title = 'date', format = ("%b %Y")), scale=alt.Scale(zero=False, clamp=True)),
+            y=alt.Y(y, scale=alt.Scale(zero=False, clamp=True)),
+            tooltip=tooltips
+        ).interactive()
     else:
         chart = alt.Chart(df, height=600, width=600).mark_line().encode(
             x=alt.X('date:T', axis = alt.Axis(title = 'date', format = ("%b %Y")), scale=alt.Scale(zero=False, clamp=True)),
             y=alt.Y(y, scale=alt.Scale(zero=False, clamp=True)),
+            color=alt.Color('repo'), # FIXME: sort repos
             tooltip=tooltips
         ).interactive()
 

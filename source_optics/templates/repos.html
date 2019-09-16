@@ -2,9 +2,7 @@
 
 <h1>Organization: {{ org.name }}</h1>
 
-{% comment %}
 <button type="button" id="compareButton" class="btn btn-outline-secondary btn-sm">Compare</button>
-{% endcomment %}
 
 <form id="repoForm">
 <input type="hidden" name="_param_org" value="{{ org.id }}"/>
@@ -27,9 +25,7 @@
     }
 
     var columnDefs = [
-    {% comment %}
         {headerName: "",               field: "details1", cellRenderer: checkBoxCell, width: 60},
-    {% endcomment %}
         {headerName: "Name",           field: "name", sortable: true, filter: true },
         {headerName: "Explore",        field: "details2", cellRenderer: navCell, },
         {headerName: "Authors",        field: "author_total", sortable: true, filter: true },
@@ -58,15 +54,12 @@
   thisGrid = new agGrid.Grid(eGridDiv, gridOptions);
 
   $('#compareButton').click(function() {
-      alert("hi");
       var repos = [];
       $.each($("input[name='repo']:checked"), function(){
           repos.push($(this).val());
       });
       var repos_str = repos.join("+");
-      alert(repos_str);
       var new_url = "/graphs?org={{ org.pk }}&repos=" + repos_str + "&start={{ start_str }}&end={{ end_str}}";
-      console.log(new_url);
       window.location.href = new_url
   });
 

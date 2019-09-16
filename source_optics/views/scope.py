@@ -33,8 +33,8 @@ class Scope(object):
 
     __slots__ = [
         'start', 'end', 'start_str', 'end_str', 'interval', 'org', 'orgs', 'orgs_count',
-        'repos', 'repo', 'repos', 'repos_str', 'page_size', 'page', 'author', 'context', 'add_repo_table', 'add_orgs_table',
-        'request'
+        'repos', 'repo', 'repos', 'repos_str', 'page_size', 'page', 'author', 'context', 'add_repo_table',
+        'add_orgs_table', 'available_repos', 'request'
     ]
 
     def _compute_start_and_end(self):
@@ -129,31 +129,35 @@ class Scope(object):
                     self.repo = Repository.objects.get(name=self.repo)
                 self.org = self.repo.organization
 
-        if not repos:
-            # if the user hasn't passed in a list of repositories...
-            if self.org:
-                self.repos = Repository.objects.filter(organization=self.org).select_related('organization')
-            else:
-                self.repos = Repository.objects.all()
-
-        else:
-
+        if  repos:
+            # if the user has passed in a list of repositories...
             self.repos_str = None
+            print("REPOS WAS: %s" % repos)
             if isinstance(repos, str) and repos != "None":
                 # FIXME: how does it get to be string None?
-                self.repos_str=repos
+                print("DEBUG: here we are")
                 repos = repos = [ int(x) for x in repos.split(" ") ]
                 if self.org:
                     self.repos = Repository.objects.filter(pk__in=repos, organization=self.org).select_related('organization')
                 else:
                     self.repos = Repository.objects.filter(pk__in=repos).select_related('organization')
                 self.repo = self.repos.first()
+        else:
+            self.repos = None
+
 
         if self.repos_str is None:
             if self.request.GET.get('repos',None) is not None:
-                self.repos_str = "+".join([ x.pk for x in self.repos.all() ])
+                self.repos_str = "+".join([ str(x.pk) for x in self.repos.all() ])
             elif self.repo:
                 self.repos_str = str(self.repo.pk)
+
+        # available repos is the list of all repos, for lists or dropdowns, not the selected repos list
+        if self.org:
+            self.available_repos = Repository.objects.filter(organization=self.org).select_related('organization')
+        else:
+            self.available_repos = Repository.objects.select_related('organization')
+
 
     def _compute_orgs(self):
         """
@@ -183,7 +187,7 @@ class Scope(object):
             orgs=self.orgs.order_by('name').all(),
             org=self.org,
             orgs_count=self.orgs.count(),
-            repos=self.repos.all(),
+            available_repos=self.available_repos.all(),
             start=self.start,
             end=self.end,
             repo=self.repo,
@@ -191,8 +195,13 @@ class Scope(object):
             intv=self.interval,
             title="Source Optics"
         )
+        if self.repos:
+            self.context['repos'] = self.repos.all()
+        else:
+            self.context['repos'] = None
         self._add_start_and_end_strings()
         self._add_tables()
+        print("the value of repos is %s" % self.repos)
 
     def _add_start_and_end_strings(self):
         """
@@ -207,6 +216,14 @@ class Scope(object):
 
         self.context['start_str'] = self.start_str
         self.context['end_str'] = self.end_str
+
+    def multiple_repos_selected(self):
+        print("REPOS STR=%s" % self.repos_str)
+        if self.repos_str is None:
+            return False
+        if not ('+' in self.repos_str):
+            return False
+        return True
 
     def __init__(self, request, org=None, repo=None, add_repo_table=False, add_orgs_table=False):
 

@@ -112,7 +112,7 @@ def repo_table(scope): # repos, start, end):
     """
 
     results = []
-    for repo in scope.repos:
+    for repo in scope.available_repos:
         stats = Statistic.queryset_for_range(repo, author=None, interval='DY', start=scope.start, end=scope.end)
         stat2 = Statistic.compute_interval_statistic(stats, interval='DY', repo=repo, author=None, start=scope.start, end=scope.end)
         stat2 = stat2.to_dict()

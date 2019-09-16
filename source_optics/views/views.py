@@ -119,56 +119,82 @@ def graphs(request):
     Generates a page full of graphs that is relatively context sensitive based on the query string
     """
     scope = Scope(request)
-    assert scope.repo is not None
-    scope.context['title'] = "Source Optics: %s repo (graphs)" % scope.repo.name
+    if scope.multiple_repos_selected():
+        scope.context['title'] = "Source Optics: Repo Comparison Graphs"
+    else:
+        scope.context['title'] = "Source Optics: %s Repo Graphs" % scope.repo.name
     return render(request, 'graphs.html', context=scope.context)
 
 def graph_participation(request):
     scope = Scope(request)
-    df = dataframes.team_time_series(scope)
+    (df, _) = dataframes.team_time_series(scope)
     scope.context['graph'] = graph_module.time_plot(df=df, scope=scope, y='author_total')
     return render(request, 'graph.html', context=scope.context)
 
 def graph_files_changed(request):
     scope = Scope(request)
-    df = dataframes.team_time_series(scope)
+    (df, _) = dataframes.team_time_series(scope)
     scope.context['graph'] = graph_module.time_plot(df=df, scope=scope, y='files_changed')
     return render(request, 'graph.html', context=scope.context)
 
 def graph_lines_changed(request):
     scope = Scope(request)
-    (df, top) = dataframes.top_author_time_series(scope, aspect='lines_changed')
-    scope.context['graph'] = graph_module.time_plot(df=df, scope=scope, y='lines_changed', top=top, by_author=True, aspect='commit_total')
+    if scope.multiple_repos_selected():
+        (df, top) = dataframes.team_time_series(scope)
+        scope.context['graph'] = graph_module.time_plot(df=df, scope=scope, y='lines_changed', top=top, aspect='repo')
+    else:
+        (df, top) = dataframes.top_author_time_series(scope, aspect='lines_changed')
+        scope.context['graph'] = graph_module.time_plot(df=df, scope=scope, y='lines_changed', top=top, by_author=True, aspect='commit_total')
     return render(request, 'graph.html', context=scope.context)
 
+# FIXME: make a function, repeat less
 def graph_commits(request):
     scope = Scope(request)
-    (df, top) = dataframes.top_author_time_series(scope, aspect='commit_total')
-    scope.context['graph'] = graph_module.time_plot(df=df, scope=scope, y='commit_total', top=top, by_author=True, aspect='commit_total')
+    assert scope.repos is None
+    assert scope.multiple_repos_selected()
+
+    if scope.multiple_repos_selected():
+        (df, top) = dataframes.team_time_series(scope)
+        scope.context['graph'] = graph_module.time_plot(df=df, scope=scope, y='commit_total', top=top, aspect='repo')
+    else:
+        (df, top) = dataframes.top_author_time_series(scope, aspect='commit_total')
+        scope.context['graph'] = graph_module.time_plot(df=df, scope=scope, y='commit_total', top=top, by_author=True, aspect='commit_total')
     return render(request, 'graph.html', context=scope.context)
 
 def graph_creates(request):
     scope = Scope(request)
-    (df, top) = dataframes.top_author_time_series(scope, aspect='commit_total')
-    scope.context['graph'] = graph_module.time_plot(df=df, scope=scope, y='creates', top=top, by_author=True, aspect='commit_total')
+    if scope.multiple_repos_selected():
+        (df, top) = dataframes.team_time_series(scope)
+        scope.context['graph'] = graph_module.time_plot(df=df, scope=scope, y='creates', top=top, aspect='repo')
+    else:
+        (df, top) = dataframes.top_author_time_series(scope, aspect='commit_total')
+        scope.context['graph'] = graph_module.time_plot(df=df, scope=scope, y='creates', top=top, by_author=True, aspect='commit_total')
     return render(request, 'graph.html', context=scope.context)
 
 def graph_edits(request):
     # FIXME: DRY on all of these
     scope = Scope(request)
-    (df, top) = dataframes.top_author_time_series(scope, aspect='commit_total')
-    scope.context['graph'] = graph_module.time_plot(df=df, scope=scope, y='edits', top=top, by_author=True, aspect='commit_total')
+    if scope.multiple_repos_selected():
+        (df, top) = dataframes.team_time_series(scope)
+        scope.context['graph'] = graph_module.time_plot(df=df, scope=scope, y='edits', top=top, aspect='repo')
+    else:
+        (df, top) = dataframes.top_author_time_series(scope, aspect='commit_total')
+        scope.context['graph'] = graph_module.time_plot(df=df, scope=scope, y='edits', top=top, by_author=True, aspect='commit_total')
     return render(request, 'graph.html', context=scope.context)
 
 def graph_moves(request):
     scope = Scope(request)
-    (df, top) = dataframes.top_author_time_series(scope, aspect='commit_total')
-    scope.context['graph'] = graph_module.time_plot(df=df, scope=scope, y='moves', top=top, by_author=True, aspect='commit_total')
+    if scope.multiple_repos_selected():
+        (df, top) = dataframes.team_time_series(scope)
+        scope.context['graph'] = graph_module.time_plot(df=df, scope=scope, y='moves', top=top, aspect='repo')
+    else:
+        (df, top) = dataframes.top_author_time_series(scope, aspect='commit_total')
+        scope.context['graph'] = graph_module.time_plot(df=df, scope=scope, y='moves', top=top, by_author=True, aspect='commit_total')
     return render(request, 'graph.html', context=scope.context)
 
 def graph_commit_size(request):
     scope = Scope(request)
-    df = dataframes.team_time_series(scope)
+    (df, top) = dataframes.team_time_series(scope)
     scope.context['graph'] = graph_module.time_plot(df=df, scope=scope, y='average_commit_size')
     return render(request, 'graph.html', context=scope.context)
 
@@ -179,7 +205,7 @@ def report_author_stats(request):
     limit = None
     scope = Scope(request)
     data = reports.author_stats_table(scope, limit=limit)
-    if scope.repo:
+    if scope.multiple_repos_selected():
         # FIXME: this should be done in the template
         scope.context['title'] = "Source Optics: stats for repo=%s" % scope.repo.name
     else:
