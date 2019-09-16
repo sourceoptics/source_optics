@@ -132,10 +132,8 @@ class Scope(object):
         if  repos:
             # if the user has passed in a list of repositories...
             self.repos_str = None
-            print("REPOS WAS: %s" % repos)
             if isinstance(repos, str) and repos != "None":
                 # FIXME: how does it get to be string None?
-                print("DEBUG: here we are")
                 repos = repos = [ int(x) for x in repos.split(" ") ]
                 if self.org:
                     self.repos = Repository.objects.filter(pk__in=repos, organization=self.org).select_related('organization')
@@ -201,7 +199,6 @@ class Scope(object):
             self.context['repos'] = None
         self._add_start_and_end_strings()
         self._add_tables()
-        print("the value of repos is %s" % self.repos)
 
     def _add_start_and_end_strings(self):
         """
@@ -218,7 +215,6 @@ class Scope(object):
         self.context['end_str'] = self.end_str
 
     def multiple_repos_selected(self):
-        print("REPOS STR=%s" % self.repos_str)
         if self.repos_str is None:
             return False
         if not ('+' in self.repos_str):

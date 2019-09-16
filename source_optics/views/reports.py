@@ -135,7 +135,6 @@ def orgs_table(scope):
         row = dict()
         row['name'] = org.name
         row['repo_count'] = org.repos.count()
-        print("repo_count=%s" % row['repo_count'])
         row['details1'] = org.pk
         results.append(row)
     return json.dumps(results)
