@@ -2,20 +2,36 @@
 
 <h1>Organization: {{ org.name }}</h1>
 
+{% comment %}
+<button type="button" id="compareButton" class="btn btn-outline-secondary btn-sm">Compare</button>
+{% endcomment %}
+
+<form id="repoForm">
+<input type="hidden" name="_param_org" value="{{ org.id }}"/>
+<input type="hidden" name="_start" value="{{ start_str }}"/>
+<input type="hidden" name="_end" value="{{ end_str }}"/>
+
 <div id="myGrid" class="ag-theme-balham"></div>
 
   <script type="text/javascript" charset="utf-8">
 
+    function checkBoxCell(params) {
+        return "<input type='checkbox' name='repo' value='" + params.value + "'/>";
+    }
+
     function navCell(params) {
-         var graphs = "<a href='/repo/" + params.value + "?start={{ start_str }}&end={{ end_str }}&intv={{ intv }}&org={{ org.pk }}'><i class='fas fa-chart-line'></i></a>&nbsp;";
-         var author_stats = "<a href='/report/author_stats?start={{ start_str }}&end={{ end_str }}&repo=" + params.value + "&org={{ org.pk }}'><i class='fas fa-users'></i></a>&nbsp;";
-         var commit_feed = "<a href='/report/commits?start={{ start_str }}&end={{ end_str }}&repo=" + params.value + "&org={{ org.pk }}'><i class='fas fa-rss-square'></i></a>&nbsp;";
+         var graphs = "<a href='/graphs?repo=" + params.value + "&start={{ start_str }}&end={{ end_str }}&intv={{ intv }}'><i class='fas fa-chart-line'></i></a>&nbsp;";
+         var author_stats = "<a href='/report/author_stats?start={{ start_str }}&end={{ end_str }}&repo=" + params.value + "'><i class='fas fa-users'></i></a>&nbsp;";
+         var commit_feed = "<a href='/report/commits?start={{ start_str }}&end={{ end_str }}&repo=" + params.value + "'><i class='fas fa-rss-square'></i></a>&nbsp;";
          return graphs + author_stats + commit_feed;
     }
 
     var columnDefs = [
+    {% comment %}
+        {headerName: "",               field: "details1", cellRenderer: checkBoxCell, width: 60},
+    {% endcomment %}
         {headerName: "Name",           field: "name", sortable: true, filter: true },
-        {headerName: "Explore",        field: "details1", cellRenderer: navCell, },
+        {headerName: "Explore",        field: "details2", cellRenderer: navCell, },
         {headerName: "Authors",        field: "author_total", sortable: true, filter: true },
         {headerName: "L+",             field: "lines_added", sortable: true, filter: true },
         {headerName: "L-",             field: "lines_removed", sortable: true, filter: true },
@@ -41,6 +57,21 @@
   var eGridDiv = document.querySelector('#myGrid');
   thisGrid = new agGrid.Grid(eGridDiv, gridOptions);
 
+  $('#compareButton').click(function() {
+      alert("hi");
+      var repos = [];
+      $.each($("input[name='repo']:checked"), function(){
+          repos.push($(this).val());
+      });
+      var repos_str = repos.join("+");
+      alert(repos_str);
+      var new_url = "/graphs?org={{ org.pk }}&repos=" + repos_str + "&start={{ start_str }}&end={{ end_str}}";
+      console.log(new_url);
+      window.location.href = new_url
+  });
+
   </script>
+
+</form>
 
 {% include 'footer.html' %}

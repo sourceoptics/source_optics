@@ -33,7 +33,7 @@ class Scope(object):
 
     __slots__ = [
         'start', 'end', 'start_str', 'end_str', 'interval', 'org', 'orgs', 'orgs_count',
-        'repos', 'repo', 'page_size', 'page', 'author', 'context', 'add_repo_table', 'add_orgs_table',
+        'repos', 'repo', 'repos', 'repos_str', 'page_size', 'page', 'author', 'context', 'add_repo_table', 'add_orgs_table',
         'request'
     ]
 
@@ -56,7 +56,6 @@ class Scope(object):
         else:
             start = datetime.datetime.strptime(start, "%Y-%m-%d")
         self.start = start
-
 
     def _compute_pagination(self):
         """
@@ -89,10 +88,8 @@ class Scope(object):
 
         if author:
             if is_int(author):
-                print("a1")
                 self.author = Author.objects.get(pk=author)
             else:
-                print("a2 (%s)" % author)
                 # if we have an email like 12345+noreply@github.com
                 # the query string "+" comes back as a space for the "+" and this fixes it. As spaces
                 # are illegal in email this should be ok.
@@ -109,7 +106,11 @@ class Scope(object):
         The repo is an int or a string, but is filtered by the selected organization, as repo names
         should only be unique within an organization.
         """
-        # FIXME: this is still a bit of a mess
+        # FIXME: this is a mess
+
+        self.repos_str = None
+
+        repos = self.request.GET.get('repos', None)
 
         if not self.repo:
             self.repo = self.request.GET.get('repo', None)
@@ -128,10 +129,31 @@ class Scope(object):
                     self.repo = Repository.objects.get(name=self.repo)
                 self.org = self.repo.organization
 
-        if self.org:
-            self.repos = Repository.objects.filter(organization=self.org).select_related('organization')
+        if not repos:
+            # if the user hasn't passed in a list of repositories...
+            if self.org:
+                self.repos = Repository.objects.filter(organization=self.org).select_related('organization')
+            else:
+                self.repos = Repository.objects.all()
+
         else:
-            self.repos = Repository.objects.all()
+
+            self.repos_str = None
+            if isinstance(repos, str) and repos != "None":
+                # FIXME: how does it get to be string None?
+                self.repos_str=repos
+                repos = repos = [ int(x) for x in repos.split(" ") ]
+                if self.org:
+                    self.repos = Repository.objects.filter(pk__in=repos, organization=self.org).select_related('organization')
+                else:
+                    self.repos = Repository.objects.filter(pk__in=repos).select_related('organization')
+                self.repo = self.repos.first()
+
+        if self.repos_str is None:
+            if self.request.GET.get('repos',None) is not None:
+                self.repos_str = "+".join([ x.pk for x in self.repos.all() ])
+            elif self.repo:
+                self.repos_str = str(self.repo.pk)
 
     def _compute_orgs(self):
         """
@@ -165,6 +187,7 @@ class Scope(object):
             start=self.start,
             end=self.end,
             repo=self.repo,
+            repos_str=self.repos_str,
             intv=self.interval,
             title="Source Optics"
         )

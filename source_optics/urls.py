@@ -31,24 +31,20 @@ router.register(r'commit', views.CommitViewSet)
 
 urlpatterns = [
 
-    # FIXME: move the app to use the django URL reversing function before changing URL structure.
-    # FIXME: UI - these should all be changed to use query strings, work just needs to be done later.
-    # FIXME: the org parameter is unneccessary when repo is specified.
-
     path('', views.orgs, name='orgs'),
+    # FIXME: use org in query string, else show all repos
     path('org/<org>/repos', views.repos, name='repos'),
-    path('repo/<repo>', views.repo, name='repo'),
-    # TODO: use the reverse url function vs having these URLs directly in templates
+    path('graphs', views.graphs, name='graphs'),
 
-    # GRAPHS
-    path('repo/<repo>/graph/participation', views.graph_participation, name='graph_participation'),
-    path('repo/<repo>/graph/commits', views.graph_commits, name='graph_commits'),
-    path('repo/<repo>/graph/lines_changed', views.graph_lines_changed, name='graph_lines_changed'),
-    path('repo/<repo>/graph/files_changed', views.graph_files_changed, name='graph_files_changed'),
-    path('repo/<repo>/graph/commit_size', views.graph_commit_size, name='graph_commit_size'),
-    path('repo/<repo>/graph/creates', views.graph_creates, name='graph_creates'),
-    path('repo/<repo>/graph/edits', views.graph_edits, name='graph_edits'),
-    path('repo/<repo>/graph/moves', views.graph_moves, name='graph_moves'),
+    # GRAPH snippets loaded from /graphs
+    path('graph/participation', views.graph_participation, name='graph_participation'),
+    path('graph/commits', views.graph_commits, name='graph_commits'),
+    path('graph/lines_changed', views.graph_lines_changed, name='graph_lines_changed'),
+    path('graph/files_changed', views.graph_files_changed, name='graph_files_changed'),
+    path('graph/commit_size', views.graph_commit_size, name='graph_commit_size'),
+    path('graph/creates', views.graph_creates, name='graph_creates'),
+    path('graph/edits', views.graph_edits, name='graph_edits'),
+    path('graph/moves', views.graph_moves, name='graph_moves'),
 
     # REPORTS
     path('report/author_stats', views.report_author_stats, name='report_author_stats'),

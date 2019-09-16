@@ -37,7 +37,8 @@ from source_optics.serializers import (AuthorSerializer, CommitSerializer,
                                        StatisticSerializer, UserSerializer)
 from source_optics.views.webhooks import Webhooks
 import source_optics.models as models
-from . import dataframes, graphs, reports
+from . import dataframes, reports
+from . import graphs as graph_module
 from .scope import Scope
 
 
@@ -113,63 +114,62 @@ class StatisticViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 
-def repo(request, repo=None):
+def graphs(request):
     """
-    Generates the index page for a given repo.
-    The index page is mostly a collection of graphs, so perhaps it should be called repo_graphs.html and this method
-    should also be renamed.
+    Generates a page full of graphs that is relatively context sensitive based on the query string
     """
-    scope = Scope(request, repo=repo)
+    scope = Scope(request)
+    assert scope.repo is not None
     scope.context['title'] = "Source Optics: %s repo (graphs)" % scope.repo.name
-    return render(request, 'repo.html', context=scope.context)
+    return render(request, 'graphs.html', context=scope.context)
 
-def graph_participation(request, repo=None):
-    scope = Scope(request, repo=repo)
+def graph_participation(request):
+    scope = Scope(request)
     df = dataframes.team_time_series(scope)
-    scope.context['graph'] = graphs.time_plot(df=df, scope=scope, y='author_total')
+    scope.context['graph'] = graph_module.time_plot(df=df, scope=scope, y='author_total')
     return render(request, 'graph.html', context=scope.context)
 
-def graph_files_changed(request, repo=None):
-    scope = Scope(request, repo=repo)
+def graph_files_changed(request):
+    scope = Scope(request)
     df = dataframes.team_time_series(scope)
-    scope.context['graph'] = graphs.time_plot(df=df, scope=scope, y='files_changed')
+    scope.context['graph'] = graph_module.time_plot(df=df, scope=scope, y='files_changed')
     return render(request, 'graph.html', context=scope.context)
 
-def graph_lines_changed(request, repo=None):
-    scope = Scope(request, repo=repo)
+def graph_lines_changed(request):
+    scope = Scope(request)
     (df, top) = dataframes.top_author_time_series(scope, aspect='lines_changed')
-    scope.context['graph'] = graphs.time_plot(df=df, scope=scope, y='lines_changed', top=top, by_author=True, aspect='commit_total')
+    scope.context['graph'] = graph_module.time_plot(df=df, scope=scope, y='lines_changed', top=top, by_author=True, aspect='commit_total')
     return render(request, 'graph.html', context=scope.context)
 
-def graph_commits(request, repo=None):
-    scope = Scope(request, repo=repo)
+def graph_commits(request):
+    scope = Scope(request)
     (df, top) = dataframes.top_author_time_series(scope, aspect='commit_total')
-    scope.context['graph'] = graphs.time_plot(df=df, scope=scope, y='commit_total', top=top, by_author=True, aspect='commit_total')
+    scope.context['graph'] = graph_module.time_plot(df=df, scope=scope, y='commit_total', top=top, by_author=True, aspect='commit_total')
     return render(request, 'graph.html', context=scope.context)
 
-def graph_creates(request, repo=None):
-    scope = Scope(request, repo=repo)
+def graph_creates(request):
+    scope = Scope(request)
     (df, top) = dataframes.top_author_time_series(scope, aspect='commit_total')
-    scope.context['graph'] = graphs.time_plot(df=df, scope=scope, y='creates', top=top, by_author=True, aspect='commit_total')
+    scope.context['graph'] = graph_module.time_plot(df=df, scope=scope, y='creates', top=top, by_author=True, aspect='commit_total')
     return render(request, 'graph.html', context=scope.context)
 
-def graph_edits(request, repo=None):
+def graph_edits(request):
     # FIXME: DRY on all of these
-    scope = Scope(request, repo=repo)
+    scope = Scope(request)
     (df, top) = dataframes.top_author_time_series(scope, aspect='commit_total')
-    scope.context['graph'] = graphs.time_plot(df=df, scope=scope, y='edits', top=top, by_author=True, aspect='commit_total')
+    scope.context['graph'] = graph_module.time_plot(df=df, scope=scope, y='edits', top=top, by_author=True, aspect='commit_total')
     return render(request, 'graph.html', context=scope.context)
 
-def graph_moves(request, repo=None):
-    scope = Scope(request, repo=repo)
+def graph_moves(request):
+    scope = Scope(request)
     (df, top) = dataframes.top_author_time_series(scope, aspect='commit_total')
-    scope.context['graph'] = graphs.time_plot(df=df, scope=scope, y='moves', top=top, by_author=True, aspect='commit_total')
+    scope.context['graph'] = graph_module.time_plot(df=df, scope=scope, y='moves', top=top, by_author=True, aspect='commit_total')
     return render(request, 'graph.html', context=scope.context)
 
-def graph_commit_size(request, repo=None):
-    scope = Scope(request, repo=repo)
+def graph_commit_size(request):
+    scope = Scope(request)
     df = dataframes.team_time_series(scope)
-    scope.context['graph'] = graphs.time_plot(df=df, scope=scope, y='average_commit_size')
+    scope.context['graph'] = graph_module.time_plot(df=df, scope=scope, y='average_commit_size')
     return render(request, 'graph.html', context=scope.context)
 
 def report_author_stats(request):

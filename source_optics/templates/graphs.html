@@ -1,0 +1,43 @@
+{% include 'header.html' %}
+
+{% if repo %}
+<h1>Repo: {{ repo.name }}</h1>
+{% else %}
+<h1>Repo Comparison</h1>
+{% endif %}
+<p>between: {{ start_str }} and {{ end_str }}</p>
+
+
+<h2>Lines Changed</h2>
+
+<div data-loader="ajax" data-src="/graph/lines_changed?repos={{ repos_str}}&start={{ start_str}}&end={{ end_str}}&intf={{ intv }}">loading</div>
+
+<h2>Commits</h2>
+
+<div data-loader="ajax" data-src="/graph/commits?repos={{ repos_str}}&start={{ start_str}}&end={{ end_str}}&intf={{ intv }}">loading</div>
+
+<h2>Files Changed</h2>
+
+<div data-loader="ajax" data-src="/graph/files_changed?repos={{ repos_str}}&start={{ start_str}}&end={{ end_str}}&intf={{ intv }}">loading</div>
+
+<h2>Participation</h2>
+
+<div data-loader="ajax" data-src="/graph/participation?repos={{ repos_str}}&start={{ start_str}}&end={{ end_str}}&intf={{ intv }}">loading</div>
+
+<h2>Creates</h2>
+
+<div data-loader="ajax" data-src="/graph/creates?repos={{ repos_str}}&start={{ start_str}}&end={{ end_str}}&intf={{ intv }}">loading</div>
+
+<h2>Edits</h2>
+
+<div data-loader="ajax" data-src="/graph/edits?repos={{ repos_str}}&start={{ start_str}}&end={{ end_str}}&intf={{ intv }}">loading</div>
+
+<h2>Moves</h2>
+
+<div data-loader="ajax" data-src="/graph/moves?repos={{ repos_str}}&start={{ start_str}}&end={{ end_str}}&intf={{ intv }}">loading</div>
+
+<h2>Average Commit Size</h2>
+
+<div data-loader="ajax" data-src="/graph/commit_size?repos={{ repos_str }}&start={{ start_str}}&end={{ end_str}}&intf={{ intv }}">loading</div>
+
+{% include 'footer.html' %}
