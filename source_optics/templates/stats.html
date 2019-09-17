@@ -1,0 +1,79 @@
+
+{% include 'header.html' %}
+
+<!-- FIXME: context aware H1 + title -->
+
+{% include 'nav.html' %}
+
+<div id="myGrid" class="ag-theme-balham"></div>
+
+  <script type="text/javascript" charset="utf-8">
+
+    {% include 'tables.js' %}
+
+    {% if not author %}
+    function authorNavCell(params) {
+      return authorNav(params.value)
+    }
+    {% endif %}
+
+    {% if not repo %}
+    function repoNavCell(params) {
+        return repoNav(params.value)
+    }
+    {% endif %}
+
+    var columnDefs = [
+        {% if not author %}
+        {headerName: "Author",         field: "author", sortable: true, filter: true },
+        {headerName: "Explore",        field: "author_pk", cellRenderer: authorNavCell },
+        {% endif %}
+        {% if not repo %}
+        {headerName: "Repo",           field: "repo", sortable: true, filter: true },
+        {headerName: "Explore",        field: "repo_pk", cellRenderer: repoNavCell },
+        {% endif %}
+        {headerName: "L+",             field: "lines_added", sortable: true, filter: true },
+        {headerName: "L-",             field: "lines_removed", sortable: true, filter: true },
+        {headerName: "Commits",        field: "commit_total", sortable: true, filter: true},
+        {% comment %}
+        # it seems more useful to show creates/edits/moves ... correct?
+        {headerName: "Files",          field: "files_changed", sortable: true, filter: true },
+        {% endcomment %}
+        {headerName: "Creates",        field: "creates", sortable: true, filter: true },
+        {headerName: "Edits",          field: "edits", sortable: true, filter: true },
+        {headerName: "Moves",          field: "moves", sortable: true, filter: true },
+        {headerName: "Days",           field: "days_active", sortable: true, filter: true },
+        {% comment %}
+        {headerName: "Missing For",    field: "days_since_seen", sortable: true, filter: true },
+        {headerName: "Earliest",       field: "earliest_commit_date", type: 'dateColumn', sortable: true, filter: true },
+        {% endcomment %}
+        {headerName: "Latest",         field: "latest_commit_date", type: 'dateColumn', sortable: true, filter: true },
+        {headerName: "Longevity",      field: "longevity", sortable: true, filter: true }
+
+    ];
+
+    var rowData = {{ table_json | safe }};
+    var gridOptions = {
+      columnDefs: columnDefs,
+      rowData: rowData,
+      paginationAutoPageSize: true,
+      pagination: true,
+      onFirstDataRendered: onFirstDataRendered
+    };
+
+    function onFirstDataRendered(params) {
+         params.api.sizeColumnsToFit();
+    }
+
+
+    var eGridDiv = document.querySelector('#myGrid');
+    thisGrid = new agGrid.Grid(eGridDiv, gridOptions);
+
+</script>
+
+</div>
+
+{% include 'footer.html' %}
+
+
+

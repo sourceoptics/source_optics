@@ -106,24 +106,9 @@ class StatisticViewSet(viewsets.ReadOnlyModelViewSet):
     filterset_fields = ('start_date', 'interval', 'repo', 'author')
 
 
-# END REST API
-# ======
+# =================================================================================================================
+# GRAPH FRAGMENTS
 
-# FIXME: move these into another file, like 'tables.py'
-
-
-
-
-def graphs(request):
-    """
-    Generates a page full of graphs that is relatively context sensitive based on the query string
-    """
-    scope = Scope(request)
-    if scope.multiple_repos_selected():
-        scope.context['title'] = "Source Optics: Repo Comparison Graphs"
-    else:
-        scope.context['title'] = "Source Optics: %s Repo Graphs" % scope.repo.name
-    return render(request, 'graphs.html', context=scope.context)
 
 def graph_participation(request):
     scope = Scope(request)
@@ -198,23 +183,42 @@ def graph_commit_size(request):
     scope.context['graph'] = graph_module.time_plot(df=df, scope=scope, y='average_commit_size')
     return render(request, 'graph.html', context=scope.context)
 
-def report_author_stats(request):
+# =================================================================================================================
+# USER PAGES
+
+
+def graphs(request):
+    """
+    Generates a page full of graphs that is relatively context sensitive based on the query string
+    """
+    scope = Scope(request)
+    scope.context['mode'] = 'graphs'
+    return render(request, 'graphs.html', context=scope.context)
+
+def repo(request, repo=None):
+    scope = Scope(request, repo=repo)
+    scope.context['mode'] = 'repo'
+    return render(request, 'repo.html', context=scope.context)
+
+def author(request, author=None):
+    scope = Scope(request, author=author)
+    scope.context['mode'] = 'author'
+    return render(request, 'author.html', context=scope.context)
+
+def report_stats(request):
     """
     generates a partial graph which is loaded in the repo graphs page. more comments in graphs.py
     """
     limit = None
     scope = Scope(request)
     data = reports.author_stats_table(scope, limit=limit)
-    if scope.multiple_repos_selected():
-        # FIXME: this should be done in the template
-        scope.context['title'] = "Source Optics: stats for repo=%s" % scope.repo.name
-    else:
-        scope.context['title'] = "Source Optics: stats for author=%s" % scope.author.email
-
+    # FIXME: better context aware titles across the app!  use the scope class, perhaps
+    scope.context['title'] = "SourceOptics: stats view"
     scope.context['author_count'] = len(data)
     scope.context['table_json'] = json.dumps(data)
+    scope.context['mode'] = 'stats'
     # FIXME: should be repo_authors ? perhaps this will be standardized...
-    return render(request, 'author_stats.html', context=scope.context)
+    return render(request, 'stats.html', context=scope.context)
 
 def report_commits(request, org=None):
     # FIXME: how about a scope object?
@@ -240,6 +244,7 @@ def report_commits(request, org=None):
         elif scope.author:
             scope.context['next_link'] = "/report/commits?author=%s&start=%s&end=%s&page=%s" % (scope.author.pk, scope.start_str, scope.end_str, page.next_page_number())
     scope.context.update(data)
+    scope.context['mode'] = 'feed'
     return render(request, 'commits.html', context=scope.context)
 
 def repos(request, org=None):
@@ -248,6 +253,7 @@ def repos(request, org=None):
     """
     scope = Scope(request, org=org, add_repo_table=True)
     scope.context['title'] = "Source Optics: %s organization" % scope.org.name
+    scope.context['mode'] = 'repos'
     return render(request, 'repos.html', context=scope.context)
 
 def orgs(request):
@@ -257,6 +263,7 @@ def orgs(request):
     """
     scope = Scope(request, add_orgs_table=True)
     scope.context['title'] = "Source Optics: index"
+    scope.context['mode'] = 'orgs'
     return render(request, 'orgs.html', context=scope.context)
 
 

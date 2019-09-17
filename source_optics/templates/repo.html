@@ -1,0 +1,17 @@
+{% include 'header.html' %}
+
+{% include 'nav.html' %}
+
+Repo: {{ repo.name }}<br/>
+Last Scanned: {{ repo.last_scanned }}<br/>
+
+<!-- FIXME: better layout -->
+<!-- FIXME: include OVERALL stats here -->
+
+<br/>Overall stats will appear here in a future upgrade. See also:<br/><br/>
+
+<a href='/graphs?repo={{ repo.pk }}&start={{ start_str }}&end={{ end_str }}'>Graphs</a><br/>
+<a href='/report/stats?repo={{ repo.pk }}&start={{ start_str }}&end={{ end_str }}'>Stats (By Author)</a><br/>
+<a href='/report/commits?repo={{ repo.pk }}&start={{ start_str }}&end={{ end_str }}'>Commit Feed</a><br/>
+
+{% include 'footer.html' %}

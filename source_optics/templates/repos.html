@@ -1,39 +1,34 @@
 {% include 'header.html' %}
-
-<h1>Organization: {{ org.name }}</h1>
-
-<button type="button" id="compareButton" class="btn btn-outline-secondary btn-sm">Compare</button>
+{% include 'nav.html' %}
 
 <form id="repoForm">
-<input type="hidden" name="_param_org" value="{{ org.id }}"/>
-<input type="hidden" name="_start" value="{{ start_str }}"/>
-<input type="hidden" name="_end" value="{{ end_str }}"/>
+
+<!-- TODO: link to org index with buttons -->
 
 <div id="myGrid" class="ag-theme-balham"></div>
 
   <script type="text/javascript" charset="utf-8">
 
+    {% include 'tables.js' %}
+
     function checkBoxCell(params) {
         return "<input type='checkbox' name='repo' value='" + params.value + "'/>";
     }
 
-    function navCell(params) {
-         var graphs = "<a href='/graphs?repo=" + params.value + "&start={{ start_str }}&end={{ end_str }}&intv={{ intv }}'><i class='fas fa-chart-line'></i></a>&nbsp;";
-         var author_stats = "<a href='/report/author_stats?start={{ start_str }}&end={{ end_str }}&repo=" + params.value + "'><i class='fas fa-users'></i></a>&nbsp;";
-         var commit_feed = "<a href='/report/commits?start={{ start_str }}&end={{ end_str }}&repo=" + params.value + "'><i class='fas fa-rss-square'></i></a>&nbsp;";
-         return graphs + author_stats + commit_feed;
+    function repoNavCell(params) {
+        return repoNav(params.value);
     }
 
     var columnDefs = [
         {headerName: "",               field: "details1", cellRenderer: checkBoxCell, width: 60},
         {headerName: "Name",           field: "name", sortable: true, filter: true },
-        {headerName: "Explore",        field: "details2", cellRenderer: navCell, },
+        {headerName: "Explore",        field: "details2", cellRenderer: repoNavCell },
         {headerName: "Authors",        field: "author_total", sortable: true, filter: true },
         {headerName: "L+",             field: "lines_added", sortable: true, filter: true },
         {headerName: "L-",             field: "lines_removed", sortable: true, filter: true },
         {headerName: "#Commits",       field: "commit_total", sortable: true, filter: true },
         {headerName: "Days Active",    field: "days_active", sortable: true, filter: true },
-        {headerName: "Last Scanned",   field: "last_scanned", sortable: true, filter: true, type: 'dateColumn' }
+        {headerName: "Last Scanned",   field: "last_scanned", sortable: true, filter: true }
     ];
 
     var rowData = {{ repo_table | safe }};
@@ -53,15 +48,6 @@
   var eGridDiv = document.querySelector('#myGrid');
   thisGrid = new agGrid.Grid(eGridDiv, gridOptions);
 
-  $('#compareButton').click(function() {
-      var repos = [];
-      $.each($("input[name='repo']:checked"), function(){
-          repos.push($(this).val());
-      });
-      var repos_str = repos.join("+");
-      var new_url = "/graphs?org={{ org.pk }}&repos=" + repos_str + "&start={{ start_str }}&end={{ end_str}}";
-      window.location.href = new_url
-  });
 
   </script>
 

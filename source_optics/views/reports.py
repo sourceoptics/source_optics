@@ -88,6 +88,8 @@ def author_stats_table(scope, limit=None):
         stat2 = stat2.to_dict()
         stat2['author'] = author.email
         stat2['repo'] = repo.name
+        stat2['author_pk'] = author.pk
+        stat2['repo_pk'] = repo.pk
         if stat2['lines_changed']:
             # skip authors with no contribution in the time range
             results.append(stat2)

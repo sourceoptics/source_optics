@@ -1,12 +1,6 @@
 {% include 'header.html' %}
 
-{% if repo %}
-<h1>Repo: {{ repo.name }}</h1>
-{% else %}
-<h1>Repo Comparison</h1>
-{% endif %}
-<p>between: {{ start_str }} and {{ end_str }}</p>
-
+{% include 'nav.html' %}
 
 <h2>Lines Changed</h2>
 

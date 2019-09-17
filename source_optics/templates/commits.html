@@ -1,13 +1,10 @@
 
 {% include 'header.html' %}
+{% include 'nav.html' %}
 
-{% if repo %}
-<h1>repo={{ repo.name }}: Commits</h1>
-{% elif author %}
-<h1>author={{ author.email }}: Commits</h1>
-{% else %}
-<h1>Commits</h1>
-{% endif %}
+{% comment %}
+FIXME: pagination below should be in an included template
+{% endcomment %}
 
 {% if has_prev %}<a href="{{ prev_link }}">&lt;&lt;</a>{% endif %} page {{ page_number}}{% if has_next %}<a href="{{ next_link }}">&gt;&gt;</a>{% endif %}
 
@@ -15,26 +12,27 @@
 
   <script type="text/javascript" charset="utf-8">
 
-
-    function authorCell(params) {
-        {% if repo %}
-        return "<a href='/report/commits?start={{ start_str }}&end={{ end_str }}&author=" + params.value + "'>" + params.value + "</a>";
-        {% else %}
-        return params.value
-        {% endif %}
+    {% if not author %}
+    function authorNavCell(params) {
+        return authorNav(params.value);
     }
+    {% endif %}
 
-    function repoCell(params) {
-        return "<a href='/report/commits?start={{ start_str }}&end={{ end_str }}&repo=" + params.value + "'>" + params.value + "</a>";
+    {% if not repo %}
+    function repoNavCell(params) {
+        return repoNav(params.value);
     }
+    {% endif %}
 
     var columnDefs = [
         {headerName: "Date",        field: "commit_date", sortable: false, filter: true, type: ['dateColumn'] },
-        {% if repo %}
-        {headerName: "Author",      field: "author", sortable: true, filter: true, cellRenderer: authorCell},
+        {% if not author %}
+        {headerName: "Author",         field: "author", sortable: true, filter: true },
+        {headerName: "Explore",        field: "details1", cellRenderer: authorNavCell },
         {% endif %}
-        {% if author %}
-        {headerName: "Repo",        field: "repo", sortable: true, filter: true, width: 100, cellRenderer: repoCell },
+        {% if not repo %}
+        {headerName: "Repo",           field: "repo", sortable: true, filter: true },
+        {headerName: "Explore",        field: "details1", cellRenderer: repoNavCell },
         {% endif %}
         {headerName: "Description", field: "subject", sortable: true, filter: true, width: 600 },
         {headerName: "SHA",         field: "sha", filter: true }

@@ -34,7 +34,7 @@ class Scope(object):
     __slots__ = [
         'start', 'end', 'start_str', 'end_str', 'interval', 'org', 'orgs', 'orgs_count',
         'repos', 'repo', 'repos', 'repos_str', 'page_size', 'page', 'author', 'context', 'add_repo_table',
-        'add_orgs_table', 'available_repos', 'request'
+        'add_orgs_table', 'available_repos', 'request',
     ]
 
     def _compute_start_and_end(self):
@@ -84,7 +84,9 @@ class Scope(object):
         FIXME: Note that now that we have 'display_name' on author, we really should search that also.
         """
 
-        author = self.request.GET.get('author', None)
+        author = self.author
+        if not author:
+            author = self.request.GET.get('author', None)
 
         if author:
             if is_int(author):
@@ -191,7 +193,8 @@ class Scope(object):
             repo=self.repo,
             repos_str=self.repos_str,
             intv=self.interval,
-            title="Source Optics"
+            title="Source Optics",
+            multiple_repos_selected=self.multiple_repos_selected()
         )
         if self.repos:
             self.context['repos'] = self.repos.all()
@@ -221,7 +224,7 @@ class Scope(object):
             return False
         return True
 
-    def __init__(self, request, org=None, repo=None, add_repo_table=False, add_orgs_table=False):
+    def __init__(self, request, org=None, repo=None, author=None, add_repo_table=False, add_orgs_table=False):
 
         """
         A scope object parses the request query string and makes available scope.context to django
@@ -231,6 +234,7 @@ class Scope(object):
         # FIXME: get org and repo from the query strings and remove them from the URL structure?
         self.org = org
         self.repo = repo
+        self.author = author
 
         self.add_repo_table = add_repo_table
         self.add_orgs_table = add_orgs_table

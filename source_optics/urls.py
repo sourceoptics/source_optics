@@ -31,10 +31,12 @@ router.register(r'commit', views.CommitViewSet)
 
 urlpatterns = [
 
+    # top level pages - object hierarchy navigation
     path('', views.orgs, name='orgs'),
     # FIXME: use org in query string, else show all repos
     path('org/<org>/repos', views.repos, name='repos'),
-    path('graphs', views.graphs, name='graphs'),
+    path('author/<author>', views.author, name='author'),
+    path('repo/<repo>', views.repo, name='repo'),
 
     # GRAPH snippets loaded from /graphs
     path('graph/participation', views.graph_participation, name='graph_participation'),
@@ -46,8 +48,9 @@ urlpatterns = [
     path('graph/edits', views.graph_edits, name='graph_edits'),
     path('graph/moves', views.graph_moves, name='graph_moves'),
 
-    # REPORTS
-    path('report/author_stats', views.report_author_stats, name='report_author_stats'),
+    # REPORTS AND GRAPH PAGES - RATHER FLEXIBLE BY QUERY STRING
+    path('graphs', views.graphs, name='graphs'),
+    path('report/stats', views.report_stats, name='report_author_stats'),
     path('report/commits', views.report_commits, name='report_commits'),
 
     # REST API
