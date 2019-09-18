@@ -27,7 +27,7 @@ from source_optics.scanner.encrypt import SecretsManager
 
 # FIXME: move each model to a seperate file (not urgent)
 
-repo_validator = re.compile(r'[^a-zA-Z0-9._]')
+repo_validator = re.compile(r'[^a-zA-Z0-9._\-]')
 
 def validate_repo_name(value):
     if re.search(repo_validator, value):
