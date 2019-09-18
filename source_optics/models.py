@@ -369,7 +369,7 @@ class File(models.Model):
         if authors:
             objs = objs.filter(file_changes__commit__author__pk__in=authors)
         if repos:
-            objs = objs.filter(repo = repo)
+            objs = objs.filter(repo__pk__in=repos)
         return objs
 
     def __str__(self):
@@ -408,8 +408,17 @@ class FileChange(models.Model):
     def aggregate_stats(cls, repo, author=None, start=None, end=None):
         # the placement of this method is a little misleading as it deals in files, file changes, and commits
         # it likely could be a lot more efficient by building a custom SQL query here
-        qs = cls.queryset_for_range(repos=[repo.pk], authors=[author.pk], start=start, end=end)
-        files = File.queryset_for_range(repos=[repo.pk], authors=[author.pk], start=start, end=end)
+
+
+        authors = None
+        repos = None
+        if author:
+            authors = [ author.pk ]
+        if repo:
+            repos = [ repo.pk ]
+
+        qs = cls.queryset_for_range(repos=repos, authors=authors, start=start, end=end)
+        files = File.queryset_for_range(repos=repos, authors=authors, start=start, end=end)
         stats = qs.aggregate(
             lines_added=Sum("lines_added"),
             lines_removed = Sum("lines_removed"),
@@ -417,8 +426,7 @@ class FileChange(models.Model):
             edits = Sum("is_edit"),
             creates = Sum("is_create"),
         )
-        # FIXME: there is duplication here with the Statistic class and we should figure out how to fix that.
-        # FIXME: the qs call should use a LRU cache wrapped method. Isn't there a method in Commit?
+        # FIXME: we should be able to aggregrate the count and make this less expensive
         stats['commit_total'] = qs.values_list('commit', flat=True).distinct().count()
         # FIXME: this should also have a LRU - use the file count method in File
         stats['files_changed'] = files.count()
