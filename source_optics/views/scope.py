@@ -21,6 +21,8 @@ from source_optics.models import (Organization, Repository, Author)
 import source_optics.models as models
 from . import reports
 
+CURRENT_TZ = timezone.get_current_timezone()
+
 
 def is_int(x):
     try:
@@ -34,7 +36,7 @@ class Scope(object):
     __slots__ = [
         'start', 'end', 'start_str', 'end_str', 'interval', 'org', 'orgs', 'orgs_count',
         'repos', 'repo', 'repos', 'repos_str', 'page_size', 'page', 'author', 'context', 'add_repo_table',
-        'add_orgs_table', 'available_repos', 'request',
+        'add_orgs_table', 'available_repos', 'request', 'full_time_range'
     ]
 
     def _compute_start_and_end(self):
@@ -44,11 +46,16 @@ class Scope(object):
 
         start = self.request.GET.get('start', None)
         end = self.request.GET.get('end', None)
+        now = timezone.now()
+        epoch = datetime.datetime.strptime("1970-01-01", "%Y-%m-%d").replace(tzinfo=CURRENT_TZ)
+
+        self.full_time_range=False
 
         if end == '_' or not end:
             end = timezone.now()
         elif end is not None:
-            end = datetime.datetime.strptime(end, "%Y-%m-%d")
+            end = datetime.datetime.strptime(end, "%Y-%m-%d").replace(tzinfo=CURRENT_TZ)
+
         self.end = end + datetime.timedelta(days=1)  # start of tomorrow
 
         if start == '_' or not start:
@@ -56,6 +63,12 @@ class Scope(object):
         else:
             start = datetime.datetime.strptime(start, "%Y-%m-%d")
         self.start = start
+
+        self.start = self.start.replace(tzinfo=CURRENT_TZ)
+        self.end = self.end.replace(tzinfo=CURRENT_TZ)
+
+        if (self.start <= epoch) and (self.end >= now):
+            self.full_time_range = True
 
     def _compute_pagination(self):
         """
@@ -194,7 +207,8 @@ class Scope(object):
             repos_str=self.repos_str,
             intv=self.interval,
             title="Source Optics",
-            multiple_repos_selected=self.multiple_repos_selected()
+            multiple_repos_selected=self.multiple_repos_selected(),
+            full_time_range=self.full_time_range
         )
         if self.repos:
             self.context['repos'] = self.repos.all()

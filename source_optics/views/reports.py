@@ -74,8 +74,9 @@ def author_stats_table(scope, limit=None):
 
 
     interval = scope.interval
-    if interval != 'LF':
-        interval = 'DY'
+    interval = 'DY'
+    if scope.full_time_range:
+        interval = 'LF'
 
     authors = None
     if scope.repo:
@@ -83,8 +84,8 @@ def author_stats_table(scope, limit=None):
         authors = Author.authors(scope.repo, scope.start, scope.end).order_by('email')
 
     def add_stat(author, repo):
-        stat1 = Statistic.queryset_for_range(repo, author=author, start=scope.start, end=scope.end, interval=scope.interval)
-        stat2 = Statistic.compute_interval_statistic(stat1, interval=scope.interval, repo=repo, author=author, start=scope.start, end=scope.end)
+        stat1 = Statistic.queryset_for_range(repo, author=author, start=scope.start, end=scope.end, interval=interval)
+        stat2 = Statistic.compute_interval_statistic(stat1, interval=interval, repo=repo, author=author, start=scope.start, end=scope.end)
         stat2 = stat2.to_dict()
         stat2['author'] = author.email
         stat2['repo'] = repo.name
@@ -113,10 +114,14 @@ def repo_table(scope): # repos, start, end):
     time range, along with navigation links.
     """
 
+    interval = 'DY'
+    if scope.full_time_range:
+        interval='LF'
+
     results = []
     for repo in scope.available_repos:
-        stats = Statistic.queryset_for_range(repo, author=None, interval='DY', start=scope.start, end=scope.end)
-        stat2 = Statistic.compute_interval_statistic(stats, interval='DY', repo=repo, author=None, start=scope.start, end=scope.end)
+        stats = Statistic.queryset_for_range(repo, author=None, interval=interval, start=scope.start, end=scope.end)
+        stat2 = Statistic.compute_interval_statistic(stats, interval=interval, repo=repo, author=None, start=scope.start, end=scope.end)
         stat2 = stat2.to_dict()
         stat2['name'] = repo.name
         if repo.last_scanned:
