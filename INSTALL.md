@@ -277,6 +277,8 @@ You should absolutely backup /etc/source_optics, not only for database configura
 is not held within the database.  As previously mentioned, if you rewrite this key, you will need
 to set up new credentials in the admin system.
 
+The database uses BRIN indexes (these are set up for automatically) for statistics lookups. Running scan with "-F" (force mode, not the default) will repeatedly delete and re-add certain objects in the database. Running "vacuum full analyze" within psql may improve performance if run periodically - this is most applicable for repos with exceptionally large numbers of contributors. To keep things simple, do not put "scan -F" on cron, and only run it in force mode when needed. Running a normal scan (without "-F") on cron is perfectly fine and expected.
+
 There are no other significant maintaince tasks to be aware of at this time.
 
 Security Concerns
