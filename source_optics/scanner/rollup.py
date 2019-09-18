@@ -191,9 +191,7 @@ class Rollup:
                     author__isnull=True,
                     interval=DAY,
                     repo=repo,
-                    # FIXME: use range everywhere
-                    start_date__gte=start_day,
-                    start_date__lte=end_date
+                    start_date__range=(start_day, end_date)
                 )
             else:
                 return Statistic.objects.filter(
@@ -207,9 +205,7 @@ class Rollup:
                     author=author,
                     interval=DAY,
                     repo=repo,
-                    # FIXME: use range everywhere
-                    start_date__gte=start_day,
-                    start_date__lte=end_date
+                    start_date__range=(start_day, end_date)
                 )
             else:
                 return Statistic.objects.filter(

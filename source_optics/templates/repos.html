@@ -19,16 +19,20 @@
         return repoNav(params.value);
     }
 
+    {% comment %}
+    // to efficiently show last_scanned here we need to move it to the stats table
+    // author_total can't be set clearly YET because it must be set on all rows in a denormalized way, like commitment
+    // FIXME: restore both of these!
+    {% endcomment %}
+
     var columnDefs = [
         {headerName: "",               field: "details1", cellRenderer: checkBoxCell, width: 60},
-        {headerName: "Name",           field: "name", sortable: true, filter: true },
-        {headerName: "Explore",        field: "details2", cellRenderer: repoNavCell },
-        {headerName: "Authors",        field: "author_total", sortable: true, filter: true },
+        {headerName: "Repo",           field: "repo", sortable: true, filter: true },
+        {headerName: "Explore",        field: "repo", cellRenderer: repoNavCell },
         {headerName: "L+",             field: "lines_added", sortable: true, filter: true },
         {headerName: "L-",             field: "lines_removed", sortable: true, filter: true },
         {headerName: "#Commits",       field: "commit_total", sortable: true, filter: true },
         {headerName: "Days Active",    field: "days_active", sortable: true, filter: true },
-        {headerName: "Last Scanned",   field: "last_scanned", sortable: true, filter: true }
     ];
 
     var rowData = {{ repo_table | safe }};

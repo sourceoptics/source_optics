@@ -11,26 +11,22 @@
 
     {% include 'tables.js' %}
 
-    {% if not author %}
     function authorNavCell(params) {
       return authorNav(params.value)
     }
-    {% endif %}
 
-    {% if not repo %}
     function repoNavCell(params) {
         return repoNav(params.value)
     }
-    {% endif %}
 
     var columnDefs = [
-        {% if not author %}
+        {% if repo %}
         {headerName: "Author",         field: "author", sortable: true, filter: true },
-        {headerName: "Explore",        field: "author_pk", cellRenderer: authorNavCell },
+        {headerName: "Explore",        field: "author", cellRenderer: authorNavCell },
         {% endif %}
-        {% if not repo %}
+        {% if author %}
         {headerName: "Repo",           field: "repo", sortable: true, filter: true },
-        {headerName: "Explore",        field: "repo_pk", cellRenderer: repoNavCell },
+        {headerName: "Explore",        field: "repo", cellRenderer: repoNavCell },
         {% endif %}
         {headerName: "L+",             field: "lines_added", sortable: true, filter: true },
         {headerName: "L-",             field: "lines_removed", sortable: true, filter: true },

@@ -1,6 +1,7 @@
 
 import json
-from source_optics.models import (Author, Statistic, Commit)
+from source_optics.models import (Repository, Statistic, Commit)
+from django.db.models import Sum, Count, Max
 from django.core.paginator import Paginator
 
 def commits_feed(scope):
@@ -60,6 +61,26 @@ def commits_feed(scope):
 
     return dict(results=results, page=page, count=count)
 
+def _annotations_to_table(stats, primary, lookup):
+
+    results = []
+
+    for entry in stats:
+        new_item = {}
+        new_item[primary] = entry[lookup]
+        for (k,v) in entry.items():
+            if k.startswith("annotated_"):
+                k2 = k.replace("annotated_","")
+                if 'date' in k2:
+                    new_item[k2] = str(v)
+                else:
+                    new_item[k2] = v
+        # for making things easy with ag-grid, the primary key is available multiple times:
+        for x in [ 'details1', 'details2', 'details3']:
+            new_item[x] = entry[lookup]
+        results.append(new_item)
+    return results
+
 
 def author_stats_table(scope, limit=None):
     """
@@ -70,70 +91,36 @@ def author_stats_table(scope, limit=None):
 
     # FIXME: this performs one query PER author and could be rewritten to be a LOT more intelligent.
 
-    results = []
-
-
-    interval = scope.interval
+    (repos, authors) = scope.standardize_repos_and_authors()
     interval = 'DY'
-    if scope.full_time_range:
-        interval = 'LF'
+    stats = Statistic.queryset_for_range(repos=repos, authors=authors, start=scope.start, end=scope.end, interval=interval)
+    stats = Statistic.annotate(stats.values('author__email')).order_by('author__email')
+    data = _annotations_to_table(stats, 'author', 'author__email')
+    return data
 
-    authors = None
-    if scope.repo:
-        # this author ordering is not optimal, ideally we should use display_name if set, and then if not, email
-        authors = Author.authors(scope.repo, scope.start, scope.end).order_by('email')
 
-    def add_stat(author, repo):
-        stat1 = Statistic.queryset_for_range(repo, author=author, start=scope.start, end=scope.end, interval=interval)
-        stat2 = Statistic.compute_interval_statistic(stat1, interval=interval, repo=repo, author=author, start=scope.start, end=scope.end)
-        stat2 = stat2.to_dict()
-        stat2['author'] = author.email
-        stat2['repo'] = repo.name
-        stat2['author_pk'] = author.pk
-        stat2['repo_pk'] = repo.pk
-        if stat2['lines_changed']:
-            # skip authors with no contribution in the time range
-            results.append(stat2)
-
-    if not scope.author and scope.repo:
-        for author in authors:
-            add_stat(author, scope.repo)
-    elif scope.author and not scope.repo:
-        for repo in scope.author.repos():
-            add_stat(scope.author, repo)
-    elif scope.author and scope.repo:
-        add_stat(scope.author, scope.repo)
-
-    return results
 
 
 def repo_table(scope): # repos, start, end):
 
-    """
-    this drives the list of all repos within an organization, showing the statistics for them within the selected
-    time range, along with navigation links.
-    """
+    #this drives the list of all repos within an organization, showing the statistics for them within the selected
+    #time range, along with navigation links.
 
+    (repos, authors) = scope.standardize_repos_and_authors()
     interval = 'DY'
-    if scope.full_time_range:
-        interval='LF'
+    # FIXME: explain
+    repos = [ x.pk for x in scope.available_repos.all() ]
+    stats = Statistic.queryset_for_range(repos=repos, authors=authors, start=scope.start, end=scope.end, interval=interval)
+    stats = Statistic.annotate(stats.values('repo__name')).order_by('repo__name')
+    data = _annotations_to_table(stats, 'repo', 'repo__name')
+    # some repos won't have been scanned, and this requires a second query to fill them into the table
+    repos = Repository.objects.filter(last_scanned=None, organization=scope.org)
+    for unscanned in repos:
+        data.append(dict(
+            repo=unscanned.name
+        ))
+    return data
 
-    results = []
-    for repo in scope.available_repos:
-        stats = Statistic.queryset_for_range(repo, author=None, interval=interval, start=scope.start, end=scope.end)
-        stat2 = Statistic.compute_interval_statistic(stats, interval=interval, repo=repo, author=None, start=scope.start, end=scope.end)
-        stat2 = stat2.to_dict()
-        stat2['name'] = repo.name
-        if repo.last_scanned:
-            stat2['last_scanned'] = repo.last_scanned.strftime("%Y-%m-%d %H:%M:%S")
-        else:
-            stat2['last_scanned'] = ""
-        # providing pk's for link columns in the repo chart
-        for x in [ 'details1', 'details2', 'details3']:
-            stat2[x] = repo.pk
-        results.append(stat2)
-    results = sorted(results, key=lambda x: x['name'])
-    return json.dumps(results)
 
 def orgs_table(scope):
 

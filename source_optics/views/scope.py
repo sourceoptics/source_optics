@@ -167,8 +167,10 @@ class Scope(object):
 
         # available repos is the list of all repos, for lists or dropdowns, not the selected repos list
         if self.org:
+            print("p1 filter", type(self.org))
             self.available_repos = Repository.objects.filter(organization=self.org).select_related('organization')
         else:
+            print("p2 filter")
             self.available_repos = Repository.objects.select_related('organization')
 
 
@@ -237,6 +239,37 @@ class Scope(object):
         if not ('+' in self.repos_str):
             return False
         return True
+
+
+    def standardize_repos_and_authors(self):
+        """"
+        Doesn't modify a scope, but returns some plural forms that let callers not know' \
+        if the scope specified plural or singular objects
+        """
+        repos = None
+        authors = None
+
+        if self.author:
+
+            if isinstance(self.author, str):
+                email = self.author.replace(" ","+")
+                authors = Author.objects.filter(email=email)
+            else:
+                authors = Author.objects.filter(pk=self.author.pk).values_list('pk', flat=True)
+        elif self.repo:
+            authors = self.repo.author_ids(self.start, self.end)
+        else:
+            authors = None
+
+        if not self.repo and self.author:
+            repos = Author.repos(repos, self.start, self.end).values_list('pk', flat=True)
+        elif self.repo:
+            repos = Repository.objects.filter(pk=self.repo.pk).values_list('pk', flat=True)
+        else:
+            assert self.org is not None
+            repos = [ x.pk for x in Repository.objects.filter(organization=self.org).all() ]
+
+        return (repos, authors)
 
     def __init__(self, request, org=None, repo=None, author=None, add_repo_table=False, add_orgs_table=False):
 

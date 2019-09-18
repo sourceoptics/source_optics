@@ -12,27 +12,25 @@ FIXME: pagination below should be in an included template
 
   <script type="text/javascript" charset="utf-8">
 
-    {% if not author %}
+    {% include 'tables.js' %}
+
     function authorNavCell(params) {
         return authorNav(params.value);
     }
-    {% endif %}
 
-    {% if not repo %}
     function repoNavCell(params) {
         return repoNav(params.value);
     }
-    {% endif %}
 
     var columnDefs = [
         {headerName: "Date",        field: "commit_date", sortable: false, filter: true, type: ['dateColumn'] },
-        {% if not author %}
+        {% if repo %}
         {headerName: "Author",         field: "author", sortable: true, filter: true },
-        {headerName: "Explore",        field: "details1", cellRenderer: authorNavCell },
+        {headerName: "Explore",        field: "author", cellRenderer: authorNavCell },
         {% endif %}
-        {% if not repo %}
+        {% if author %}
         {headerName: "Repo",           field: "repo", sortable: true, filter: true },
-        {headerName: "Explore",        field: "details1", cellRenderer: repoNavCell },
+        {headerName: "Explore",        field: "repo", cellRenderer: repoNavCell },
         {% endif %}
         {headerName: "Description", field: "subject", sortable: true, filter: true, width: 600 },
         {headerName: "SHA",         field: "sha", filter: true }

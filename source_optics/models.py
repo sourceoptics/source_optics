@@ -21,7 +21,7 @@ from django.contrib.auth.models import User
 from django.contrib.postgres.indexes import BrinIndex
 from django.core.exceptions import ValidationError
 from django.db import models
-from django.db.models import Sum
+from django.db.models import Sum, Max
 
 from source_optics.scanner.encrypt import SecretsManager
 
@@ -221,6 +221,9 @@ class Author(models.Model):
         cls.author_count.cache_clear()
 
     def statistics(self, repo, start=None, end=None, interval=None):
+
+        # FIXME: we should be using annotate in most places, move away from this?
+
         assert start is not None
         assert end is not None
         assert interval is not None
@@ -322,27 +325,20 @@ class Commit(models.Model):
         ]
 
     @classmethod
-    def queryset_for_range(cls, repo, author=None, start=None, end=None):
-        if author:
-            if start:
-                return cls.objects.filter(
-                    repo=repo,
-                    author=author,
-                    commit_date__range=(start, end)
-                )
-            else:
-                return cls.objects.filter(
-                    repo=repo,
-                    author=author
-                )
-        else:
-            if start:
-                return cls.objects.filter(
-                    repo=repo,
-                    commit_date__range=(start, end)
-                )
-            else:
-                return cls.object.filter(repo=repo)
+    def queryset_for_range(cls, repos, authors, start=None, end=None):
+
+        assert repos or authors
+
+        objs = cls.objects
+
+        if authors:
+            objs = objs.filter(author__pk__in=authors)
+        if repos:
+            objs = objs.filter(repos__pk__in=repos)
+        if start:
+            assert end is not None
+            objs = objs.filter(commit_date__range=(start,end))
+        return objs
 
     def __str__(self):
         return f"Commit: {self.sha} (r:{self.repo.name})"
@@ -363,20 +359,18 @@ class File(models.Model):
         ]
 
     @classmethod
-    def queryset_for_range(cls, repo, author=None, start=None, end=None):
+    def queryset_for_range(cls, repos=None, authors=None, start=None, end=None):
         assert start is not None
         assert end is not None
-        if author:
-            return File.objects.select_related('file_changes','commit').filter(
-                repo=repo,
-                file_changes__commit__author=author,
-                file_changes__commit__commit_date__range=(start, end)
-            )
-        else:
-            return File.objects.select_related('file_changes','commit').filter(
-                repo=repo,
-                file_changes__commit__commit_date__range=(start, end)
-            )
+        assert repos or authors
+
+        objs = File.objects.select_related('file_changes', 'commit')
+
+        if authors:
+            objs = objs.filter(file_changes__commit__author__pk__in=authors)
+        if repos:
+            objs = objs.filter(repo = repo)
+        return objs
 
     def __str__(self):
         return f"File: ({self.repo}) {self.path}/{self.name})"
@@ -399,35 +393,23 @@ class FileChange(models.Model):
         ]
 
     @classmethod
-    def queryset_for_range(cls, repo, author=None, start=None, end=None):
-        # FIXME: not the most efficient query
-        if author:
-            if start:
-                return FileChange.objects.select_related('commit','file').filter(
-                    commit__author=author,
-                    commit__repo=repo,
-                    commit__commit_date__range=(start, end)
-                )
-            else:
-                return FileChange.objects.select_related('commit','file').filter(
-                    commit__author=author,
-                    commit__repo=repo,
-                )
-        else:
-            if start:
-                return FileChange.objects.select_related('commit','file').filter(
-                    commit__repo=repo,
-                    commit__commit_date__range=(start, end)
-                )
-            else:
-                return FileChange.objects.select_related('commit', 'file').filter(commit__repo=repo)
+    def queryset_for_range(cls, repos=None, authors=None, start=None, end=None):
+        assert repos or authors
+        objs = FileChange.objects.select_related('commit','file')
+        if authors:
+           objs = objs.filter(commit__author__pk__in=authors)
+        if repos:
+            objs = objs.filter(commit__repo__pk__in=repos)
+        if start:
+            objs = objs.filter(commit__commit_date__range=(start,end))
+        return objs
 
     @classmethod
     def aggregate_stats(cls, repo, author=None, start=None, end=None):
         # the placement of this method is a little misleading as it deals in files, file changes, and commits
         # it likely could be a lot more efficient by building a custom SQL query here
-        qs = cls.queryset_for_range(repo, author=author, start=start, end=end)
-        files = File.queryset_for_range(repo, author=author, start=start, end=end)
+        qs = cls.queryset_for_range(repo, authors=[author.pk], start=start, end=end)
+        files = File.queryset_for_range(repo, authors=[author.pk], start=start, end=end)
         stats = qs.aggregate(
             lines_added=Sum("lines_added"),
             lines_removed = Sum("lines_removed"),
@@ -446,7 +428,7 @@ class FileChange(models.Model):
     @classmethod
     @functools.lru_cache(maxsize=128, typed=False)
     def change_count(cls, repo, author=None, start=None, end=None):
-        qs = cls.queryset_for_range(repo, author=author, start=start, end=end)
+        qs = cls.queryset_for_range(repo, authors=[author.pk], start=start, end=end)
         return qs.count()
 
     @classmethod
@@ -527,6 +509,24 @@ class Statistic(models.Model):
             moves=Sum("moves"),
             edits=Sum("edits"),
             creates=Sum("creates")
+        )
+
+    @classmethod
+    def annotate(cls, queryset):
+        # FIXME: eventually make all this model driven so it doesn't need double entry
+        return queryset.annotate(
+            # this next one is kind of weird, but we need it to add the value in
+            annotated_repo=Max("repo__name"),
+            annotated_lines_added=Sum("lines_added"),
+            annotated_lines_removed=Sum("lines_removed"),
+            annotated_lines_changed=Sum("lines_changed"),
+            annotated_commit_total=Sum("commit_total"),
+            annotated_days_active=Sum("days_active"),
+            annotated_moves=Sum("moves"),
+            annotated_edits=Sum("edits"),
+            annotated_creates=Sum("creates"),
+            annotated_latest_commit_date=Max('latest_commit_date'),
+            annotated_longevity=Sum('days_active')
         )
 
     @classmethod
@@ -669,39 +669,27 @@ class Statistic(models.Model):
 
 
     @classmethod
-    def queryset_for_range(cls, repo, interval, author=None, start=None, end=None):
-        assert repo is not None
-        stats = Statistic.objects.select_related('author')
-        qs = None
-        if interval == 'LF':
-            if author:
-                qs = stats.filter(
-                    author=author,
-                    interval='LF',
-                )
-            else:
-                qs = stats.filter(
-                    author__isnull=True,
-                    interval='LF',
-                )
-        else:
-            if author:
-                qs = stats.filter(
-                    author=author,
-                    interval=interval,
-                    start_date__range=(start, end)
-                )
-            else:
-                qs = stats.filter(
-                    author__isnull=True,
-                    interval=interval,
-                    start_date__range=(start, end)
-                )
-        if repo:
-            return qs.filter(repo=repo)
-        else:
-            return qs
+    def queryset_for_range(cls, repos=None, authors=None, interval=None, author=None, start=None, end=None):
 
+        assert repos or authors
+        assert interval is not None
+
+        stats = Statistic.objects.select_related('author')
+
+        if authors:
+            stats = stats.filter(author__pk__in=authors)
+        else:
+            stats = stats.filter(author__isnull=True)
+
+        if repos:
+            stats = stats.filter(repo__pk__in=repos)
+
+        if start and interval != 'LF':
+            stats = stats.filter(start_date__range=(start,end), interval=interval)
+        else:
+            stats = stats.filter(interval='LF')
+
+        return stats
 
     def to_dict(self):
         # FIXME: this really should take the interval as a parameter, such that it can not
