@@ -54,7 +54,7 @@ def get_interval(scope, start, end):
     else:
         return 'DY'
 
-def top_authors(scope, aspect='commit_total', limit=10):
+def top_authors(scope, aspect='commit_total', limit=9):
 
     """
     Return the top N authors for a repo based on a specified attribute.
