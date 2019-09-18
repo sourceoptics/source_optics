@@ -79,7 +79,7 @@ def _annotations_to_table(stats, primary, lookup):
         for x in [ 'details1', 'details2', 'details3']:
             new_item[x] = entry[lookup]
         results.append(new_item)
-    print(results)
+    # print(results)
     return results
 
 
@@ -111,11 +111,8 @@ def repo_table(scope): # repos, start, end):
     interval = 'DY'
     # FIXME: explain
     repos = [ x.pk for x in scope.available_repos.all() ]
-    print("IN REPOS=", repos)
-    print("IN AUTHORS=", authors)
     stats = Statistic.queryset_for_range(repos=repos, authors=authors, start=scope.start, end=scope.end, interval=interval)
     stats = Statistic.annotate(stats.values('repo__name')).order_by('repo__name')
-    print("COUNTED=%s" % stats.count())
     data = _annotations_to_table(stats, 'repo', 'repo__name')
     # some repos won't have been scanned, and this requires a second query to fill them into the table
     repos = Repository.objects.filter(last_scanned=None, organization=scope.org)
