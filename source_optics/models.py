@@ -76,7 +76,8 @@ class Credential(models.Model):
 
     name = models.CharField(max_length=255, blank=False, db_index=True)
     username = models.CharField(max_length=64, blank=True, help_text='for github/gitlab username')
-    password = models.CharField(max_length=255,  blank=True, null=True, help_text='for github/gitlab imports')
+    # the password needs to be a TextField because we store the encrypted value
+    password = models.TextField(blank=True, null=True, help_text='for github/gitlab imports')
     ssh_private_key = models.TextField(blank=True, null=True, help_text='for cloning private repos')
     ssh_unlock_passphrase = models.CharField(max_length=255, blank=True, null=True, help_text='for cloning private repos')
     description = models.TextField(max_length=1024, blank=True, null=True)
