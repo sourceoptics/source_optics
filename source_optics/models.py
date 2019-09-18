@@ -22,6 +22,7 @@ from django.contrib.postgres.indexes import BrinIndex
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Sum, Max
+from django.utils import timezone
 
 from source_optics.scanner.encrypt import SecretsManager
 
@@ -579,6 +580,8 @@ class Statistic(models.Model):
 
         stat.compute_derived_values()
 
+        today = timezone.now()
+
         if for_update and interval == 'LF':
 
             all_earliest = repo.earliest_commit_date()
@@ -589,7 +592,7 @@ class Statistic(models.Model):
             stat.days_before_joined = (stat.earliest_commit_date - all_earliest).days
             stat.longevity = (stat.latest_commit_date - stat.earliest_commit_date).days + 1
             stat.commitment = (stat.days_active / (1 + stat.longevity))
-            stat.last_scanned = repo.last_scanned
+            stat.last_scanned = today
 
             update_stats = None
             if author:
@@ -604,7 +607,7 @@ class Statistic(models.Model):
                 days_before_joined = stat.days_before_joined,
                 longevity = stat.longevity,
                 commitment = stat.commitment,
-                last_scanned = repo.last_scanned
+                last_scanned = today,
             )
 
         elif not for_update and queryset.count():
@@ -617,7 +620,7 @@ class Statistic(models.Model):
                 stat.days_before_joined = first.days_before_joined
                 stat.longevity = first.longevity
                 stat.commitment = first.commitment
-                stat.last_scanned = repo.last_scanned
+                stat.last_scanned = today
             else:
                 # leave these at defaults
                 pass
