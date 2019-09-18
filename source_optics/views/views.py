@@ -135,9 +135,6 @@ def graph_lines_changed(request):
 # FIXME: make a function, repeat less
 def graph_commits(request):
     scope = Scope(request)
-    assert scope.repos is None
-    assert scope.multiple_repos_selected()
-
     if scope.multiple_repos_selected():
         (df, top) = dataframes.team_time_series(scope)
         scope.context['graph'] = graph_module.time_plot(df=df, scope=scope, y='commit_total', top=top, aspect='repo')
