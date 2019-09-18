@@ -16,8 +16,11 @@
 import traceback
 from . import commands
 import os
+from django.conf import settings
 
 GIT_TYPES = ["https://", "http://"]
+GIT_CLONE_TIMEOUT = int(getattr(settings, 'GIT_CLONE_TIMEOUT', 1200)) # 12 minutes
+GIT_PULL_TIMEOUT = int(getattr(settings, 'GIT_PULL_TIMEOUT', 600)) # 6 minutes
 
 #
 # This class clones a repository (GIT) using a provided URL and credential
@@ -68,7 +71,7 @@ class Checkout:
             # FIXME: command wrapper should take an optional cwd to make this cleaner
 
             try:
-                commands.execute_command(repo, "git pull", timeout=200, env=key_mgmt)
+                commands.execute_command(repo, "git pull", timeout=GIT_PULL_TIMEOUT, env=key_mgmt)
             except Exception:
                 # FIXME: finer grained catch here
                 traceback.print_exc()
@@ -81,13 +84,13 @@ class Checkout:
 
             print("CREATING: %s" % work_dir)
             # os.makedirs can be a flakey in OS X, so shelling out
-            commands.execute_command(repo, "mkdir -p %s" % work_dir, log=True, timeout=5)
+            commands.execute_command(repo, "mkdir -p %s" % work_dir, log=True)
 
             # on-disk repo doesn't exist yet, need to clone
 
             key_mgmt = None
             cmd = f"git clone {repo_url} {work_dir} {options}"
 
-            commands.execute_command(repo, cmd, log=False, timeout=600, env=key_mgmt)
+            commands.execute_command(repo, cmd, log=False, timeout=GIT_CLONE_TIMEOUT, env=key_mgmt)
 
         return True

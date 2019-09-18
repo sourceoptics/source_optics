@@ -178,3 +178,8 @@ CHECKOUT_DIRECTORY = "/tmp/source_optics"
 
 # pull new code from repos if not pulled in N minutes, 0 = always pull
 PULL_THRESHOLD = 0
+
+# in seconds...
+GIT_PULL_TIMEOUT=400
+GIT_CLONE_TIMEOUT=2400
+
