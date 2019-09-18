@@ -421,7 +421,7 @@ class Commits:
         data = match.groupdict()
         if mode != 'Commit':
             # running back through the logs to set up the file changes
-            commit = Commit.objects.get(sha=data['commit'])
+            commit = Commit.objects.get(repo=repo, sha=data['commit'])
             return commit
 
         email = data['author_email']
