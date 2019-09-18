@@ -167,10 +167,8 @@ class Scope(object):
 
         # available repos is the list of all repos, for lists or dropdowns, not the selected repos list
         if self.org:
-            print("p1 filter", type(self.org))
             self.available_repos = Repository.objects.filter(organization=self.org).select_related('organization')
         else:
-            print("p2 filter")
             self.available_repos = Repository.objects.select_related('organization')
 
 

@@ -242,8 +242,6 @@ def report_commits(request, org=None):
             scope.context['next_link'] = "/report/commits?author=%s&start=%s&end=%s&page=%s" % (scope.author.pk, scope.start_str, scope.end_str, page.next_page_number())
     scope.context.update(data)
     scope.context['mode'] = 'feed'
-    #print("author=", scope.context['author'])
-    #print("repo=", scope.context["repo"])
     return render(request, 'commits.html', context=scope.context)
 
 def repos(request, org=None):

@@ -408,8 +408,8 @@ class FileChange(models.Model):
     def aggregate_stats(cls, repo, author=None, start=None, end=None):
         # the placement of this method is a little misleading as it deals in files, file changes, and commits
         # it likely could be a lot more efficient by building a custom SQL query here
-        qs = cls.queryset_for_range(repo, authors=[author.pk], start=start, end=end)
-        files = File.queryset_for_range(repo, authors=[author.pk], start=start, end=end)
+        qs = cls.queryset_for_range(repos=[repo.pk], authors=[author.pk], start=start, end=end)
+        files = File.queryset_for_range(repos=[repo.pk], authors=[author.pk], start=start, end=end)
         stats = qs.aggregate(
             lines_added=Sum("lines_added"),
             lines_removed = Sum("lines_removed"),
@@ -428,7 +428,10 @@ class FileChange(models.Model):
     @classmethod
     @functools.lru_cache(maxsize=128, typed=False)
     def change_count(cls, repo, author=None, start=None, end=None):
-        qs = cls.queryset_for_range(repo, authors=[author.pk], start=start, end=end)
+        if author:
+            qs = cls.queryset_for_range(repos=[repo.pk], authors=[author.pk], start=start, end=end)
+        else:
+            qs = cls.queryset_for_range(repos=[repo.pk], start=start, end=end)
         return qs.count()
 
     @classmethod
@@ -477,6 +480,7 @@ class Statistic(models.Model):
     days_since_seen = models.IntegerField(blank=False, null=True, default=-1)
     days_before_joined = models.IntegerField(blank=False, null=True, default=-1)
     longevity = models.IntegerField(blank=True, null=False, default=0)
+    last_scanned = models.DateTimeField(blank=True, null=True)
 
     moves = models.IntegerField(blank=True, null=False, default=0)
     edits = models.IntegerField(blank=True, null=False, default=0)
@@ -517,6 +521,7 @@ class Statistic(models.Model):
         return queryset.annotate(
             # this next one is kind of weird, but we need it to add the value in
             annotated_repo=Max("repo__name"),
+            annotated_last_scanned=Max("last_scanned"),
             annotated_lines_added=Sum("lines_added"),
             annotated_lines_removed=Sum("lines_removed"),
             annotated_lines_changed=Sum("lines_changed"),
@@ -576,6 +581,7 @@ class Statistic(models.Model):
             stat.days_before_joined = (stat.earliest_commit_date - all_earliest).days
             stat.longevity = (stat.latest_commit_date - stat.earliest_commit_date).days + 1
             stat.commitment = (stat.days_active / (1 + stat.longevity))
+            stat.last_scanned = repo.last_scanned
 
             update_stats = None
             if author:
@@ -589,7 +595,8 @@ class Statistic(models.Model):
                 days_since_seen = stat.days_since_seen,
                 days_before_joined = stat.days_before_joined,
                 longevity = stat.longevity,
-                commitment = stat.commitment
+                commitment = stat.commitment,
+                last_scanned = repo.last_scanned
             )
 
         elif not for_update and queryset.count():
@@ -602,6 +609,7 @@ class Statistic(models.Model):
                 stat.days_before_joined = first.days_before_joined
                 stat.longevity = first.longevity
                 stat.commitment = first.commitment
+                stat.last_scanned = repo.last_scanned
             else:
                 # leave these at defaults
                 pass
