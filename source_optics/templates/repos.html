@@ -33,6 +33,9 @@
         {headerName: "L-",             field: "lines_removed", sortable: true, filter: true },
         {headerName: "#Commits",       field: "commit_total", sortable: true, filter: true },
         {headerName: "Days Active",    field: "days_active", sortable: true, filter: true },
+        {% if not author %}
+        {headerName: "Author Count",   field: "author_count", sortable: true, filter: true },
+        {% endif %}
         {headerName: "Last Scanned",   field: "last_scanned", sortable: true, filter: true }
     ];
 

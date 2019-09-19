@@ -262,12 +262,20 @@ class Author(models.Model):
     @functools.lru_cache(maxsize=128, typed=False)
     def authors(cls, repo, start=None, end=None):
         assert repo is not None
+        qs = None
         if start is not None:
-            qs = Commit.objects.filter(
-                author__isnull=False,
-                repo=repo,
-                commit_date__range=(start, end)
-            )
+            if isinstance(repo, str):
+                qs = Commit.objects.filter(
+                    author__isnull=False,
+                    repo__name=repo,
+                    commit_date__range=(start, end)
+                )
+            else:
+                qs = Commit.objects.filter(
+                    author__isnull=False,
+                    repo=repo,
+                    commit_date__range=(start, end)
+                )
         else:
             qs = Commit.objects.filter(
                 repo=repo,

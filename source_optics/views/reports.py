@@ -1,6 +1,6 @@
 
 import json
-from source_optics.models import (Repository, Statistic, Commit)
+from source_optics.models import (Repository, Statistic, Commit, Author)
 from django.db.models import Sum, Count, Max
 from django.core.paginator import Paginator
 
@@ -114,6 +114,15 @@ def repo_table(scope): # repos, start, end):
     stats = Statistic.queryset_for_range(repos=repos, authors=authors, start=scope.start, end=scope.end, interval=interval)
     stats = Statistic.annotate(stats.values('repo__name')).order_by('repo__name')
     data = _annotations_to_table(stats, 'repo', 'repo__name')
+
+    # FIXME: insert in author count, which is ... complicated ... this can be optimized later
+    # we should be able to grab every repo and annotate it with the author count in one extra query tops
+    # but it might require manually writing it.
+    for d in data:
+        repo = d['repo']
+        author_count = Author.author_count(repo, start=scope.start, end=scope.end)
+        d['author_count'] = author_count
+
     # some repos won't have been scanned, and this requires a second query to fill them into the table
     repos = Repository.objects.filter(last_scanned=None, organization=scope.org)
     for unscanned in repos:
