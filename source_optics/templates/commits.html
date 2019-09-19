@@ -23,17 +23,17 @@ FIXME: pagination below should be in an included template
     }
 
     var columnDefs = [
-        {headerName: "Date",        field: "commit_date", sortable: false, filter: true, type: ['dateColumn'] },
+        {headerName: "Date",        field: "commit_date", sortable: false, filter: true, resizable: true, type: ['dateColumn'] },
         {% if repo %}
-        {headerName: "Author",         field: "author", sortable: true, filter: true },
-        {headerName: "Explore",        field: "author", cellRenderer: authorNavCell },
+        {headerName: "Author",         field: "author", sortable: true, filter: true, resizable: true, },
+        {headerName: "Explore",        field: "author", cellRenderer: authorNavCell, resizable: true, },
         {% endif %}
         {% if author %}
-        {headerName: "Repo",           field: "repo", sortable: true, filter: true },
-        {headerName: "Explore",        field: "repo", cellRenderer: repoNavCell },
+        {headerName: "Repo",           field: "repo", sortable: true, filter: true, resizable: true, },
+        {headerName: "Explore",        field: "repo", cellRenderer: repoNavCell, resizable: true, },
         {% endif %}
-        {headerName: "Description", field: "subject", sortable: true, filter: true, width: 600 },
-        {headerName: "SHA",         field: "sha", filter: true }
+        {headerName: "Description", field: "subject", sortable: true, filter: true, width: 600, resizable: true, },
+        {headerName: "SHA",         field: "sha", filter: true, resizable: true, }
     ];
 
     var rowData = {{ table_json | safe }};

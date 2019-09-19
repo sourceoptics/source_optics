@@ -26,17 +26,17 @@
     {% endcomment %}
 
     var columnDefs = [
-        {headerName: "",               field: "details1", cellRenderer: checkBoxCell, width: 60},
-        {headerName: "Repo",           field: "repo", sortable: true, filter: true },
-        {headerName: "Explore",        field: "repo", cellRenderer: repoNavCell },
-        {headerName: "L+",             field: "lines_added", sortable: true, filter: true },
-        {headerName: "L-",             field: "lines_removed", sortable: true, filter: true },
-        {headerName: "#Commits",       field: "commit_total", sortable: true, filter: true },
-        {headerName: "Days Active",    field: "days_active", sortable: true, filter: true },
+        {headerName: "",               field: "details1", cellRenderer: checkBoxCell, width: 60, resizable: true,},
+        {headerName: "Repo",           field: "repo", sortable: true, filter: true, resizable: true, },
+        {headerName: "Explore",        field: "repo", cellRenderer: repoNavCell, resizable: true, },
+        {headerName: "L+",             field: "lines_added", sortable: true, filter: true, resizable: true, },
+        {headerName: "L-",             field: "lines_removed", sortable: true, filter: true, resizable: true, },
+        {headerName: "#Commits",       field: "commit_total", sortable: true, filter: true, resizable: true, },
+        {headerName: "Days Active",    field: "days_active", sortable: true, filter: true, resizable: true, },
         {% if not author %}
-        {headerName: "Author Count",   field: "author_count", sortable: true, filter: true },
+        {headerName: "Author Count",   field: "author_count", sortable: true, filter: true, resizable: true, },
         {% endif %}
-        {headerName: "Last Scanned",   field: "last_scanned", sortable: true, filter: true }
+        {headerName: "Last Scanned",   field: "last_scanned", sortable: true, filter: true, resizable: true, }
     ];
 
     var rowData = {{ repo_table | safe }};
