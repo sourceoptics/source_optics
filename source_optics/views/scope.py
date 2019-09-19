@@ -149,11 +149,28 @@ class Scope(object):
             self.repos_str = None
             if isinstance(repos, str) and repos != "None":
                 # FIXME: how does it get to be string None?
-                repos = repos = [ int(x) for x in repos.split(" ") ]
-                if self.org:
-                    self.repos = Repository.objects.filter(pk__in=repos, organization=self.org).select_related('organization')
+                repos = repos.split()
+                repos_by_id = False
+                try:
+                    int(repos[1])
+                    repos_by_id = True
+                except:
+                    pass
+
+                if repos_by_id:
+                    repos = repos = [ int(x) for x in repos ]
+
+                if repos_by_id:
+                    if self.org:
+                        self.repos = Repository.objects.filter(pk__in=repos, organization=self.org).select_related('organization')
+                    else:
+                        self.repos = Repository.objects.filter(pk__in=repos).select_related('organization')
                 else:
-                    self.repos = Repository.objects.filter(pk__in=repos).select_related('organization')
+                    if self.org:
+                        self.repos = Repository.objects.filter(name__in=repos, organization=self.org).select_related('organization')
+                    else:
+                        self.repos = Repository.objects.filter(name__in=repos).select_related('organization')
+
                 self.repo = self.repos.first()
         else:
             self.repos = None
