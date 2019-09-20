@@ -175,11 +175,18 @@ CHECKOUT_DIRECTORY = "/tmp/source_optics"
 
 # ===========================
 # APP PREFERENCES
+# (you should put these overrides in /etc/source_optics/conf.d/*.py)
 
 # pull new code from repos if not pulled in N minutes, 0 = always pull
+# set this higher than 0 and put in a cron loop when enabling webhooks
+# (see install guide).
 PULL_THRESHOLD = 0
 
-# in seconds...
+# amount to wait for git before giving up, in seconds...
 GIT_PULL_TIMEOUT=400
 GIT_CLONE_TIMEOUT=2400
+
+# clamp the Y Axis of any graph to this number times the median value
+# set to 99999 to essentially disable clamping. NOT YET IMPLEMENTED
+# GRAPH_CLAMPING_MULTIPLE=100
 

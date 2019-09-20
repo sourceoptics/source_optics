@@ -143,6 +143,7 @@ def _interval_queryset(scope, by_author=False, aspect=None, limit_top_authors=Fa
             inverse = totals.exclude(author__in=limited_to).select_related('author')
             return (filtered, limited_to, inverse)
 
+    print("DF-RET")
     return (totals.order_by('author','start_date').select_related('author'), None, None)
 
 
@@ -252,8 +253,6 @@ def _stat_series(scope, by_author=False, interval=None, limit_top_authors=False,
                                                                    limit_top_authors=limit_top_authors)
 
         (df_data, fields) = _interval_queryset_to_dataframe(scope.repo, totals=totals, fields=fields, inverse=inverse)
-
-
 
     df = pandas.DataFrame(df_data, columns=fields)
     return (df, limited_to_authors)

@@ -17,6 +17,7 @@
 import functools
 from .. models import Statistic
 from django.db.models import Sum
+from django.conf import settings
 
 AUTHOR_TIME_SERIES_TOOLTIPS = ['day','author','commit_total', 'lines_changed', 'files_changed', 'longevity', 'days_since_seen' ]
 
@@ -28,6 +29,8 @@ import string
 
 import altair as alt
 from django import template
+
+GRAPH_CLAMPING_FACTOR = getattr(settings, 'GRAPH_CLAMPING_FACTOR', 5)
 
 # template used by render_chart below
 TEMPLATE_CHART = """
@@ -104,6 +107,9 @@ def time_plot(scope=None, df=None, repo=None, y=None, by_author=False, top=None,
         tooltips = AUTHOR_TIME_SERIES_TOOLTIPS
 
     alt.data_transformers.disable_max_rows()
+
+    # clamp = df[y].mean(skipna=True) * GRAPH_CLAMPING_FACTOR
+    # domain = (0, clamp)
 
     if by_author:
         chart = alt.Chart(df, height=600, width=600).mark_area().encode(

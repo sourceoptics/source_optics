@@ -23,6 +23,7 @@ from . import reports
 
 CURRENT_TZ = timezone.get_current_timezone()
 
+# FIXME: lots of refactoring in fuzzy "what is the scope" logic is still required
 
 def is_int(x):
     try:
@@ -150,12 +151,7 @@ class Scope(object):
             if isinstance(repos, str) and repos != "None":
                 # FIXME: how does it get to be string None?
                 repos = repos.split()
-                repos_by_id = False
-                try:
-                    int(repos[1])
-                    repos_by_id = True
-                except:
-                    pass
+                repos_by_id = is_int(repos[0])
 
                 if repos_by_id:
                     repos = repos = [ int(x) for x in repos ]
