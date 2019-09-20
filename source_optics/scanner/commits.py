@@ -34,6 +34,7 @@ DEL = '&DEL&>'
 # author_date %ad
 # commit_date %cd
 # author_email %ae
+# author_name %an
 # subject %f
 
 PRETTY_STRING = f"'{DEL}%H{DEL}%an{DEL}%ad{DEL}%cd{DEL}%ae{DEL}%f{DEL}'"
@@ -425,9 +426,17 @@ class Commits:
             return commit
 
         email = data['author_email']
+        author_name = data['author_name']
         email = cls.check_alias(repo, email)
 
-        author, created = Author.objects.get_or_create(email=email)
+        author, created = Author.objects.get_or_create(email=email, defaults=dict(display_name=author_name))
+
+        if not author.display_name:
+            # update database old author records if a name is now available
+            author.display_name = author_name
+            print("updating author name (%s) -> (%s)" % (author.email, author.display_name))
+            author.save()
+
 
         commit_date = parse_datetime(data['commit_date'])
         author_date = parse_datetime(data['author_date'])

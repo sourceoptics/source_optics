@@ -538,6 +538,7 @@ class Statistic(models.Model):
         return queryset.annotate(
             # this next one is kind of weird, but we need it to add the value in
             annotated_repo=Max("repo__name"),
+            annotated_author_name=Max("author__display_name"),
             annotated_last_scanned=Max("last_scanned"),
             annotated_lines_added=Sum("lines_added"),
             annotated_lines_removed=Sum("lines_removed"),
@@ -701,7 +702,7 @@ class Statistic(models.Model):
         assert repos or authors
         assert interval is not None
 
-        stats = Statistic.objects.select_related('author')
+        stats = Statistic.objects.select_related('author', 'repo')
 
         if authors:
             stats = stats.filter(author__pk__in=authors)

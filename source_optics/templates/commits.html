@@ -25,7 +25,8 @@ FIXME: pagination below should be in an included template
     var columnDefs = [
         {headerName: "Date",        field: "commit_date", sortable: false, filter: true, resizable: true, type: ['dateColumn'] },
         {% if repo %}
-        {headerName: "Author",         field: "author", sortable: true, filter: true, resizable: true, },
+        {headerName: "Author",         field: "author_name", sortable: true, filter: true, resizable: true },
+        {headerName: "Email",          field: "author", sortable: true, filter: true, resizable: true, },
         {headerName: "Explore",        field: "author", cellRenderer: authorNavCell, resizable: true, },
         {% endif %}
         {% if author %}

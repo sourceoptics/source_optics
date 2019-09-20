@@ -21,7 +21,8 @@
 
     var columnDefs = [
         {% if repo %}
-        {headerName: "Author",         field: "author", sortable: true, filter: true, resizable: true, },
+        {headerName: "Author",         field: "author_name", sortable: true, filter: true, resizable: true },
+        {headerName: "Email",          field: "author", sortable: true, filter: true, resizable: true, },
         {headerName: "Explore",        field: "author", cellRenderer: authorNavCell, resizable: true, },
         {% endif %}
         {% if author %}

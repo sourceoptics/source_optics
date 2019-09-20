@@ -55,6 +55,7 @@ def commits_feed(scope):
             commit_date=str(commit.commit_date),
             author_id=commit.author.pk,
             author=commit.author.email,
+            author_name=commit.author.display_name,
             sha=commit.sha,
             subject=desc
         ))
@@ -62,6 +63,11 @@ def commits_feed(scope):
     return dict(results=results, page=page, count=count)
 
 def _annotations_to_table(stats, primary, lookup):
+
+    """
+    Processes a list of statistics objects and converts annotated values
+    from those statistics objects back to the field names used in the tables.
+    """
 
     results = []
 
@@ -71,7 +77,7 @@ def _annotations_to_table(stats, primary, lookup):
         for (k,v) in entry.items():
             if k.startswith("annotated_"):
                 k2 = k.replace("annotated_","")
-                if 'date' in k2 or 'last_scanned' in k2:
+                if 'date' in k2 or 'last_scanned' in k2 or 'name' in k2:
                     new_item[k2] = str(v)
                 else:
                     new_item[k2] = v
