@@ -36,7 +36,7 @@ Installation, Setup, and Usage
 
 Installation and operation is fairly standard as Django applications go.
 
-See (https://github.com/sourceoptics/source_optics/blob/master/INSTALL.md) for detailed instructions.
+See [INSTALL.md](https://github.com/sourceoptics/source_optics/blob/master/INSTALL.md) for detailed instructions.
 
 Roadmap
 =======
