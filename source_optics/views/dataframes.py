@@ -226,7 +226,7 @@ def _stat_series(scope, by_author=False, interval=None, limit_top_authors=False,
 
     # FIXME: the scope parameter to this function is basically ignored. it probably can be removed.
 
-    if scope.interval == 'WK' and (delta > 700):
+    if scope.interval == 'WK' and (delta > settings.GRAPH_MAX_DAYS_RESOLUTION):
         # data points get very un-smooth with too much on the graph
         # user can always dial in the time range to get something more granular
         scope.interval = 'MN'

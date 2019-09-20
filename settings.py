@@ -194,3 +194,7 @@ GRAPH_CLAMPING=True
 GRAPH_CLAMP_FACTOR_A=0.80
 GRAPH_CLAMP_FACTOR_B=0.25
 GRAPH_CLAMP_FACTOR_C=5.00
+
+# if the time range is requested more than this many days, stop drawing the time range
+# as "weeks" and instead do "months", because the graph won't be smooth enough to be interesting
+GRAPH_MAX_DAYS_RESOLUTION=700
