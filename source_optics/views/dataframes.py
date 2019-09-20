@@ -19,6 +19,7 @@ from django.db.models import Sum
 import django.utils.timezone as timezone
 from ..models import Statistic, Author
 import pandas
+from django.conf import settings
 
 # fields valid for axes or tooltips in time series graphs
 TIME_SERIES_FIELDS = [
@@ -143,7 +144,6 @@ def _interval_queryset(scope, by_author=False, aspect=None, limit_top_authors=Fa
             inverse = totals.exclude(author__in=limited_to).select_related('author')
             return (filtered, limited_to, inverse)
 
-    print("DF-RET")
     return (totals.order_by('author','start_date').select_related('author'), None, None)
 
 
@@ -218,8 +218,18 @@ def _stat_series(scope, by_author=False, interval=None, limit_top_authors=False,
     end = scope.end
 
 
+
     if not interval:
         interval = get_interval(scope, start, end)
+
+    delta = (end - start).days
+
+    # FIXME: the scope parameter to this function is basically ignored. it probably can be removed.
+
+    if scope.interval == 'WK' and (delta > 700):
+        # data points get very un-smooth with too much on the graph
+        # user can always dial in the time range to get something more granular
+        scope.interval = 'MN'
 
     fields = TIME_SERIES_FIELDS[:]
     if by_author:
@@ -269,4 +279,51 @@ def author_time_series(scope):
 def top_author_time_series(scope, aspect=None):
     (df, top) = _stat_series(scope, by_author=True, aspect=aspect, limit_top_authors=True)
     return (df, top)
+
+CLAMP_PERCENTAGE_A=0.90
+CLAMP_PERCENTAGE_B=0.25
+
+def get_clamped_domain(df, row):
+
+    """
+    Returns the suggested axis range for a graph, where anomalies are not given too much influence
+    over Y axis scale.  This can always be improved, but is mostly trying to do no harm.
+    """
+
+    # FIXME: we could do this all with pandas and it would probably be faster...
+    # shippable proof of concept for now. Algorithm can always be improved.
+
+    items = df[row].tolist()
+    if len(items) == 0:
+        return (0,1)
+    items = sorted(items)
+    max = items[-1]
+
+    if not settings.GRAPH_CLAMPING:
+        return (0, max)
+    if (len(items) < 2) or max == 0:
+        return (0, max)
+
+    width = len(items)
+    index = int(width * settings.GRAPH_CLAMP_FACTOR_A)
+    value = items[index]
+
+    # calculate the difference percentage between the Nth percentile and the max
+    difference = ((max - value) / max)
+
+    if difference > settings.GRAPH_CLAMP_FACTOR_B:
+        clamped = int(value * settings.GRAPH_CLAMP_FACTOR_C)
+        if clamped < max:
+            return (0, clamped)
+        return (0, max)
+    else:
+        return (0, max)
+
+
+
+
+
+
+
+
 

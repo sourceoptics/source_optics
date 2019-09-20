@@ -186,7 +186,11 @@ PULL_THRESHOLD = 0
 GIT_PULL_TIMEOUT=400
 GIT_CLONE_TIMEOUT=2400
 
-# clamp the Y Axis of any graph to this number times the median value
-# set to 99999 to essentially disable clamping. NOT YET IMPLEMENTED
-# GRAPH_CLAMPING_MULTIPLE=100
-
+# attempt to clamp graph Y axis to avoid undue influence of anomalous data
+# from making the graphs unusable
+GRAPH_CLAMPING=True
+# if the 80th percentile is only 1/4 of the max
+# clamp to 5 times the 80th percentile value
+GRAPH_CLAMP_FACTOR_A=0.80
+GRAPH_CLAMP_FACTOR_B=0.25
+GRAPH_CLAMP_FACTOR_C=5.00

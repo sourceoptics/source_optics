@@ -18,6 +18,7 @@ import functools
 from .. models import Statistic
 from django.db.models import Sum
 from django.conf import settings
+from . import dataframes
 
 AUTHOR_TIME_SERIES_TOOLTIPS = ['day','author','commit_total', 'lines_changed', 'files_changed', 'longevity', 'days_since_seen' ]
 
@@ -107,28 +108,27 @@ def time_plot(scope=None, df=None, repo=None, y=None, by_author=False, top=None,
         tooltips = AUTHOR_TIME_SERIES_TOOLTIPS
 
     alt.data_transformers.disable_max_rows()
-
-    # clamp = df[y].mean(skipna=True) * GRAPH_CLAMPING_FACTOR
-    # domain = (0, clamp)
+    domain = dataframes.get_clamped_domain(df, y)
 
     if by_author:
         chart = alt.Chart(df, height=600, width=600).mark_area().encode(
             x=alt.X('date:T', axis = alt.Axis(title = 'date', format = ("%b %Y")), scale=alt.Scale(zero=False, clamp=True)),
-            y=alt.Y(y, scale=alt.Scale(zero=False, clamp=True)),
+            y=alt.Y(y, scale=alt.Scale(zero=True, domain=domain, clamp=True)),
             color=alt.Color('author', sort=top),
             tooltip=tooltips
         ).interactive()
     elif not scope.multiple_repos_selected():
         chart = alt.Chart(df, height=600, width=600).mark_line().encode(
             x=alt.X('date:T', axis = alt.Axis(title = 'date', format = ("%b %Y")), scale=alt.Scale(zero=False, clamp=True)),
-            y=alt.Y(y, scale=alt.Scale(zero=False, clamp=True)),
+            y=alt.Y(y, scale=alt.Scale(zero=True, domain=domain, clamp=True)),
             tooltip=tooltips
         ).interactive()
     else:
+        # multiple repos
         chart = alt.Chart(df, height=600, width=600).mark_line().encode(
             x=alt.X('date:T', axis = alt.Axis(title = 'date', format = ("%b %Y")), scale=alt.Scale(zero=False, clamp=True)),
-            y=alt.Y(y, scale=alt.Scale(zero=False, clamp=True)),
-            color=alt.Color('repo'), # FIXME: sort repos
+            y=alt.Y(y, scale=alt.Scale(zero=True, domain=domain, clamp=True)),
+            color=alt.Color('repo'),
             tooltip=tooltips
         ).interactive()
 
