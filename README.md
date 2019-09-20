@@ -102,31 +102,22 @@ License
 
 All source is provided under the Apache 2 license, (C) All Project Contributors.
 
-Mailing List
-============
+Newsletter
+==========
 
-A combined user & development discussion list is available on Google Groups. Setup & management questions, ideas,
-and code questions are all equally appropriate.  The mailing list is also the best place to keep up with the 
-direction of the project, and updates will be shared there that are more detailed than those posted to twitter (see also
-@SourceOptics).
-
-To join, visit [https://groups.google.com/forum/#!forum/sourceoptics](https://groups.google.com/forum/#!forum/sourceoptics).  First posts are moderated to reduce spam, and most first posts should be approved in 24 hours.
-
-Requests for features and ideas should be sent to the mailing list, not GitHub.
-
-You may also email michael@michaeldehaan.net for general questions that you do not wish to post to the mailing list.
+A weekly newsletter is available for signup at the bottom of http://sourceoptics.io/ - it's a great way to keep up with new features in development, ideas, to participate in surveys, and more. 
 
 Code Contribution Preferences
 =============================
 
-A few small guidelines to keep things easy to manage.
+A few small guidelines to keep things easy to manage:
 
-0) While not required, it is strongly encouraged that all contributors should join the mailing list, so they can keep track of larger changes and project themes, that are sometimes difficult to describe in GitHub or twitter posts.  If you are on twitter, you may also wish to follow @SourceOptics.
+0) Contributors should subscribe to the newsletter to keep up with project direction. If you are on twitter, also follow @SourceOptics.
 
 1) Contributions should be by github pull request on a seperate branch per topic. Please do not combine features. Rebase your pull requests to keep them up to date and avoid merges in the git history.  
 
-2) We care a lot about managing the surface area of the application to keep it easy to maintain and operate, and this project should move pretty fast. To keep frustrations over repeated work low, discussion of feature ideas *prior* to submitting a pull request is  encouraged (i.e. what do you think about X, how should this be implemented?). For bugfixes, feel free to submit code directly. If you make a database change, you must check in a new Django migrations file.
+2) We care a lot about managing the surface area of the application to keep it easy to maintain and operate, and this project should move pretty fast. To keep frustrations over repeated work low, discussion of feature ideas *prior* to submitting a pull request is  encouraged. For bugfixes, feel free to submit code directly. If you make a database change, you must check in a new Django migrations file. Email michael AT michaeldehaan.net to discuss anything you would like to discuss.  
 
-3) Please do not send any submissions to tweak PEP8, pylint, or other code preferences.  Management will do that periodically, this breaks source code attribution.  Similarly, do not submit additions to add packaging, deployment, or integration with third party build or test services, as these are site specific preferences and we will not be maintaining multiple offshoots.
+3) Please do not send any submissions to tweak PEP8, pylint, or other code preferences. This breaks source code attribution, and we'll do it periodically anyway. Similarly, do not submit additions to add packaging, deployment, or integration with third party build or test services, as these are site specific preferences and we will not be maintaining multiple offshoots.
 
 Thank you!
