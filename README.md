@@ -9,62 +9,21 @@ Source Optics
 Source Optics is an advanced source code repository dashboard, focused on understanding
 evolving code activity in an organization and the teams that work on them.
 
-It should be equally relevant to many types of users including:
+Read all about use cases at  http://sourceoptics.io/
 
-* Commercial software managers, developers, and executives
-* Ops/"DevOps" teams tracking a wide variety of microservice repositories
-* Open source community managers
-* Researchers interested in studying software development
-* Computer science educators with a large number of class projects
-
-It can help answer basic questions such as:
-
-* what repositories are most active within a time range
-* what are the contribution dynamics around these projects
-* which projects are growing or decreasing in activity
-* who is working on what projects
-* how much work effort is being applied, by whom, to different projects
-
-Features include:
-
-* multiple charts showing project dynamics, with built-in curve fitting
-* tables of contributor activity
-* analyzing multiple branches all at once, as opposed to just "master"
-
-Compared to other analysis tools, SourceOptics is well differentiated by:
-
-* showing all branches at once
-* supporting arbitrary time range windows for all statistics and graphs
-* offering more statistics and graphs
-* being scalable to projects with thousands of authors
-* having an amazing roadmap of new features
-
-Website
-=======
-
-See [sourceoptics.io](https://sourceoptics.io)
-
-Features/Basics
-===============
-
-Repositories are configured or can be imported over the GitHub API.
-
-Once added, repositories can be periodically scanned, or triggered for scanning from a webhook.
-
-Scanned repositories can be reviewed, using a wide range of graphs and tables.
-
-Technical Details
+Basic Details
 =================
 
 Source Optics is a stand-alone web applicaton.  It is built on Python3 and Django, using PostgreSQL
 for a database, making it exceptionally easy to deploy.
 
 Background tasks are implemented as Django management commands, which could be run by
-any task management system and/or cron.  Celery is not used, simplifying setup and
-maintaince.
+any task management system, usually cron.  Celery is not used, simplifying setup and
+maintaince.  The primary background task is the "scan" command, which updates repository data
+as new commits are available.  There are also CLI commands for syncing repository definitions
+with GitHub, though using GitHub is not required to use Source Optics.
 
-Repositories can be automatically imported via a management command, and all other aspects
-of the system are configured within in the Django management interface (on "/admin").
+The main application lives on "/", and there is an admin configuration panel on "/admin".
 
 The API is largely read-only but will support eventually support injection of user data via a few custom
 POST endpoints, for instance allowing display in-GUI of build-system status, source code
@@ -72,35 +31,22 @@ static analysis, and so on.
 
 For those wishing to try out Source Optics, it should run happily from a laptop.
 
-Installation
-============
+Installation, Setup, and Usage
+======================
 
-Installation and operation is as with any standard Django application and is described in [INSTALL.md](https://github.com/sourceoptics/source_optics/blob/master/INSTALL.md).
+Installation and operation is fairly standard as Django applications go.
+
+See (https://github.com/sourceoptics/source_optics/blob/master/INSTALL.md) for detailed instructions.
 
 Roadmap
 =======
 
-See GitHub Projects
-
-Usage
-=====
-
-(Also described in [INSTALL.md](https://github.com/sourceoptics/source_optics/blob/master/INSTALL.md))
-
-Once installed and running, add in data with the Django admin UI, ex: http://127.0.0.1:8000/servername/admin.
-Set up a credential, create an organization, add some repos.  Or use the CLI import command to import repos from GitHub.
-
-Can the repositories periodically with the "python3 manage.py scan" command.
-
-View graphs at http://127.0.0.1/
-
-More detailed documentation about Django admin settings will come later, but is largely
-documented already with tooltips and in the install guide.
+Our Roadmap is 100% public and posted on [GitHub Projects](https://github.com/sourceoptics/source_optics/projects)
 
 License
 =======
 
-All source is provided under the Apache 2 license, (C) All Project Contributors.
+All source is provided under the Apache 2 license, (C) 2018-2019, All Project Contributors.
 
 Newsletter
 ==========
