@@ -11,30 +11,12 @@ evolving code activity in an organization and the teams that work on them.
 
 Read all about use cases at  http://sourceoptics.io/
 
-Basic Details
-=================
+Installation, Setup, and Usage
+==============================
 
 Source Optics is a stand-alone web applicaton.  It is built on Python3 and Django, using PostgreSQL
-for a database, making it exceptionally easy to deploy.
-
-Background tasks are implemented as Django management commands, which could be run by
-any task management system, usually cron.  Celery is not used, simplifying setup and
-maintaince.  The primary background task is the "scan" command, which updates repository data
-as new commits are available.  There are also CLI commands for syncing repository definitions
-with GitHub, though using GitHub is not required to use Source Optics.
-
-The main application lives on "/", and there is an admin configuration panel on "/admin".
-
-The API is largely read-only but will support eventually support injection of user data via a few custom
-POST endpoints, for instance allowing display in-GUI of build-system status, source code
-static analysis, and so on. 
-
-For those wishing to try out Source Optics, it should run happily from a laptop.
-
-Installation, Setup, and Usage
-======================
-
-Installation and operation is fairly standard as Django applications go.
+for a database, making it exceptionally easy to deploy. You should be up and running in about 30
+minutes, and setup is fairly standard as Django applications go.
 
 See [INSTALL.md](https://github.com/sourceoptics/source_optics/blob/master/INSTALL.md) for detailed instructions.
 
