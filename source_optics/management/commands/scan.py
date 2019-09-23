@@ -29,15 +29,15 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
 
-        parser.add_argument('-o', '--organization_pattern',
+        parser.add_argument('-o', '--organization',
                             dest='org',
                             type=str,
-                            help='Only process organizations with this substring',
+                            help='Only process this organization',
                             default=None)
-        parser.add_argument('-r', '--repo_pattern',
+        parser.add_argument('-r', '--repo',
                             dest='repo',
                             type=str,
-                            help='Only process repositories with this substring',
+                            help='Only process this repository',
                             default=None)
         parser.add_argument('-F', '--force-nuclear-rescan',
                             dest='force_nuclear_rescan',
@@ -46,10 +46,10 @@ class Command(BaseCommand):
 
     def handle(self, *args, **kwargs):
 
-        organization_filter = kwargs['org']
-        repository_filter = kwargs['repo']
+        org = kwargs['org']
+        repo = kwargs['repo']
         force_nuclear_rescan = kwargs['force_nuclear_rescan']
 
-        RepoProcessor.scan(organization_filter=organization_filter,
-                           repository_filter=repository_filter,
+        RepoProcessor.scan(organization=org,
+                           repository=repo,
                            force_nuclear_rescan=force_nuclear_rescan)

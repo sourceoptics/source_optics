@@ -20,7 +20,7 @@ import functools
 
 from django.utils.dateparse import parse_datetime
 
-from ..models import Author, Commit, File, FileChange, EmailAlias
+from ..models import Author, Commit, File, FileChange
 from . import commands
 
 # we use git --log with a special one-line format string to capture certain fields
@@ -399,12 +399,30 @@ class Commits:
 
     @classmethod
     @functools.lru_cache(maxsize=10000, typed=False)
-    def check_alias(cls, repo, email):
-        _ = repo
-        alias = EmailAlias.objects.filter(from_email=email)
-        if alias.count():
-            return alias.first().to_email
-        return email
+    def get_author(cls, repo, email, author_name):
+        maybe = Author.objects.filter(email=email).all()
+        if len(maybe):
+            author = maybe.first()
+            count = 0
+            # if we found an alias record, walk up the tree until we find the root author, because
+            # they get the stats.
+            while author.alias_for:
+                author = author.alias_for
+                count = count + 1
+                if count > 3:
+                    print("warning: author aliases are too deep")
+                    break
+            found = author
+
+            if not found.display_name:
+                # update database old author records if a name is now available
+                found.display_name = author_name
+                print("updating author name (%s) -> (%s)" % (found.email, found.display_name))
+                found.save()
+            return found
+        else:
+            raise Exception("unexpected - %s" % email) # FIXME: remove before checkin
+            return Author.objects.create(email=email, display_name=author_name)
 
     @classmethod
     def handle_diff_information(cls, repo, line, mode):
@@ -418,7 +436,6 @@ class Commits:
         match = PARSER_RE.match(line)
         if not match:
             raise Exception("DOESN'T MATCH? %s" % line)
-
         data = match.groupdict()
         if mode != 'Commit':
             # running back through the logs to set up the file changes
@@ -427,16 +444,7 @@ class Commits:
 
         email = data['author_email']
         author_name = data['author_name']
-        email = cls.check_alias(repo, email)
-
-        author, created = Author.objects.get_or_create(email=email, defaults=dict(display_name=author_name))
-
-        if not author.display_name:
-            # update database old author records if a name is now available
-            author.display_name = author_name
-            print("updating author name (%s) -> (%s)" % (author.email, author.display_name))
-            author.save()
-
+        author = cls.get_author(repo, email, author_name)
 
         commit_date = parse_datetime(data['commit_date'])
         author_date = parse_datetime(data['author_date'])

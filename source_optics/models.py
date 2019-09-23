@@ -18,7 +18,6 @@ import re
 
 from django.conf import settings
 from django.contrib.auth.models import User
-from django.contrib.postgres.indexes import BrinIndex
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Sum, Max
@@ -121,7 +120,6 @@ class Repository(models.Model):
     enabled = models.BooleanField(default=True, help_text='if false, disable scanning')
     last_scanned = models.DateTimeField(blank=True, null=True)
 
-    tags = models.ManyToManyField('Tag', related_name='tags', blank=True)
     last_pulled = models.DateTimeField(blank = True, null = True)
     url = models.CharField(max_length=255, db_index=True, blank=False, help_text='use a git ssh url for private repos, else http/s are ok')
 
@@ -193,10 +191,13 @@ class Repository(models.Model):
         cls.earliest_commit_date.cache_clear()
         cls.latest_commit_date.cache_clear()
 
+
+
 class Author(models.Model):
 
     email = models.CharField(db_index=True, max_length=512, unique=True, blank=False, null=True)
     display_name = models.CharField(db_index=True, max_length=512, unique=False, blank=True, null=True)
+    alias_for = models.ForeignKey('self', blank=True, null=True, related_name='alias_of', on_delete=models.SET_NULL)
 
     def get_display_name(self):
         if self.display_name:
@@ -204,7 +205,7 @@ class Author(models.Model):
         return self.email
 
     def __str__(self):
-        return f"Author: {self.get_display_name()}"
+        return f"Author: {self.display_name} <{self.email}>"
 
     @functools.lru_cache(maxsize=128, typed=False)
     def earliest_commit_date(self, repo):
@@ -296,27 +297,6 @@ class Author(models.Model):
             file_changes__commit__author=self,
         ).distinct('path').count()
 
-class EmailAlias(models.Model):
-
-    organization = models.ForeignKey(Organization, related_name='+', null=True, blank=False, on_delete=models.CASCADE)
-    from_email = models.CharField(db_index=True, max_length=512, unique=True, blank=False, null=True)
-    to_email = models.CharField(db_index=True, max_length=512, unique=False, blank=False, null=True)
-
-    class Meta:
-        verbose_name_plural = "EmailAliases"
-
-    def __str__(self):
-        return("(%s) %s -> %s" % (self.organization.name, self.from_email, self.to_email))
-
-
-class Tag(models.Model):
-    name = models.CharField(max_length=64, db_index=True, blank=True, null=True)
-    repos = models.ManyToManyField(Repository, related_name='+', blank=True)
-
-    def __str__(self):
-        return f"Tag: {self.name}"
-
-
 class Commit(models.Model):
 
     repo = models.ForeignKey(Repository, db_index=True, on_delete=models.CASCADE, related_name='commits')
@@ -329,8 +309,10 @@ class Commit(models.Model):
     class Meta:
         unique_together = [ 'repo', 'sha' ]
         indexes = [
-            BrinIndex(fields=['commit_date', 'author', 'repo'], name='commit1'),
-            BrinIndex(fields=['author_date', 'author', 'repo'], name='commit2'),
+            models.Index(fields=['commit_date', 'author', 'repo'], name='commit3'),
+            models.Index(fields=['author_date', 'author', 'repo'], name='commit4'),
+            models.Index(fields=['author', 'repo'], name='commit5'),
+
         ]
 
     @classmethod
@@ -364,7 +346,7 @@ class File(models.Model):
     class Meta:
         unique_together = [ 'repo', 'name', 'path' ]
         indexes = [
-            BrinIndex(fields=[ 'repo', 'name', 'path' ], name='file1')
+            models.Index(fields=[ 'repo', 'name', 'path' ], name='file2')
         ]
 
     @classmethod
@@ -398,7 +380,7 @@ class FileChange(models.Model):
     class Meta:
         unique_together = [ 'file', 'commit' ]
         indexes = [
-            BrinIndex(fields=[ 'file', 'commit' ], name='file_change1')
+            models.Index(fields=[ 'file', 'commit' ], name='file_change2')
         ]
 
     @classmethod
@@ -516,7 +498,7 @@ class Statistic(models.Model):
         ]
 
         indexes = [
-            BrinIndex(fields=['start_date', 'interval', 'repo', 'author'], name='author_rollup2'),
+            models.Index(fields=['start_date', 'interval', 'repo', 'author'], name='author_rollup3'),
         ]
 
     @classmethod

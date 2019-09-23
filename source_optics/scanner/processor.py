@@ -64,22 +64,22 @@ class RepoProcessor:
         fcntl.flock(handle, fcntl.LOCK_UN)
 
     @classmethod
-    def scan(cls, organization_filter=None, repository_filter=None, force_nuclear_rescan=False):
+    def scan(cls, organization=None, repository=None, force_nuclear_rescan=False):
         """
         The main method behind the repo scanning CLI command.
         """
 
-        # REFACTOR: this lock should be a context manager (aka 'with')
+        # FIXME: move this to use select_for_update on the repository table
         lock_handle = cls.lock()
 
         agent_manager = SshAgentManager()
 
         print("scanning repos")
         repos = Repository.objects
-        if organization_filter:
-            repos = repos.filter(organization__name__contains=organization_filter)
-        if repository_filter:
-            repos = repos.filter(name__contains=repository_filter)
+        if organization:
+            repos = repos.filter(organization__name=organization)
+        if repository:
+            repos = repos.filter(name=repository)
 
         repos = repos.select_related('organization').all()
 
@@ -153,6 +153,8 @@ class RepoProcessor:
     # @transaction.atomic - FIXME: disabled for testing, I think? Or why?
     def process_repo(cls, repo, agent_manager, force_nuclear_rescan):
 
+        print("")
+
         if force_nuclear_rescan or repo.force_nuclear_rescan:
             print("*** RESCAN WAS FORCED **")
             cls.force_nuclear_rescan(repo)
@@ -177,6 +179,7 @@ class RepoProcessor:
 
         # FIXME: use commands class
         os.system('mkdir -p ' + work_dir)
+        print("directory: %s" % work_dir)
 
         if not cls.checkout_and_read_commit_logs(repo, work_dir):
             return False

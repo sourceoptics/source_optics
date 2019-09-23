@@ -134,6 +134,9 @@ class Rollup:
         Generate rollup stats for everything the team did on a given day
         """
 
+        # FIXME: this function is fairly expensive. What if we could instead of performing aggregrations
+        # per day, we could annotate each first commit of each day?
+
         end_date = cls.get_end_day(start_day, DAY)
 
         file_change_count = FileChange.change_count(repo, author=author, start=start_day, end=end_date)
@@ -376,11 +379,10 @@ class Rollup:
 
         for author in authors:
 
+            print("author: %s/%s: %s" % (author_count, author_total, author.email))
+
             commits = Commit.objects.filter(repo=repo, author=author)
             author_count = author_count + 1
-
-            print("(RAS1) compiling contributor stats: %s/%s" % (author_count, author_total))
-
             commit_days = commits.datetimes('commit_date', 'day', order='ASC')
 
             # print("author commit days: ", author, commit_days)

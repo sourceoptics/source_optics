@@ -68,6 +68,7 @@ class Checkout:
 
             prev = os.getcwd()
             os.chdir(work_dir)
+            print("CWD: %s" % work_dir)
             # FIXME: command wrapper should take an optional cwd to make this cleaner
 
             try:

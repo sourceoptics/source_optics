@@ -47,6 +47,7 @@ def execute_command(repo, command, input_text=None, env=None, log=True, timeout=
     prev = None
     if chdir:
         prev = os.getcwd()
+        print("chdir: %s" % chdir)
         os.chdir(chdir)
 
     # FIXME: standard logging

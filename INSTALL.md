@@ -238,22 +238,42 @@ Over time, expect to see lots of new features in this area.
 Email Alias Remapping (Optional)
 ================================
 
-It is likely that some authors may commit under several different email aliases. When this occurs, alias
-mappings can be added by adding objects under "Email Aliases" in Django Admin. Adding these aliases will
-improve statistics and graphs significantly.
+Email aliases come up in a variety of scenarios.
 
-Once added, rescanning with "python3 manage.py scan ... -F" will recompute all statistics, 
-combining the author records into one.  If a rescan with "-F" is not done, aliases will only affect
-future statistics.
+(A) If an author wants to use a new email address, first let the scanner first pick up their new commits. Then, find the old
+email address in Django admin, and edit the "alias_for" field to point to the new record.
 
-To remove the alias mapping, delete the EmailAlias row, and rescan again with "-F" and statistics will once
-again be recorded by the original email address.
+(B) It is also likely that some authors may commit under several different email aliases, and this is particularly a
+problem in newly imported repositories, with educational projects, and with open source projects, where people
+may commit while working for different employers or with a mixture of home and work accounts. When this occurs,
+alias mappings can be added automatically, which perhaps unsafely assume that all users have unique full names.
 
-To provide faster data entry, a management command to load aliases from a text file seems like a good idea 
-for a future feature.
+First, generate a plan file for the organization:
 
-Consider a site-wide policy to require commits to be under a specific email address per person to minimize
-the need to manage this aspect of the program.
+    python3 manage.py deduplicate_authors -o <organization> -f <plan_file.toml> -p
+
+This creates a plan file in TOML format, which you should manually review for false positives, and edit as you see fit. 
+You can delete anything in there you don't want to map.
+
+When ready, execute the plan file to set the alias pointers, which does exactly the same thing you would do in the 
+web interface.
+
+    python3 manage.py deduplicate_authors -o <organization> -f <plan_file.toml> -x
+
+Finally, to recompute statistics, force rescan the repos in question:
+
+    ssh-agent python3 manage.py scan -o <organization> -F
+    
+This is the exact same process you should follow if, for instance, you rename a company entirely and want to start
+using the new company email address.  Just wait a month for everyone to have used their new address, and execute
+a TOML file that details the remap.
+    
+If an user merely wants to change names or correct a spelling error in a name, you can edit the display name in Django Admin,
+and skip all of the above steps.
+
+If you have an alias entered and want to make it a primary address, simply find that address in Django Admin
+and pick the "Make Primary" action from the dropdown.  This will make the primary account an alias for the record
+and vice versa. You will still need to force rescan the repo to move the statistics calculations.
 
 Upgrades
 ========
