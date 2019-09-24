@@ -421,7 +421,6 @@ class Commits:
                 found.save()
             return found
         else:
-            raise Exception("unexpected - %s" % email) # FIXME: remove before checkin
             return Author.objects.create(email=email, display_name=author_name)
 
     @classmethod
