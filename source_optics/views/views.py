@@ -168,7 +168,7 @@ def graph_moves(request):
     scope = Scope(request)
     if scope.multiple_repos_selected():
         (df, top) = dataframes.team_time_series(scope)
-        scope.context['graph'] = graph_module.time_plot(df=df, scope=scope, y='moves', top=top, aspect='repo')
+        scope.context['graph']= graph_module.time_plot(df=df, scope=scope, y='moves', top=top, aspect='repo')
     else:
         (df, top) = dataframes.top_author_time_series(scope, aspect='commit_total')
         scope.context['graph'] = graph_module.time_plot(df=df, scope=scope, y='moves', top=top, by_author=True, aspect='commit_total')
@@ -178,6 +178,13 @@ def graph_commit_size(request):
     scope = Scope(request)
     (df, top) = dataframes.team_time_series(scope)
     scope.context['graph'] = graph_module.time_plot(df=df, scope=scope, y='average_commit_size')
+    return render(request, 'graph.html', context=scope.context)
+
+
+def graph_path_segment(request):
+    scope = Scope(request)
+    df = dataframes.path_segment_series(scope)
+    scope.context['graph'] = graph_module.path_segment_plot(df=df, scope=scope)
     return render(request, 'graph.html', context=scope.context)
 
 # =================================================================================================================
@@ -250,12 +257,9 @@ def report_files(request):
     """
     scope = Scope(request)
     data = reports.files(scope)
-    # FIXME: better context aware titles across the app!  use the scope class, perhaps
-    # FIXME: mode should be a required (?) parameter to scope
     scope.context['title'] = "SourceOptics: tree view"
-    scope.context['rows'] = data
     scope.context['mode'] = 'files'
-    # FIXME: should be repo_authors ? perhaps this will be standardized...
+    scope.context.update(data)
     return render(request, 'files.html', context=scope.context)
 
 def repos(request, org=None):

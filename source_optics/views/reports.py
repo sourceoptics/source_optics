@@ -1,11 +1,39 @@
 
 import json
-from source_optics.models import (Repository, Statistic, Commit, Author)
-from django.db.models import Sum, Count, Max
+from source_optics.models import (Repository, Statistic, Commit, Author, File, FileChange)
 from django.core.paginator import Paginator
 
 def files(scope):
-    return []
+    # the files report view
+    repo = scope.repo
+    path = scope.path
+    if path == '/':
+        path = ''
+
+    kids = get_child_paths(repo, path)
+    return dict(
+        path=path,
+        paths=kids,
+        paths_length=len(kids)
+    )
+
+def get_child_paths(repo, path):
+
+    # find all the directory paths
+    all_paths = File.objects.filter(
+        repo=repo,
+        path__startswith=path,
+    ).values_list('path', flat=True).distinct().all()
+
+    slashes = path.count('/')
+    desired = slashes
+
+    # find all the paths that are one level deeper than the specified path
+    # the removal of "=>" deals with moved path detection in old versions of the program w/ legacy data
+    children = [ dict(path=path) for path in sorted(all_paths) if ((not '=>' in path) and (path.count('/') == desired)) ]
+
+    return children
+
 
 def commits_feed(scope):
 

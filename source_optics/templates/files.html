@@ -2,6 +2,21 @@
 
 {% include 'nav.html' %}
 
-Under construction...
+Browsing: {{ path }}
+
+<br/><br/>
+
+{% if paths_length %}
+<table border="1">
+{% for path in paths %}
+<tr>
+<td><a href="/report/files?repo={{ repo }}&start={{ start_str }}&end={{ end_str }}&path={{ path.path }}/">{{ path.path }}</a></td>
+<td width="500"><div data-loader="ajax" data-src="/graph/path_segment?repo={{ repo }}&start={{ start_str}}&end={{ end_str }}&path={{ path.path }}"/></td>
+</tr>
+{% endfor %}
+</table>
+{% else %}
+There are no tracked subdirectories
+{% endif %}
 
 {% include 'footer.html' %}

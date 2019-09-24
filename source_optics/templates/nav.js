@@ -57,6 +57,8 @@ $('#homeButton').click(function() {
   $('#graphsButton').click(function()  { window.location.href = "/graphs?repo={{ repo.pk }}&start={{ start_str}}&end_str={{ end_str }}"; });
   $('#feedButton').click(function()   { window.location.href = "/report/commits?repo={{ repo.pk }}&start={{ start_str}}&end_str={{ end_str }}"; });
   $('#statsButton').click(function()  { window.location.href = "/report/stats?repo={{ repo.pk }}&start={{ start_str}}&end_str={{ end_str }}"; });
+  $('#filesButton').click(function()  { window.location.href = "/report/files?repo={{ repo.pk }}&start={{ start_str}}&end_str={{ end_str }}&path="; });
+
 
 {% elif repos_str %}
 

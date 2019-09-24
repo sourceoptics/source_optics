@@ -17,9 +17,13 @@
 
 from django.db.models import Sum
 import django.utils.timezone as timezone
-from ..models import Statistic, Author
+from ..models import Statistic, Author, FileChange
 import pandas
 from django.conf import settings
+import datetime
+from dateutil import relativedelta
+import dateutil.rrule as rrule
+from django.db.models import Sum, Max
 
 # fields valid for axes or tooltips in time series graphs
 TIME_SERIES_FIELDS = [
@@ -275,10 +279,51 @@ def author_time_series(scope):
     (df, _) = _stat_series(scope, by_author=True)
     return (df, None)
 
-
 def top_author_time_series(scope, aspect=None):
     (df, top) = _stat_series(scope, by_author=True, aspect=aspect, limit_top_authors=True)
     return (df, top)
+
+def path_segment_series(scope):
+    # a series dealing with a specific directory of file changes
+
+    assert scope.repo is not None
+
+    fields = [ 'commits', 'date' ]
+    path = scope.path
+    if path == '/':
+        path = ''
+
+    repo = scope.repo
+
+    earliest = repo.earliest_commit_date()
+    latest = repo.latest_commit_date()
+
+    if scope.start < earliest:
+        scope.start = earliest
+
+    if scope.end > latest:
+        scope.end = latest
+
+    # NOTE: these are NOT rolled up by date, so this could get a bit large.
+    results = []
+    for dt in rrule.rrule(rrule.WEEKLY, dtstart=scope.start, until=scope.end):
+        next_week = dt + relativedelta.relativedelta(weeks=1)
+
+        count = FileChange.objects.filter(
+            commit__repo=scope.repo,
+            file__path=path,
+            commit__commit_date__range=(dt, next_week)
+        ).count()
+
+
+        item = dict(
+            date = str(dt),
+            commits = count,
+        )
+        results.append(item)
+
+    return pandas.DataFrame(results, columns=fields)
+
 
 CLAMP_PERCENTAGE_A=0.90
 CLAMP_PERCENTAGE_B=0.25

@@ -47,6 +47,7 @@ urlpatterns = [
     path('graph/creates', views.graph_creates, name='graph_creates'),
     path('graph/edits', views.graph_edits, name='graph_edits'),
     path('graph/moves', views.graph_moves, name='graph_moves'),
+    path('graph/path_segment', views.graph_path_segment, name='graph_path_segment'),
 
     # REPORTS AND GRAPH PAGES - RATHER FLEXIBLE BY QUERY STRING
     path('graphs', views.graphs, name='graphs'),
