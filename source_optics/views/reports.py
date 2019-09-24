@@ -85,7 +85,6 @@ def _annotations_to_table(stats, primary, lookup):
         for x in [ 'details1', 'details2', 'details3']:
             new_item[x] = entry[lookup]
         results.append(new_item)
-    # print(results)
     return results
 
 
@@ -101,11 +100,17 @@ def author_stats_table(scope, limit=None):
     (repos, authors) = scope.standardize_repos_and_authors()
     interval = 'DY'
     stats = Statistic.queryset_for_range(repos=repos, authors=authors, start=scope.start, end=scope.end, interval=interval)
-    stats = Statistic.annotate(stats.values('author__email')).order_by('author__email')
-    data = _annotations_to_table(stats, 'author', 'author__email')
+    data = None
+    if not scope.author:
+        stats = Statistic.annotate(stats.values('author__email')).order_by('author__email')
+        data = _annotations_to_table(stats, 'author', 'author__email')
+    else:
+        stats = Statistic.annotate(stats.values('repo__name')).order_by('repo__name')
+        data = _annotations_to_table(stats, 'repo', 'repo__name')
     return data
 
 
+# FIXME: see what's up with the author table
 
 
 def repo_table(scope): # repos, start, end):
