@@ -11,5 +11,6 @@ function repoNav(value) {
    var graphs = "<a href='/graphs?repo=" + value + "&start={{ start_str }}&end={{ end_str }}&intv={{ intv }}'><i class='fas fa-chart-line'></i></a>&nbsp;";
    var stats  = "<a href='/report/stats?repo=" + value + "&start={{ start_str }}&end={{ end_str }}'><i class='fas fa-table'></i></a>&nbsp;";
    var commit_feed = "<a href='/report/commits?repo=" + value + "&start={{ start_str }}&end={{ end_str }}'><i class='fas fa-rss-square'></i></a>&nbsp;";
-   return index + graphs + stats + commit_feed;
+   var files = "<a href='/report/files?repo=" + value + "&start={{ start_str }}&end={{ end_str }}&path=/'><i class='fas fa-folder-open'></i></a>&nbsp;";
+   return index + graphs + stats + commit_feed + files;
 }

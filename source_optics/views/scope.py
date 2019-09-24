@@ -37,7 +37,7 @@ class Scope(object):
     __slots__ = [
         'start', 'end', 'start_str', 'end_str', 'interval', 'org', 'orgs', 'orgs_count',
         'repos', 'repo', 'repos', 'repos_str', 'page_size', 'page', 'author', 'context', 'add_repo_table',
-        'add_orgs_table', 'available_repos', 'request', 'full_time_range'
+        'add_orgs_table', 'available_repos', 'request', 'full_time_range', 'path'
     ]
 
     def _compute_start_and_end(self):
@@ -70,6 +70,9 @@ class Scope(object):
 
         if (self.start <= epoch) and (self.end >= now):
             self.full_time_range = True
+
+    def _compute_path(self):
+        self.path = self.request.GET.get('path', None)
 
     def _compute_pagination(self):
         """
@@ -300,6 +303,7 @@ class Scope(object):
         assert request is not None
 
         self.request = request
+        self._compute_path()
         self._compute_pagination()
         self._compute_interval()
         self._compute_org()

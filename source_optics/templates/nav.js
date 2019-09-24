@@ -11,6 +11,8 @@ var navBar =`
 {% if author %}
 <button type="button" id="authorButton" class="btn btn-outline-secondary btn-sm">Author: {{ author.email }} &gt;</button>
 {% endif %}
+&nbsp;
+&nbsp;
 {% if repo or repos_str or author %}
 {% if not author %}
 {% comment %}
@@ -21,6 +23,9 @@ author graphs across all repos are coming soon
 {% if not multiple_repos_selected %}
 <button type="button" id="statsButton" class="btn btn-outline-info btn-sm">Stats</button>
 <button type="button" id="feedButton" class="btn btn-outline-info btn-sm">Commit Feed</button>
+{% if not author %}
+<button type="button" id="filesButton" class="btn btn-outline-info btn-sm">Files</button>
+{% endif %}
 {% endif %}
 {% endif %}
 {% if org and not repo and not author %}
@@ -97,6 +102,9 @@ FIXME: disable the button instead and grey-out. DRY.
 {% elif mode == 'repo' %}
    var text = $('#repoButton').text()
    $('#repoButton').text("*" + text)
+{% elif mode == 'files' %}
+   var text = $('#filesButton').text()
+   $('#filesButton').text("*" + text)
 {% endif %}
 
 

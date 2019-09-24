@@ -244,6 +244,20 @@ def report_commits(request, org=None):
     scope.context['mode'] = 'feed'
     return render(request, 'commits.html', context=scope.context)
 
+def report_files(request):
+    """
+    generates a browseable directory tree
+    """
+    scope = Scope(request)
+    data = reports.files(scope)
+    # FIXME: better context aware titles across the app!  use the scope class, perhaps
+    # FIXME: mode should be a required (?) parameter to scope
+    scope.context['title'] = "SourceOptics: tree view"
+    scope.context['rows'] = data
+    scope.context['mode'] = 'files'
+    # FIXME: should be repo_authors ? perhaps this will be standardized...
+    return render(request, 'files.html', context=scope.context)
+
 def repos(request, org=None):
     """
     generates the list of all repos, with stats and navigation.

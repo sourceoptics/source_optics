@@ -52,6 +52,7 @@ urlpatterns = [
     path('graphs', views.graphs, name='graphs'),
     path('report/stats', views.report_stats, name='report_author_stats'),
     path('report/commits', views.report_commits, name='report_commits'),
+    path('report/files', views.report_files, name='report_files'),
 
     # REST API
     path('api/', include(api_router.urls)),

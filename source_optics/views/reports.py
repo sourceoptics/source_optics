@@ -4,6 +4,9 @@ from source_optics.models import (Repository, Statistic, Commit, Author)
 from django.db.models import Sum, Count, Max
 from django.core.paginator import Paginator
 
+def files(scope):
+    return []
+
 def commits_feed(scope):
 
     objs = None
