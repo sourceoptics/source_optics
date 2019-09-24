@@ -2,6 +2,11 @@
 
 {% include 'nav.html' %}
 
+{% comment %}
+FIXME: we can load the  dataframe once in a variable and these will each load faster...
+{% endcomment %}
+
+
 <h2>Lines Changed</h2>
 
 <div data-loader="ajax" data-src="/graph/lines_changed?repos={{ repos_str}}&start={{ start_str}}&end={{ end_str}}&intf={{ intv }}">loading</div>

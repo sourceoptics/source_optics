@@ -82,7 +82,7 @@ def _interval_queryset(scope, by_author=False, aspect=None, limit_top_authors=Fa
 
     """
     Returns a queryset of statistics usable for a scatter plot.
-    FIXME: this is only slightly different from the methods in models.py, because it doesn't yet use the top_authors data. Add the option
+    FIXME: this is only slightly different from the methods in models.phy, because it doesn't yet use the top_authors data. Add the option
     with a limit=-1 (default) parameter.
     # FIXME: clean all this up.
     """

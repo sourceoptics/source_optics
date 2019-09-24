@@ -325,7 +325,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='repository',
             name='name',
-            field=models.TextField(db_index=True, max_length=32, validators=[source_optics.models.validate_repo_name]),
+            field=models.TextField(db_index=True, max_length=32, validators=[source_optics.models.repository.validate_repo_name]),
         ),
         migrations.AddField(
             model_name='repository',
@@ -612,7 +612,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='repository',
             name='name',
-            field=models.CharField(db_index=True, max_length=64, validators=[source_optics.models.validate_repo_name]),
+            field=models.CharField(db_index=True, max_length=64, validators=[source_optics.models.repository.validate_repo_name]),
         ),
         migrations.AlterField(
             model_name='repository',

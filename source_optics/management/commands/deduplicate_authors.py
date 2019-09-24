@@ -18,7 +18,7 @@ from django.core.management.base import BaseCommand, CommandError
 import toml
 from source_optics.models import Commit, Organization, Repository, Author
 
-from ...models import Organization, Repository
+from ... models import Organization, Repository
 
 # usage:
 # python3 manage.py deduplicate_authors -o org_name --file authors.yml --plan
