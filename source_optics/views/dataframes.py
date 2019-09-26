@@ -311,7 +311,7 @@ def path_segment_series(scope):
 
         count = FileChange.objects.filter(
             commit__repo=scope.repo,
-            file__path=path,
+            file__path__startswith=path,
             commit__commit_date__range=(dt, next_week)
         ).count()
 
