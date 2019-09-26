@@ -306,22 +306,40 @@ def path_segment_series(scope):
 
     # NOTE: these are NOT rolled up by date, so this could get a bit large.
     results = []
-    for dt in rrule.rrule(rrule.WEEKLY, dtstart=scope.start, until=scope.end):
-        next_week = dt + relativedelta.relativedelta(weeks=1)
+
+    scope.interval = 'WK'
+    if (scope.end - scope.start).days > 700:
+        scope.interval = 'MN'
+
+    rule_pattern = None
+    next_dt = None
+
+    if scope.interval == 'WK':
+        rule_pattern = rrule.rrule(rrule.WEEKLY, dtstart=scope.start, until=scope.end)
+    else:
+        rule_pattern = rrule.rrule(rrule.MONTHLY, dtstart=scope.start, until=scope.end)
+
+
+    for dt in rule_pattern:
+        if scope.interval == 'WK':
+            next_dt = dt + relativedelta.relativedelta(weeks=1)
+        else:
+            next_dt = dt + relativedelta.relativedelta(months=1)
+
 
         count = None
         if scope.file is None:
             count = FileChange.objects.filter(
                 commit__repo=scope.repo,
                 file__path__startswith=path,
-                commit__commit_date__range=(dt, next_week)
+                commit__commit_date__range=(dt, next_dt)
             ).count()
         else:
             count = FileChange.objects.filter(
                 commit__repo=scope.repo,
                 file__path=path,
                 file__name=scope.file,
-                commit__commit_date__range=(dt, next_week)
+                commit__commit_date__range=(dt, next_dt)
             ).count()
 
         item = dict(
