@@ -183,8 +183,9 @@ def graph_commit_size(request):
 
 def graph_path_segment(request):
     scope = Scope(request)
-    df = dataframes.path_segment_series(scope)
-    scope.context['graph'] = graph_module.path_segment_plot(df=df, scope=scope)
+    top_authors = dataframes.top_authors_for_path(scope)
+    df = dataframes.path_segment_series(scope, top_authors)
+    scope.context['graph'] = graph_module.path_segment_plot(df=df, scope=scope, top_authors=top_authors)
     return render(request, 'graph.html', context=scope.context)
 
 # =================================================================================================================

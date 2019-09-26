@@ -23,7 +23,7 @@ from django.conf import settings
 import datetime
 from dateutil import relativedelta
 import dateutil.rrule as rrule
-from django.db.models import Sum, Max
+from django.db.models import Sum, Count
 
 # fields valid for axes or tooltips in time series graphs
 TIME_SERIES_FIELDS = [
@@ -80,6 +80,27 @@ def top_authors(scope, aspect='commit_total', limit=9):
 
     result = [ x for x in Author.objects.filter(pk__in= [ t['author_id'] for t in filter_set ]).all() ]
     return result
+
+def top_authors_for_path(scope, limit=5):
+
+    filter_set = FileChange.objects.filter(
+        file__path=scope.path,
+        commit__repo=scope.repo,
+        commit__commit_date__range=(scope.start, scope.end)
+    )
+    if scope.file:
+        filter_set = filter_set.filter(file__name=scope.file)
+
+    filter_set = filter_set.values('commit__author_id').annotate(total=Count('commit'))[0:limit]
+
+
+
+
+    result = [ x for x in Author.objects.filter(pk__in= [ t['commit__author_id'] for t in filter_set ]).all() ]
+
+    return result
+
+
 
 def _interval_queryset(scope, by_author=False, aspect=None, limit_top_authors=False):
 
@@ -283,12 +304,12 @@ def top_author_time_series(scope, aspect=None):
     (df, top) = _stat_series(scope, by_author=True, aspect=aspect, limit_top_authors=True)
     return (df, top)
 
-def path_segment_series(scope):
+def path_segment_series(scope, top_authors):
     # a series dealing with a specific directory of file changes
 
     assert scope.repo is not None
 
-    fields = [ 'commits', 'date' ]
+    fields = [ 'commits', 'date', 'author' ]
     path = scope.path
     if path == '/':
         path = ''
@@ -319,6 +340,8 @@ def path_segment_series(scope):
     else:
         rule_pattern = rrule.rrule(rrule.MONTHLY, dtstart=scope.start, until=scope.end)
 
+    all_authors = top_authors[:]
+    all_authors.append('OTHER')
 
     for dt in rule_pattern:
         if scope.interval == 'WK':
@@ -326,27 +349,42 @@ def path_segment_series(scope):
         else:
             next_dt = dt + relativedelta.relativedelta(months=1)
 
+        for author in all_authors:
 
-        count = None
-        if scope.file is None:
-            count = FileChange.objects.filter(
-                commit__repo=scope.repo,
-                file__path__startswith=path,
-                commit__commit_date__range=(dt, next_dt)
-            ).count()
-        else:
-            count = FileChange.objects.filter(
-                commit__repo=scope.repo,
-                file__path=path,
-                file__name=scope.file,
-                commit__commit_date__range=(dt, next_dt)
-            ).count()
+            count = None
+            if scope.file is None:
+                count = FileChange.objects.select_related('commit','file').filter(
+                    commit__repo=scope.repo,
+                    file__path__startswith=path,
+                    commit__commit_date__range=(dt, next_dt)
+                )
+            else:
+                count = FileChange.objects.select_related('commit','file').filter(
+                    commit__repo=scope.repo,
+                    file__path=path,
+                    file__name=scope.file,
+                    commit__commit_date__range=(dt, next_dt)
+                )
 
-        item = dict(
-            date = str(dt),
-            commits = count,
-        )
-        results.append(item)
+            top_ids = [x.pk for x in top_authors]
+
+            if author != 'OTHER':
+                count = count.filter(commit__author=author)
+            else:
+                count = count.exclude(commit__author__pk__in=top_ids)
+            count = count.count()
+
+            k = author
+            if k != 'OTHER':
+                k = k.email
+
+            item = dict(
+                date = str(dt),
+                commits = count,
+                author = k,
+            )
+
+            results.append(item)
 
     return pandas.DataFrame(results, columns=fields)
 

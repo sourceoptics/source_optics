@@ -72,7 +72,7 @@ class Checkout:
             # FIXME: command wrapper should take an optional cwd to make this cleaner
 
             try:
-                commands.execute_command(repo, "git pull", timeout=GIT_PULL_TIMEOUT, env=key_mgmt)
+                commands.execute_command(repo, "git pull --all", timeout=GIT_PULL_TIMEOUT, env=key_mgmt)
             except Exception:
                 # FIXME: finer grained catch here
                 traceback.print_exc()
@@ -91,7 +91,14 @@ class Checkout:
 
             key_mgmt = None
             cmd = f"git clone {repo_url} {work_dir} {options}"
-
             commands.execute_command(repo, cmd, log=False, timeout=GIT_CLONE_TIMEOUT, env=key_mgmt)
+
+            prev = os.getcwd()
+            os.chdir(work_dir)
+
+            cmd = f"git pull --all"
+            commands.execute_command(repo, cmd, log=False, timeout=GIT_CLONE_TIMEOUT, env=key_mgmt)
+
+            os.chdir(prev)
 
         return True

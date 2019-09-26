@@ -150,6 +150,13 @@ class RepoProcessor:
         return True
 
     @classmethod
+    def process_deleted_files(cls, repo, work_dir):
+        # mark everything in history undeleted
+        File.objects.filter(repo=repo, deleted=True).update(deleted=False)
+        # ask git to flag what is currently deleted
+        Commits.process_deleted_files(repo, work_dir)
+
+    @classmethod
     # @transaction.atomic - FIXME: disabled for testing, I think? Or why?
     def process_repo(cls, repo, agent_manager, force_nuclear_rescan):
 

@@ -23,12 +23,17 @@ class File(models.Model):
     path = models.TextField(db_index=True, max_length=256, blank=False, null=True)
     ext = models.TextField(max_length=32, blank=False, null=True)
     binary = models.BooleanField(default=False)
+    # 'deleted' is presently unused.  It might be used to track files that weren't on the master branch
+    # to prevent them from showing up in the file browser
+    deleted = models.BooleanField(default=False, db_index=True)
     created_by = models.ForeignKey('Commit', on_delete=models.CASCADE, related_name='files', null=True)
 
     class Meta:
         unique_together = [ 'repo', 'name', 'path' ]
         indexes = [
-            models.Index(fields=[ 'repo', 'name', 'path' ], name='file2')
+            models.Index(fields=[ 'repo', 'name', 'path' ], name='file2'),
+            models.Index(fields=['repo', 'path'], name='file3'),
+            models.Index(fields=['repo', 'name', 'path', 'deleted'], name='file4'),
         ]
 
     @classmethod

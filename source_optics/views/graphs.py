@@ -15,7 +15,7 @@
 # graphs.py - generate altair graphs as HTML snippets given panda dataframe inputs (see dataframes.py)
 
 import functools
-from .. models import Statistic
+from .. models import Statistic, FileChange
 from django.db.models import Sum
 from django.conf import settings
 from . import dataframes
@@ -134,14 +134,41 @@ def time_plot(scope=None, df=None, repo=None, y=None, by_author=False, top=None,
 
     return render_chart(chart)
 
-def path_segment_plot(scope=None, df=None, repo=None):
-    _ = scope
-    _ = repo
+def path_segment_plot(df, scope, top_authors):
+
+    assert top_authors is not None
+
+
+    def get_author_stat(repo, author):
+
+        value = FileChange.objects.filter(
+            commit__author=author,
+            commit__repo=scope.repo,
+            commit__commit_date__range=(scope.start, scope.end),
+            file__path=scope.path
+        )
+        if scope.file:
+            value = value.filter(file__name=scope.file)
+        value = value.count()
+        if value is None:
+            return -10000
+        return value
+
+
+    # sort top authors by the statistic we filtered them by
+    top = reversed(sorted(top_authors, key=lambda x: get_author_stat(scope, x)))
+
+    # FIXME: should use display name?
+    top = [ x.email for x in top ]
+    top.append('OTHER')
+
+
     # a basic plot of directory activity that can be improved later as we choose to update it.
-    tooltips = ['date:T','commits']
-    chart = alt.Chart(df, height=150, width=300).mark_line().encode(
+    tooltips = ['date:T','commits','author']
+    chart = alt.Chart(df, height=150, width=300).mark_area().encode(
         x=alt.X('date:T', axis=alt.Axis(title='date', format=("%b %Y")), scale=alt.Scale(zero=False, clamp=True)),
         y=alt.Y('commits', scale=alt.Scale(zero=True)),
+        color=alt.Color('author', sort=top),
         tooltip=tooltips
     ).interactive()
     return render_chart(chart)

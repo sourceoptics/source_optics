@@ -10,8 +10,8 @@ def files(scope):
     if path == '/':
         path = ''
 
-    kids = get_child_paths(repo, path)
-    files = get_files(repo, path)
+    kids = get_child_paths(scope, repo, path)
+    files = get_files(scope, repo, path)
 
     if path == "":
         path = "/"
@@ -24,13 +24,14 @@ def files(scope):
         files_length=len(files)
     )
 
-def get_child_paths(repo, path):
+def get_child_paths(scope, repo, path):
 
     # find all the directory paths
-    all_paths = File.objects.filter(
-        repo=repo,
-        path__startswith=path,
-    ).values_list('path', flat=True).distinct().all()
+    all_paths = FileChange.objects.filter(
+        commit__repo=repo,
+        file__path__startswith=path,
+        commit__commit_date__range=(scope.start, scope.end)
+    ).values_list('file__path', flat=True).distinct().all()
 
     slashes = path.count('/')
     desired = slashes
@@ -41,12 +42,15 @@ def get_child_paths(repo, path):
 
     return children
 
-def get_files(repo, path):
+def get_files(scope, repo, path):
 
-    all_files = File.objects.filter(
-        repo=repo,
-        path=path,
-    ).order_by('name').all()
+    all_files = FileChange.objects.filter(
+        commit__repo=repo,
+        file__path=path,
+        commit__commit_date__range=(scope.start, scope.end)
+    ).values_list('file', flat=True).distinct().order_by('file__name').all()
+
+    all_files = File.objects.filter(pk__in=all_files)
 
     return [ dict(filename=f.name, path=f.path) for f in all_files.all() ]
 
