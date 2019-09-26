@@ -11,10 +11,17 @@ def files(scope):
         path = ''
 
     kids = get_child_paths(repo, path)
+    files = get_files(repo, path)
+
+    if path == "":
+        path = "/"
+
     return dict(
         path=path,
         paths=kids,
-        paths_length=len(kids)
+        paths_length=len(kids),
+        files=files,
+        files_length=len(files)
     )
 
 def get_child_paths(repo, path):
@@ -33,6 +40,15 @@ def get_child_paths(repo, path):
     children = [ dict(path=path) for path in sorted(all_paths) if ((not '=>' in path) and (path.count('/') == desired)) ]
 
     return children
+
+def get_files(repo, path):
+
+    all_files = File.objects.filter(
+        repo=repo,
+        path=path,
+    ).order_by('name').all()
+
+    return [ dict(filename=f.name, path=f.path) for f in all_files.all() ]
 
 
 def commits_feed(scope):

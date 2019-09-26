@@ -2,21 +2,52 @@
 
 {% include 'nav.html' %}
 
-Browsing: {{ path }}
+Browsing: {{ path }}<br/>
+
+<i>note: this feature is under-development. It will take some time to load and may melt your CPU</i>
 
 <br/><br/>
 
+<table border="0">
+
+<tr>
+
+<td valign="top">
+<h2>subdirectories</h2>
 {% if paths_length %}
 <table border="1">
 {% for path in paths %}
 <tr>
-<td><a href="/report/files?repo={{ repo }}&start={{ start_str }}&end={{ end_str }}&path={{ path.path }}/">{{ path.path }}</a></td>
+<td valign="top"><a href="/report/files?repo={{ repo }}&start={{ start_str }}&end={{ end_str }}&path={{ path.path }}">{{ path.path }}</a></td>
 <td width="500"><div data-loader="ajax" data-src="/graph/path_segment?repo={{ repo }}&start={{ start_str}}&end={{ end_str }}&path={{ path.path }}"/></td>
 </tr>
 {% endfor %}
 </table>
 {% else %}
-There are no tracked subdirectories
+0 subdirectories
 {% endif %}
+</td>
+
+
+<td valign="top">
+<h2>files</h2>
+{% if files_length %}
+
+<table border="1">
+{% for file in files %}
+<tr>
+<td valign="top">{{ file.filename }}</td>
+<td width="500"><div data-loader="ajax" data-src="/graph/path_segment?repo={{ repo }}&start={{ start_str}}&end={{ end_str }}&path={{ file.path }}&file={{ file.filename }}"/></td>
+</tr>
+{% endfor %}
+</table>
+</td>
+{% else %}
+0 files
+{% endif %}
+</tr>
+</table>
+
+
 
 {% include 'footer.html' %}

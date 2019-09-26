@@ -37,7 +37,7 @@ class Scope(object):
     __slots__ = [
         'start', 'end', 'start_str', 'end_str', 'interval', 'org', 'orgs', 'orgs_count',
         'repos', 'repo', 'repos', 'repos_str', 'page_size', 'page', 'author', 'context', 'add_repo_table',
-        'add_orgs_table', 'available_repos', 'request', 'full_time_range', 'path'
+        'add_orgs_table', 'available_repos', 'request', 'full_time_range', 'path', 'file'
     ]
 
     def _compute_start_and_end(self):
@@ -73,6 +73,7 @@ class Scope(object):
 
     def _compute_path(self):
         self.path = self.request.GET.get('path', None)
+        self.file = self.request.GET.get('file', None)
 
     def _compute_pagination(self):
         """
