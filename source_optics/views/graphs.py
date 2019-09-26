@@ -138,7 +138,7 @@ def path_segment_plot(scope=None, df=None, repo=None):
     _ = scope
     _ = repo
     # a basic plot of directory activity that can be improved later as we choose to update it.
-    tooltips = ['date','commits']
+    tooltips = ['date:T','commits']
     chart = alt.Chart(df, height=150, width=300).mark_line().encode(
         x=alt.X('date:T', axis=alt.Axis(title='date', format=("%b %Y")), scale=alt.Scale(zero=False, clamp=True)),
         y=alt.Y('commits', scale=alt.Scale(zero=True)),
