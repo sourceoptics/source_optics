@@ -84,6 +84,11 @@ def commits_feed(scope):
     if author:
         objs = objs.filter(author__pk=author.pk)
 
+    if scope.path:
+        objs = objs.filter(file_changes__file__path=scope.path)
+    if scope.file:
+        objs = objs.filter(file_changes__file__name=scope.file)
+
     # all this nested filtering apparently can make bad queries, so we should probably unroll all of the above?
 
     objs = objs.select_related('author').order_by('-commit_date')
