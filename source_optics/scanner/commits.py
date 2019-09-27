@@ -151,9 +151,7 @@ class Commits:
                 cls.bulk_create(total_commits, total_files, total_file_changes)
 
             if not line or line == "\n":
-                #print("F1")
-                return True # continue
-
+                return True
 
             elif line.startswith(DEL):
 

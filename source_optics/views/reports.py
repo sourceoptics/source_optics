@@ -88,6 +88,8 @@ def commits_feed(scope):
         objs = objs.filter(file_changes__file__path=scope.path)
     if scope.file:
         objs = objs.filter(file_changes__file__name=scope.file)
+    if scope.extension:
+        objs = objs.filter(file_changes__file__ext=scope.extension)
 
     # all this nested filtering apparently can make bad queries, so we should probably unroll all of the above?
 
