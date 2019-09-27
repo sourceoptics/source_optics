@@ -225,7 +225,9 @@ class Scope(object):
             intv=self.interval,
             title="Source Optics",
             multiple_repos_selected=self.multiple_repos_selected(),
-            full_time_range=self.full_time_range
+            full_time_range=self.full_time_range,
+            file=self.file,
+            path=self.path
         )
         if self.repos:
             self.context['repos'] = self.repos.all()

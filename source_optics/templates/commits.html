@@ -6,6 +6,15 @@
 FIXME: pagination below should be in an included template
 {% endcomment %}
 
+{% if path and file %}
+Showing commits to {{path}}/{{file}}. <a href="/reports/commits?repo={{ repo }}&start={{ start_str }}&end={{ end_str }}">Clear filter.</a><br/><br/>
+{% elif path %}
+Showing commits to files in {{path}}. <a href="/reports/commits?repo={{ repo }}&start={{ start_str }}&end={{ end_str }}">Clear filter.</a><br/><br/>
+{% elif file %}
+Showing commits to any file named {{file}}. <a href="/reports/commits?repo={{ repo }}&start={{ start_str }}&end={{ end_str }}">Clear filter.</a><br/><br/>
+{% endif %}
+
+
 {% if has_prev %}<a href="{{ prev_link }}">&lt;&lt;</a>{% endif %} page {{ page_number}}{% if has_next %}<a href="{{ next_link }}">&gt;&gt;</a>{% endif %}
 
 <div id="myGrid" class="ag-theme-balham"></div>
