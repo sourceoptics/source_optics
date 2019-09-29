@@ -17,6 +17,10 @@ import functools
 from django.db import models
 from django.db.models import Sum
 
+from . commit import Commit
+from . file import File
+from . repository import Repository
+
 class Author(models.Model):
 
     email = models.CharField(db_index=True, max_length=512, unique=True, blank=False, null=True)
@@ -70,7 +74,6 @@ class Author(models.Model):
 
     @functools.lru_cache(maxsize=128, typed=False)
     def repos(self, start=None, end=None):
-        from . commit import Commit
         if start is not None:
             qs = Commit.objects.filter(
                 author=self,
@@ -86,7 +89,6 @@ class Author(models.Model):
     @classmethod
     @functools.lru_cache(maxsize=128, typed=False)
     def authors(cls, repo, start=None, end=None):
-        from . commit import Commit
         assert repo is not None
         qs = None
         if start is not None:
@@ -117,7 +119,6 @@ class Author(models.Model):
 
     @functools.lru_cache(maxsize=128, typed=False)
     def files_changed(self, repo):
-        from . file import File
         return File.objects.select_related('file_changes', 'commit').filter(
             repo=repo,
             file_changes__commit__author=self,
