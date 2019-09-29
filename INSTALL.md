@@ -66,7 +66,7 @@ Add your database configuration settings to /etc/source_optics/conf.d/database.p
 DATABASES = {
             'default': {
                         'ENGINE': 'django.db.backends.postgresql',
-                        'USER': '<username>',
+                        'USER': '<username_from_above>',
                         'NAME': 'source_optics',   
                     }
             }
