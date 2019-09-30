@@ -13,7 +13,7 @@ needing PostgreSQL.
 
 It can scan repos from any HTTP/HTTPS git server (public repos only) or SSH based repositories (public
 or private).  You do not need to be using GitHub, though some features like API imports of repositories
-and webhooks have been written primarily for GitHub and GitHub Enterprise, and other versions 
+and webhooks have been written primarily for GitHub and GitHub Enterprise, and other versions. 
 
 This application has been developed on a Mac with support for Mac and Linux/Unix machines. Some small areas
 of the application probably do not work on Windows. Patches to fix any problem related to Windows support are always welcome.
@@ -65,9 +65,9 @@ Add your database configuration settings to /etc/source_optics/conf.d/database.p
 ```
 DATABASES = {
             'default': {
-                        'ENGINE':'django.db.backends.postgresql',
-                        'USER':  'postgres',
-                        'NAME': 'USERNAME_FROM_ABOVE',   
+                        'ENGINE': 'django.db.backends.postgresql',
+                        'USER': '<username_from_above>',
+                        'NAME': 'source_optics',   
                     }
             }
 ```
