@@ -1,4 +1,16 @@
-﻿.footer {
+﻿/* date picker css */
+#datepicker {
+  padding: .5em;
+  background-color: #eee
+}
+#datepicker button {
+  margin-left: .5em;
+}
+
+
+/* footer css */
+
+.footer {
   position: fixed;
   left: 0;
   bottom: 0;
