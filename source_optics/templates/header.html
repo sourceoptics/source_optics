@@ -38,5 +38,30 @@ $(function() {
 <div style="background-color: #ff0000">
   <a href="/"><img src="/source_optics/static/logo_no_bg.png" height=200/></a>
 </div>
+{% if 'start' in request.get_full_path %}
+<link rel="stylesheet" type="text/css" href="/source_optics/static/vendor/bootstrap-datepicker3.min.css">
+<script src="/source_optics/static/vendor/bootstrap-datepicker.min.js"></script>
 
+<div id="datepicker" class="input-group input-daterange">
+        <input type="text" class="form-control" value="{{ start_str }}" name="start" id="datepicker_start">
+        <div class="input-group-addon">to</div>
+        <input type="text" class="form-control" value="{{ end_str }}" name="end" id="datepicker_end">
+        <button onclick="pickDates()">GO</button>
+</div>
+<script>
+    $("#datepicker").datepicker({
+        format: "yyyy-mm-dd",
+        todayBtn: "linked",
+    });
+</script>
+<script>
+    var request_path = "{{ request.get_full_path }}".split("&amp;").join("&")
+
+    function pickDates(){
+      var path = request_path.replace(/(&start=)([0-9-]+)(&)/g, "$1"+$("#datepicker_start").val()+"$3" );
+      path = path.replace(/(&end=)([0-9-]+)(&)/g, "$1"+$("#datepicker_end").val()+"$3" );
+      location.href= path;
+    }
+</script>
+{% endif %}
 <br/>

@@ -47,22 +47,22 @@ $('#homeButton').click(function() {
 {% if author %}
 
   $('#authorButton').click(function() { window.location.href = "/author/{{ author.pk }}"; });
-  $('#graphsButton').click(function()  { window.location.href = "/graphs?author={{ author.pk }}&start={{ start_str}}&end_str={{ end_str }}"; });
-  $('#feedButton').click(function()   { window.location.href = "/report/commits?author={{ author.pk }}&start={{ start_str}}&end_str={{ end_str }}"; });
-  $('#statsButton').click(function()  { window.location.href = "/report/stats?author={{ author.pk }}&start={{ start_str}}&end_str={{ end_str }}"; });
+  $('#graphsButton').click(function()  { window.location.href = "/graphs?author={{ author.pk }}&start={{ start_str}}&end={{ end_str }}"; });
+  $('#feedButton').click(function()   { window.location.href = "/report/commits?author={{ author.pk }}&start={{ start_str}}&end={{ end_str }}"; });
+  $('#statsButton').click(function()  { window.location.href = "/report/stats?author={{ author.pk }}&start={{ start_str}}&end={{ end_str }}"; });
 
 {% elif repo and not multiple_repos_selected %}
 
   $('#repoButton').click(function()   { window.location.href = "/repo/{{ repo.pk }}"; });
-  $('#graphsButton').click(function()  { window.location.href = "/graphs?repo={{ repo.pk }}&start={{ start_str}}&end_str={{ end_str }}"; });
-  $('#feedButton').click(function()   { window.location.href = "/report/commits?repo={{ repo.pk }}&start={{ start_str}}&end_str={{ end_str }}"; });
-  $('#statsButton').click(function()  { window.location.href = "/report/stats?repo={{ repo.pk }}&start={{ start_str}}&end_str={{ end_str }}"; });
-  $('#filesButton').click(function()  { window.location.href = "/report/files?repo={{ repo.pk }}&start={{ start_str}}&end_str={{ end_str }}&path="; });
+  $('#graphsButton').click(function()  { window.location.href = "/graphs?repo={{ repo.pk }}&start={{ start_str}}&end={{ end_str }}"; });
+  $('#feedButton').click(function()   { window.location.href = "/report/commits?repo={{ repo.pk }}&start={{ start_str}}&end={{ end_str }}"; });
+  $('#statsButton').click(function()  { window.location.href = "/report/stats?repo={{ repo.pk }}&start={{ start_str}}&end={{ end_str }}"; });
+  $('#filesButton').click(function()  { window.location.href = "/report/files?repo={{ repo.pk }}&start={{ start_str}}&end={{ end_str }}&path="; });
 
 
 {% elif repos_str %}
 
-  $('#graphsButton').click(function() { window.location.href = "/graphs?repos={{ repos_str }}&start={{ start_str}}&end_str={{ end_str }}"; });
+  $('#graphsButton').click(function() { window.location.href = "/graphs?repos={{ repos_str }}&start={{ start_str}}&end={{ end_str }}"; });
 
 {% endif %}
 
