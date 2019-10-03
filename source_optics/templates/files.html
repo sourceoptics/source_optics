@@ -19,7 +19,7 @@ Browsing: {{ path }}<br/>
 <tr>
 <td valign="top"><a href="/report/files?repo={{ repo }}&start={{ start_str }}&end={{ end_str }}&path={{ path.path }}">{{ path.path }}</a></td>
 <td width="500"><div data-loader="ajax" data-src="/graph/path_segment?repo={{ repo }}&start={{ start_str}}&end={{ end_str }}&path={{ path.path }}"/></td>
-<td><a href="/report/commits?repo={{ repo }}&start={{ start_str}}&end={{ end_str }}&path={{ path.path }}"/><i class='fas fa-rss-square'></i></a></td>
+<td><a href="/report/commits?repo={{ repo }}&start={{ start_str}}&end={{ end_str }}&path={{ path.path }}"/ aria-label="Commits"><i aria-hidden='true' class='fas fa-rss-square' title="Commits"></i></a></td>
 </tr>
 {% endfor %}
 </table>
@@ -38,7 +38,7 @@ Browsing: {{ path }}<br/>
 <tr>
 <td valign="top">{{ file.filename }}</td>
 <td width="500"><div data-loader="ajax" data-src="/graph/path_segment?repo={{ repo }}&start={{ start_str}}&end={{ end_str }}&path={{ file.path }}&file={{ file.filename }}"/></td>
-<td><a href="/report/commits?repo={{ repo }}&start={{ start_str}}&end={{ end_str }}&path={{ path.path }}"/><i class='fas fa-rss-square'></i></a></td>
+<td><a href="/report/commits?repo={{ repo }}&start={{ start_str}}&end={{ end_str }}&path={{ path.path }}"/ aria-label="Commits"><i aria-hidden='true' class='fas fa-rss-square' title="Commits"></i></a></td>
 </tr>
 {% endfor %}
 </table>
