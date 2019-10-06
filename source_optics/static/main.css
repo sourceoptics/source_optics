@@ -1,106 +1,48 @@
-﻿/* modal */
-#myModal{
-  display: none;
-  position: fixed;
-  top: 0;
-  left: 0;
-  height: 100vh;
-  width: 100%;
-  background-color: rgba(0,0,0,.99);
-  z-index: 99;
-  padding: 5% 10%;
-}
-div.modalButtons{
-  width: 100%;
-  text-align: center;
-  margin-top: 1.5rem;
-}
-div.modalButtons button{
-  margin: 10px;
-}
-
-/* header container */
-#header__container{
+﻿/* header container */
+#header__container {
   background-color: #ff0000;
 }
 
 /* user action navigation */
-#user_action__navbar{
+#user_action__navbar {
   color: rgba(255, 255, 255, 0.95);
-  width: 50%;
+  height: 22px;
+  line-height: normal;
   min-width: 300px;
-  padding:.3rem 1.3rem;
-  text-align: right;
   position: absolute;
-  right: 0;
-  background: -moz-linear-gradient(45deg, rgba(255,255,255,0) 0%, rgba(0,0,0,.3) 95%);
-  background: -webkit-linear-gradient(45deg, rgba(255,255,255,0) 0%, rgba(0,0,0,.3) 95%);
-  background: linear-gradient(45deg, rgba(255,255,255,0) 0%, rgba(0,0,0,.3) 95%);
-  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr="#000000",endColorstr="#000000",GradientType=1);
+  right: 1.3rem;
+  text-align: right;
+  top: 13px;
+  width: 50%;
 }
-#user_action__navbar a{
+#user_action__navbar a {
   color: inherit;
   text-decoration: none;
 }
 #user_action__navbar .far,
-#user_action__navbar svg{
+#user_action__navbar svg {
   font-size: 1rem;
-  margin-left: .2rem;
-}
-#date_picker_container{
-  max-width: 500px;
-  margin: auto;
-  display: flex;
-  justify-content: space-evenly;
-  align-items: baseline;
+  margin: 0 0.25rem;
 }
 
 #user_action__navbar .far:hover,
-#user_action__navbar svg:hover,
-#datepicker_dates__display:hover{
+#user_action__navbar svg:hover {
   color: rgba(255, 255, 255, 0.80);
-}
-#datepicker_dates__display{
-  display: inline-block;
-  font-size: .85rem;
-  font-weight: 100;
-}
-#datepicker_dates__display>span{
-  letter-spacing: -0.015rem;
-  text-decoration: underline dotted; 
-}
-
-/* date picker css */
-#datepicker {
-  padding: .5em;
-  background-color: #eee
-}
-#datepicker button {
-  margin-left: .5em;
-}
-.calendar_title{
-  color: rgba(23, 162, 184, .3);
-  width: 100%;
-  margin-bottom: 1.5rem;
-  font-weight: 100;
-  font-size: .9rem;
-  text-align: center;
-  padding-bottom: .5rem;
-}
+  cursor: pointer;
 }
 
 /* footer css */
 .footer {
-  position: fixed;
-  left: 0;
-  bottom: 0;
-  width: 100%;
   background-color: black;
+  bottom: 0;
   color: white;
+  left: 0;
+  position: fixed;
   text-align: center;
+  width: 100%;
 }
 
 /* css tools */
-.flex{
+.flex {
   display: flex;
 }

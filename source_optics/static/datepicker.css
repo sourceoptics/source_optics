@@ -1,0 +1,72 @@
+/* date picker css */
+
+#datepicker_dates__display:hover {
+    color: rgba(255, 255, 255, 0.80);
+    cursor: pointer;
+  }
+
+#datepicker_modal {
+    background-color: rgba(255,255,255,.98);
+    border-radius: 0 0 0 2rem;
+    box-shadow: 10px -11px 26px #666;
+    position: absolute;
+    padding: 2% 3% 1%;;
+    right: 0;
+    top: 0;
+    z-index: 99;
+}
+
+.datepicker_modal__buttons {
+    margin-top: 1.5rem;
+    width: 100%;
+    text-align: center;
+}
+
+.datepicker_modal__buttons button {
+    margin: 10px;
+}
+
+#date_picker_container {
+    align-items: baseline;
+    display: flex;
+    justify-content: space-evenly;
+    margin: auto;
+    max-width: 500px;
+}
+  
+.datepicker_cal {
+    margin: .5rem;
+}
+
+.datepicker-inline {
+    padding: .5rem;
+}
+
+#datepicker_dates__display {
+    display: inline-block;
+    font-size: .9rem;
+    font-weight: 100;
+  }
+
+#datepicker_dates__display>span {
+    letter-spacing: -0.015rem;
+    text-decoration: underline dotted; 
+}
+  
+#datepicker {
+    background-color: #eee
+    padding: .5em;
+}
+
+#datepicker button {
+    margin-left: .5em;
+}
+
+.calendar_title {
+    color: rgb(140, 148, 150);
+    font-size: .9rem;
+    font-weight: 100;
+    padding-bottom: .5rem;
+    text-align: center;
+    width: 100%;
+}

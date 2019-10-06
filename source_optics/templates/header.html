@@ -37,40 +37,9 @@ $(function() {
 
 
 <div id="header__container">
-    <div id="user_action__navbar">
-        {% if 'start' in request.get_full_path %}
-        <div id="datepicker_dates__display" class="right" >
-            <span id="start_date_display" data-date="{{ start_str }}">{{ start_str }}</span>
-            &nbsp;to&nbsp;
-            <span id="end_date_display" data-date="{{ end_str }}">{{ end_str }}</span>
-            <i class="far fa-calendar-alt"></i>
-        </div>
-        {% endif %}
-        <a href="/admin"><i class="fas fa-cogs"></i></a>
-    </div>
-    <a href="/"><img src="/source_optics/static/logo_no_bg.png" height=200/></a>
+        {% include 'user_nav.html' %}
+        <a href="/"><img src="/source_optics/static/logo_no_bg.png" height=200/></a>
 </div>
-{% if 'start' in request.get_full_path %}
-<div id="myModal" style="display:none;">
-    <div id="date_picker_container">
-        <div id="datepicker_start_cal" class="datepicker_cal" data-date="{{ start_str }}">
-            <div class="calendar_title">Start Date</div>
-        </div>
-        <input type="hidden" id="datepicker_start" name="start" >
-        
-        <div id="datepicker_end_cal" class="datepicker_cal" data-date="{{ end_str }}">
-            <div class="calendar_title">End Date</div>
-        </div>
-        <input type="hidden" id="datepicker_end" name="end" >
-    </div>
-    <div class="modalButtons">
-        <button onclick="pickDates()" class="btn btn-outline-info btn-md">Apply</button>
-        <button id="cancelButton" class="btn btn-outline-info btn-md">Cancel</button>
-    </div>
-</div>
-<link rel="stylesheet" type="text/css" href="/source_optics/static/vendor/bootstrap-datepicker3.min.css">
-<script src="/source_optics/static/vendor/bootstrap-datepicker.min.js"></script>
-<script src="/source_optics/static/datepicker-query-parser.js"></script>
-<script src="/source_optics/static/datepicker-setup-behaviour.js"></script>
-{% endif %}
+{% include 'datepicker.html' %}
+
 <br/>
