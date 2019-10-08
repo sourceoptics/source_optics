@@ -35,7 +35,7 @@ def is_int(x):
 class Scope(object):
 
     __slots__ = [
-        'start', 'end', 'start_str', 'end_str', 'interval', 'org', 'orgs', 'orgs_count',
+        'start', 'end', 'display_end', 'start_str', 'end_str', 'interval', 'org', 'orgs', 'orgs_count',
         'repos', 'repo', 'repos', 'repos_str', 'page_size', 'page', 'author', 'context', 'add_repo_table',
         'add_orgs_table', 'available_repos', 'request', 'full_time_range', 'path', 'file', 'extension'
     ]
@@ -242,9 +242,13 @@ class Scope(object):
         """
         Add formatted versions of the start and end times to the context for use in templates
         """
+
+
         if self.start and self.end:
             self.start_str = self.start.strftime("%Y-%m-%d")
-            self.end_str = self.end.strftime("%Y-%m-%d")
+            fixed_end = self.end - datetime.timedelta(days=1)
+            self.context['display_end'] = fixed_end
+            self.end_str = fixed_end.strftime("%Y-%m-%d")
         else:
             self.start_str = None
             self.end_str = None
