@@ -10,8 +10,8 @@ Last Scanned: {{ repo.last_scanned }}<br/>
 
 <br/>Overall stats will appear here in a future upgrade. See also:<br/><br/>
 
-<a href='/graphs?repo={{ repo.pk }}&start={{ start_str }}&end={{ end_str }}'>Graphs</a><br/>
-<a href='/report/stats?repo={{ repo.pk }}&start={{ start_str }}&end={{ end_str }}'>Stats (By Author)</a><br/>
-<a href='/report/commits?repo={{ repo.pk }}&start={{ start_str }}&end={{ end_str }}'>Commit Feed</a><br/>
+<a href='/graphs?repo={{ repo.pk }}&start={{ start_str }}&end={{ end_str }}'><i class='fas fa-chart-line'></i> Graphs</a><br/>
+<a href='/report/stats?repo={{ repo.pk }}&start={{ start_str }}&end={{ end_str }}'><i class='fas fa-table'></i> Stats (By Author)</a><br/>
+<a href='/report/commits?repo={{ repo.pk }}&start={{ start_str }}&end={{ end_str }}'><i class='fas fa-rss-square'></i> Commit Feed</a><br/>
 
 {% include 'footer.html' %}

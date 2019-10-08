@@ -13,7 +13,7 @@ Email: {{ author.email }}</br>
 
 <br/>Overall stats for this author, across all repositories, will appear here in a future upgrade. See also:<br/><br/>
 
-<a href='/report/stats?author={{ author.pk }}&start={{ start_str }}&end={{ end_str }}'>Stats for All Repos</a></br>
-<a href='/report/commits?author={{ author.pk }}&start={{ start_str }}&end={{ end_str }}'>Commit Feed For All Repos</a></br>
+<a href='/report/stats?author={{ author.pk }}&start={{ start_str }}&end={{ end_str }}'><i class='fas fa-table'></i> Stats for All Repos</a></br>
+<a href='/report/commits?author={{ author.pk }}&start={{ start_str }}&end={{ end_str }}'><i class='fas fa-rss-square'></i> Commit Feed For All Repos</a></br>
 
 {% include 'footer.html' %}

@@ -13,7 +13,7 @@
 
     // FIXME: URL should be /repos?org=1
     function detailsCell(params) {
-        return "<a href='/org/" + params.value + "/repos?start={{start_str}}&end={{end_str}}'><span><i class='fas fa-database'></i></span></a>"
+        return "<a href='/org/" + params.value + "/repos?start={{start_str}}&end={{end_str}}' aria-label='Repositories'><span><i aria-hidden='true' class='fas fa-sitemap' title='Repos'></i></span></a>"
     }
 
     var columnDefs = [
